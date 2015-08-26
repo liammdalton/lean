@@ -80,7 +80,7 @@ class exporter {
         dependency_exporter(std::ostream & out, environment env, exporter & ex):
             m_out(out), m_env(env), m_saw(), m_ex(ex) {}
 
-        void export_name_dependencies(const expr & e) {
+        void export_lemma_dependencies(const expr & e) {
             declaration d;
             switch (e.kind()) {
             case expr_kind::Var: break;
@@ -88,17 +88,17 @@ class exporter {
             case expr_kind::Constant:
                 d    = m_env.get(const_name(e));
                 if (d.is_theorem()) {
-                    m_ex.export_name(const_name(e));                    
+                    m_ex.export_definition(d);
                 }
                 break;
             case expr_kind::App:
-                export_name_dependencies(app_fn(e));
-                export_name_dependencies(app_arg(e));
+                export_lemma_dependencies(app_fn(e));
+                export_lemma_dependencies(app_arg(e));
                 break;
             case expr_kind::Lambda:
             case expr_kind::Pi:            
-                export_name_dependencies(binding_domain(e));
-                export_name_dependencies(binding_body(e));
+                export_lemma_dependencies(binding_domain(e));
+                export_lemma_dependencies(binding_body(e));
                 break;
             case expr_kind::Meta:
             case expr_kind::Local:
@@ -281,7 +281,7 @@ class exporter {
                 export_dependencies(d.get_type());
             }
             const expr & proof = unfold_all_macros(m_env,d.get_value());
-            dependency_exporter(m_out,m_env,*this).export_name_dependencies(proof);
+            dependency_exporter(m_out,m_env,*this).export_lemma_dependencies(proof);
             unsigned t = export_root_expr(d.get_type());
             m_out << "#LEM " << n << " " << t << " ";
             dependency_exporter(m_out,m_env,*this).export_proof_dependencies(proof);
