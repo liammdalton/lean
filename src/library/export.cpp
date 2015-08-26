@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2015 Microsoft Corporation. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
+  Copyright (c) 2015 Microsoft Corporation. All rights reserved.
+  Released under Apache 2.0 license as described in the file LICENSE.
 
-Author: Leonardo de Moura
+  Author: Leonardo de Moura
 */
 #include <unordered_map>
 #include "kernel/expr_maps.h"
@@ -37,15 +37,20 @@ class exporter {
 
     class dependency_exporter {
         std::ostream & m_out;
+        environment           m_env;
         std::unordered_set<unsigned> m_saw;
         exporter & m_ex;
 
         void acc_dependencies(const expr & e) {
+            declaration d;
             switch (e.kind()) {
             case expr_kind::Var: return;
             case expr_kind::Sort: return;
             case expr_kind::Constant:
-                m_saw.insert(m_ex.export_name(const_name(e)));
+                d    = m_env.get(const_name(e));
+                if (d.is_theorem()) {
+                    m_saw.insert(m_ex.export_name(const_name(e)));
+                }
                 break;
             case expr_kind::App:
                 acc_dependencies(app_fn(e));
@@ -72,16 +77,19 @@ class exporter {
 
 
     public:
-        dependency_exporter(std::ostream & out, exporter & ex):
-            m_out(out), m_saw(), m_ex(ex) {}
+        dependency_exporter(std::ostream & out, environment env, exporter & ex):
+            m_out(out), m_env(env), m_saw(), m_ex(ex) {}
 
         void export_name_dependencies(const expr & e) {
-
+            declaration d;
             switch (e.kind()) {
-            case expr_kind::Var: return;
-            case expr_kind::Sort: return;
+            case expr_kind::Var: break;
+            case expr_kind::Sort: break;
             case expr_kind::Constant:
-                m_ex.export_name(const_name(e));
+                d    = m_env.get(const_name(e));
+                if (d.is_theorem()) {
+                    m_ex.export_name(const_name(e));                    
+                }
                 break;
             case expr_kind::App:
                 export_name_dependencies(app_fn(e));
@@ -269,14 +277,14 @@ class exporter {
 
         if (is_thm) {
             if (m_all) {
-                export_dependencies(d.get_value()); // not ideal: we only want the names!
+//                export_dependencies(d.get_value()); // not ideal: we only want the names!
                 export_dependencies(d.get_type());
             }
             const expr & proof = unfold_all_macros(m_env,d.get_value());
-            dependency_exporter(m_out,*this).export_name_dependencies(proof);
+            dependency_exporter(m_out,m_env,*this).export_name_dependencies(proof);
             unsigned t = export_root_expr(d.get_type());
             m_out << "#LEM " << n << " " << t << " ";
-            dependency_exporter(m_out,*this).export_proof_dependencies(proof);
+            dependency_exporter(m_out,m_env,*this).export_proof_dependencies(proof);
             m_out << "\n";
         }
         else if (is_reducible) {
@@ -372,7 +380,9 @@ class exporter {
     void export_declarations() {
         if (m_all) {
             m_env.for_each_declaration([&](declaration const & d) {
-                    export_declaration(d.get_name());
+                    if (d.is_theorem() || !d.is_definition()) {
+                        export_declaration(d.get_name());
+                    }
                 });
         } else {
             buffer<name> ns;
