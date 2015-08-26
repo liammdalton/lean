@@ -24,6 +24,7 @@ template<typename T>
 using name_hmap = typename std::unordered_map<name, T, name_hash, name_eq>;
 
 
+
 class exporter {
     std::ostream &        m_out;
     environment           m_env;
@@ -33,6 +34,79 @@ class exporter {
     name_hmap<unsigned>   m_name2idx;
     level_map<unsigned>   m_level2idx;
     expr_map<unsigned>    m_expr2idx;
+
+    class dependency_exporter {
+        std::ostream & m_out;
+        std::unordered_set<unsigned> m_saw;
+        exporter & m_ex;
+
+        void acc_dependencies(const expr & e) {
+            switch (e.kind()) {
+            case expr_kind::Var: return;
+            case expr_kind::Sort: return;
+            case expr_kind::Constant:
+                m_saw.insert(m_ex.export_name(const_name(e)));
+                break;
+            case expr_kind::App:
+                acc_dependencies(app_fn(e));
+                acc_dependencies(app_arg(e));
+                break;
+            case expr_kind::Lambda:
+            case expr_kind::Pi:            
+                acc_dependencies(binding_domain(e));
+                acc_dependencies(binding_body(e));
+                break;
+            case expr_kind::Meta:
+            case expr_kind::Local:
+            case expr_kind::Macro:
+                throw exception("invalid 'export', proof contains illegal expression type");
+                break;
+            }
+        }
+
+        void output_dependencies() {
+            for (auto & i : m_saw) {
+                m_out << " " << i;
+            }
+        }
+
+
+    public:
+        dependency_exporter(std::ostream & out, exporter & ex):
+            m_out(out), m_saw(), m_ex(ex) {}
+
+        void export_name_dependencies(const expr & e) {
+
+            switch (e.kind()) {
+            case expr_kind::Var: return;
+            case expr_kind::Sort: return;
+            case expr_kind::Constant:
+                m_ex.export_name(const_name(e));
+                break;
+            case expr_kind::App:
+                export_name_dependencies(app_fn(e));
+                export_name_dependencies(app_arg(e));
+                break;
+            case expr_kind::Lambda:
+            case expr_kind::Pi:            
+                export_name_dependencies(binding_domain(e));
+                export_name_dependencies(binding_body(e));
+                break;
+            case expr_kind::Meta:
+            case expr_kind::Local:
+            case expr_kind::Macro:
+                throw exception("invalid 'export', proof contains illegal expression type");
+                break;
+            }
+        }
+
+        void export_proof_dependencies(const expr & e) {
+            acc_dependencies(e);
+            output_dependencies();
+        }
+
+    };
+    
 
     void mark(name const & n) {
         m_exported.insert(n);
@@ -194,9 +268,16 @@ class exporter {
         bool is_reducible = is_at_least_quasireducible(m_env,d.get_name());
 
         if (is_thm) {
-            if (m_all) { export_dependencies(d.get_type()); }
+            if (m_all) {
+                export_dependencies(d.get_value()); // not ideal: we only want the names!
+                export_dependencies(d.get_type());
+            }
+            const expr & proof = unfold_all_macros(m_env,d.get_value());
+            dependency_exporter(m_out,*this).export_name_dependencies(proof);
             unsigned t = export_root_expr(d.get_type());
-            m_out << "#LEM " << n << " " << t << "\n";
+            m_out << "#LEM " << n << " " << t << " ";
+            dependency_exporter(m_out,*this).export_proof_dependencies(proof);
+            m_out << "\n";
         }
         else if (is_reducible) {
             if (m_all) {
@@ -347,6 +428,8 @@ public:
         export_declarations();
     }
 };
+
+
 
 void export_module_as_lowtext(std::ostream & out, environment const & env) {
     exporter(out, env, false)();
