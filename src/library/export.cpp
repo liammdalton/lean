@@ -7,10 +7,14 @@ Author: Leonardo de Moura
 #include <unordered_map>
 #include "kernel/expr_maps.h"
 #include "kernel/for_each_fn.h"
+
 #include "kernel/inductive/inductive.h"
+#include "kernel/quotient/quotient.h"
 #include "library/max_sharing.h"
 #include "library/module.h"
 #include "library/unfold_macros.h"
+#include "library/reducible.h"
+
 
 namespace lean {
 template<typename T>
@@ -37,6 +41,8 @@ class exporter {
     bool already_exported(name const & n) {
         return m_exported.contains(n);
     }
+
+
 
     unsigned export_name(name const & n) {
         auto it = m_name2idx.find(n);
@@ -102,37 +108,20 @@ class exporter {
         return i;
     }
 
-    void display_binder_info(binder_info const & bi) {
-        if (bi.is_implicit())
-            m_out << "#BI";
-        else if (bi.is_strict_implicit())
-            m_out << "#BS";
-        else if (bi.is_inst_implicit())
-            m_out << "#BC";
-        else
-            m_out << "#BD";
-    }
-
     unsigned export_binding(expr const & e, char const * k) {
-        unsigned n  = export_name(binding_name(e));
         unsigned e1 = export_expr(binding_domain(e));
         unsigned e2 = export_expr(binding_body(e));
         unsigned i  = m_expr2idx.size();
         m_out << i << " " << k << " ";
-        display_binder_info(binding_info(e));
-        m_out << " " << n << " " << e1 << " " << e2 << "\n";
+        m_out << e1 << " " << e2 << "\n";
         return i;
     }
 
     unsigned export_const(expr const & e) {
         buffer<unsigned> ls;
         unsigned n = export_name(const_name(e));
-        for (level const & l : const_levels(e))
-            ls.push_back(export_level(l));
         unsigned i  = m_expr2idx.size();
         m_out << i << " #EC " << n;
-        for (unsigned l : ls)
-            m_out << " " << l;
         m_out << "\n";
         return i;
     }
@@ -196,40 +185,63 @@ class exporter {
     void export_definition(declaration const & d) {
         if (already_exported(d.get_name()))
             return;
+        
         mark(d.get_name());
         unsigned n = export_name(d.get_name());
         buffer<unsigned> ps;
-        if (m_all) {
-            export_dependencies(d.get_type());
-            export_dependencies(d.get_value());
+
+        bool is_thm = d.is_theorem();
+        bool is_reducible = is_at_least_quasireducible(m_env,d.get_name());
+
+        if (is_thm) {
+            if (m_all) { export_dependencies(d.get_type()); }
+            unsigned t = export_root_expr(d.get_type());
+            m_out << "#LEM " << n << " " << t << "\n";
         }
-        for (name const & p : d.get_univ_params())
-            ps.push_back(export_name(p));
-        unsigned t = export_root_expr(d.get_type());
-        unsigned v = export_root_expr(d.get_value());
-        m_out << "#DEF " << n;
-        for (unsigned p : ps)
-            m_out << " " << p;
-        m_out << " | " << t << " " << v << "\n";
+        else if (is_reducible) {
+            if (m_all) {
+                export_dependencies(d.get_value());
+            }
+            unsigned v = export_root_expr(d.get_value());
+            m_out << "#RDEF " << n << " " << v << "\n";
+        }
+        else {
+            m_out << "#DEF " << n << "\n";
+        }
     }
 
     void export_axiom(declaration const & d) {
-        if (inductive::is_intro_rule(m_env, d.get_name()) || inductive::is_elim_rule(m_env, d.get_name()))
-            return;
-        if (already_exported(d.get_name()))
-            return;
+        if (already_exported(d.get_name())) return;
         mark(d.get_name());
         unsigned n = export_name(d.get_name());
-        buffer<unsigned> ps;
-        if (m_all)
-            export_dependencies(d.get_type());
-        for (name const & p : d.get_univ_params())
-            ps.push_back(export_name(p));
-        unsigned t = export_root_expr(d.get_type());
-        m_out << "#AX " << n;
-        for (unsigned p : ps)
-            m_out << " " << p;
-        m_out << " | " << t << "\n";
+
+        if (m_all) export_dependencies(d.get_type());
+
+        if (inductive::is_intro_rule(m_env, d.get_name())) {
+            unsigned t = export_root_expr(d.get_type());
+            m_out << "#CON " << n << " " << t << "\n";
+        }
+        else if (inductive::is_elim_rule(m_env, d.get_name())) {
+            unsigned t = export_root_expr(d.get_type());
+            m_out << "#REC " << n << " " << t << "\n";
+        }
+        else if (is_quotient_decl(m_env,d.get_name())) {
+            int quot_id = -1;
+            if (d.get_name() == name{"quot"}) quot_id = 1;
+            else if (d.get_name() == name{"quot", "lift"}) quot_id = 2;
+            else if (d.get_name() == name{"quot", "ind"}) quot_id = 3;
+            else if (d.get_name() == name{"quot", "mk"}) quot_id = 4;
+            else if (d.get_name() == name{"quot", "sound"}) quot_id = 5;
+            else {
+                lean_assert(false);
+            }
+            unsigned t = export_root_expr(d.get_type());
+            m_out << "#QUOT " << n << " " << quot_id << " " << t << "\n";
+        }
+        else {
+            unsigned t = export_root_expr(d.get_type());
+            m_out << "#AX " << n << " " << t << "\n";
+        }
     }
 
     void export_inductive(name const & n) {
@@ -246,29 +258,22 @@ class exporter {
                 }
             }
         }
-        for (name const & p : std::get<0>(decls))
-            export_name(p);
         for (inductive::inductive_decl const & d : std::get<2>(decls)) {
             export_name(inductive::inductive_decl_name(d));
             export_root_expr(inductive::inductive_decl_type(d));
             for (inductive::intro_rule const & c : inductive::inductive_decl_intros(d)) {
-                export_name(inductive::intro_rule_name(c));
                 export_root_expr(inductive::intro_rule_type(c));
             }
         }
-        m_out << "#BIND " << std::get<1>(decls) << " " << length(std::get<2>(decls));
-        for (name const & p : std::get<0>(decls))
-            m_out << " " << export_name(p);
-        m_out << "\n";
         for (inductive::inductive_decl const & d : std::get<2>(decls)) {
-            m_out << "#IND " << export_name(inductive::inductive_decl_name(d)) << " "
-                  << export_root_expr(inductive::inductive_decl_type(d)) << "\n";
+            m_out << "#INDTYPE " << export_name(inductive::inductive_decl_name(d)) << " "
+                  << export_root_expr(inductive::inductive_decl_type(d)) << " ";
+            
             for (inductive::intro_rule const & c : inductive::inductive_decl_intros(d)) {
-                m_out << "#INTRO " << export_name(inductive::intro_rule_name(c)) << " "
-                      << export_root_expr(inductive::intro_rule_type(c)) << "\n";
+                m_out << export_root_expr(inductive::intro_rule_type(c)) << " ";
             }
         }
-        m_out << "#EIND\n";
+        m_out << "\n";
     }
 
     void export_declaration(name const & n) {
