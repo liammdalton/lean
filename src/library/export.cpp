@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include "kernel/expr_maps.h"
 #include "kernel/for_each_fn.h"
-
+#include "kernel/instantiate.h"
 #include "kernel/inductive/inductive.h"
 #include "kernel/quotient/quotient.h"
 #include "library/max_sharing.h"
@@ -44,7 +44,7 @@ class exporter {
         void acc_dependencies(const expr & e) {
             declaration d;
             switch (e.kind()) {
-            case expr_kind::Var: return;
+            case expr_kind::Var: break;
             case expr_kind::Sort: return;
             case expr_kind::Constant:
                 d    = m_env.get(const_name(e));
@@ -62,10 +62,15 @@ class exporter {
                 acc_dependencies(binding_body(e));
                 break;
             case expr_kind::Meta:
+                throw exception("invalid 'export', proof contains Meta");
+                break;
             case expr_kind::Local:
+                throw exception("invalid 'export', proof contains Local expression type");
+                break;
             case expr_kind::Macro:
                 throw exception("invalid 'export', proof contains illegal expression type");
                 break;
+
             }
         }
 
@@ -83,7 +88,8 @@ class exporter {
         void export_lemma_dependencies(const expr & e) {
             declaration d;
             switch (e.kind()) {
-            case expr_kind::Var: break;
+            case expr_kind::Var:
+                break;
             case expr_kind::Sort: break;
             case expr_kind::Constant:
                 d    = m_env.get(const_name(e));
@@ -192,9 +198,13 @@ class exporter {
 
     unsigned export_binding(expr const & e, char const * k) {
         unsigned e1 = export_expr(binding_domain(e));
-        unsigned e2 = export_expr(binding_body(e));
+        unsigned n = export_name(binding_name(e));
+
+        expr l = mk_local(name(), binding_name(e), binding_domain(e), binding_info(e));        
+        unsigned e2 = export_expr(instantiate(binding_body(e), l));
         unsigned i  = m_expr2idx.size();
         m_out << i << " " << k << " ";
+        m_out << n << " ";
         m_out << e1 << " " << e2 << "\n";
         return i;
     }
@@ -215,9 +225,12 @@ class exporter {
         unsigned i = 0;
         unsigned l, e1, e2;
         switch (e.kind()) {
-        case expr_kind::Var:
+        case expr_kind::Local:
             i = m_expr2idx.size();
-            m_out << i << " #EV " << var_idx(e) << "\n";
+            m_out << i << " #ET ";
+            i = export_name(mlocal_name(e));
+            e1 = export_expr(mlocal_type(e));
+            m_out << i << " " << e1 << "\n";
             break;
         case expr_kind::Sort:
             l = export_level(sort_level(e));
@@ -241,8 +254,8 @@ class exporter {
             break;
         case expr_kind::Meta:
             throw exception("invalid 'export', meta-variables cannot be exported");
-        case expr_kind::Local:
-            throw exception("invalid 'export', local constants cannot be exported");
+        case expr_kind::Var:
+            throw exception("invalid 'export', variables cannot be exported");
         case expr_kind::Macro:
             throw exception("invalid 'export', macros cannot be exported");
         }
@@ -277,7 +290,6 @@ class exporter {
 
         if (is_thm) {
             if (m_all) {
-//                export_dependencies(d.get_value()); // not ideal: we only want the names!
                 export_dependencies(d.get_type());
             }
             const expr & proof = unfold_all_macros(m_env,d.get_value());
