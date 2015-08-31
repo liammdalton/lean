@@ -285,10 +285,7 @@ class exporter {
         unsigned n = export_name(d.get_name());
         buffer<unsigned> ps;
 
-        bool is_thm = d.is_theorem();
-        bool is_reducible = is_at_least_quasireducible(m_env,d.get_name());
-
-        if (is_thm) {
+        if (d.is_theorem()) {
             if (m_all) {
                 export_dependencies(d.get_type());
             }
@@ -300,19 +297,20 @@ class exporter {
             m_out << "\n";
         }
         // TODO handle these cases together, and just print out the reducibility status as well
-        else if (is_reducible) {
+        else {
+            std::string status;
+            switch (get_reducible_status(m_env,d.get_name())) {
+            case reducible_status::Reducible: status = "R"; break;
+            case reducible_status::Quasireducible: status = "Q"; break;
+            case reducible_status::Semireducible: status = "S"; break;
+            case reducible_status::Irreducible: status = "I"; break;
+            }
+
             if (m_all) {
                 export_dependencies(d.get_value());
             }
             unsigned v = export_root_expr(d.get_value());
-            m_out << "#RDEF " << n << " " << v << "\n";
-        }
-        else {
-            if (m_all) {
-                export_dependencies(d.get_value());
-            }
-            unsigned v = export_root_expr(d.get_value());            
-            m_out << "#DEF " << n << " " << v << "\n";
+            m_out << "#DEF " << status << " " << n << " " << v << "\n";
         }
     }
 
