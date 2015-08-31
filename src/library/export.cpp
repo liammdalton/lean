@@ -299,6 +299,7 @@ class exporter {
             dependency_exporter(m_out,m_env,*this).export_proof_dependencies(proof);
             m_out << "\n";
         }
+        // TODO handle these cases together, and just print out the reducibility status as well
         else if (is_reducible) {
             if (m_all) {
                 export_dependencies(d.get_value());
@@ -307,7 +308,11 @@ class exporter {
             m_out << "#RDEF " << n << " " << v << "\n";
         }
         else {
-            m_out << "#DEF " << n << "\n";
+            if (m_all) {
+                export_dependencies(d.get_value());
+            }
+            unsigned v = export_root_expr(d.get_value());            
+            m_out << "#DEF " << n << " " << v << "\n";
         }
     }
 
