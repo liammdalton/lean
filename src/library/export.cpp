@@ -233,7 +233,7 @@ class exporter {
             m_out << i << " " << e1 << "\n";
             break;
         case expr_kind::Sort:
-            l = export_level(sort_level(e));
+            l = export_level(normalize(sort_level(e)));
             i = m_expr2idx.size();
             m_out << i << " #ES " << l << "\n";
             break;
