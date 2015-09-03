@@ -512,7 +512,7 @@ section migrate_algebra
     add_comm         := add.comm,
     mul              := mul,
     mul_assoc        := mul.assoc,
-    one              := (of_num 1),
+    one              := 1,
     one_mul          := one_mul,
     mul_one          := mul_one,
     left_distrib     := mul.left_distrib,
@@ -544,7 +544,7 @@ end migrate_algebra
 
 theorem eq_num_div_denom (a : ℚ) : a = num a / denom a :=
 have H : of_int (denom a) ≠ 0, from assume H', ne_of_gt (denom_pos a) (of_int.inj H'),
-iff.mpr (eq_div_iff_mul_eq H) (mul_denom a)
+iff.mpr (!eq_div_iff_mul_eq H) (mul_denom a)
 
 theorem of_int_div {a b : ℤ} (H : b ∣ a) : of_int (a div b) = of_int a / of_int b :=
 decidable.by_cases
@@ -556,7 +556,7 @@ decidable.by_cases
       int.dvd.elim H
         (take c, assume Hc : a = b * c,
           by rewrite [Hc, !int.mul_div_cancel_left bnz, mul.comm]),
-    iff.mpr (eq_div_iff_mul_eq bnz') H')
+    iff.mpr (!eq_div_iff_mul_eq bnz') H')
 
 theorem of_int_pow (a : ℤ) (n : ℕ) : of_int (a^n) = (of_int a)^n :=
 begin

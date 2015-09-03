@@ -8,13 +8,12 @@ This construction follows Bishop and Bridges (1985).
 To do:
  o Rename things and possibly make theorems private
 -/
-
 import data.nat data.rat.order data.pnat
 open nat eq eq.ops pnat
 open -[coercions] rat
 local notation 0 := rat.of_num 0
 local notation 1 := rat.of_num 1
-----------------------------------------------------------------------------------------------------
+
 -- small helper lemmas
 
 theorem s_mul_assoc_lemma_3 (a b n : ℕ+) (p : ℚ) :
@@ -24,8 +23,8 @@ theorem s_mul_assoc_lemma_3 (a b n : ℕ+) (p : ℚ) :
 theorem s_mul_assoc_lemma_4 {n : ℕ+} {ε q : ℚ} (Hε : ε > 0) (Hq : q > 0) (H : n ≥ pceil (q / ε)) :
         q * n⁻¹ ≤ ε :=
   begin
-    let H2 := pceil_helper H (pos_div_of_pos_of_pos Hq Hε),
-    let H3 := mul_le_of_le_div (pos_div_of_pos_of_pos Hq Hε) H2,
+    let H2 := pceil_helper H (div_pos_of_pos_of_pos Hq Hε),
+    let H3 := mul_le_of_le_div (div_pos_of_pos_of_pos Hq Hε) H2,
     rewrite -(one_mul ε),
     apply mul_le_mul_of_mul_div_le,
     repeat assumption
@@ -39,7 +38,7 @@ theorem find_thirds (a b : ℚ) (H : b > 0) : ∃ n : ℕ+, a + n⁻¹ + n⁻¹ 
               ... ≤ of_nat 4 * (b / of_nat 4)
                   : rat.mul_le_mul_of_nonneg_left (!inv_pceil_div dec_trivial H) !of_nat_nonneg
               ... = b / of_nat 4 * of_nat 4 : rat.mul.comm
-              ... = b : rat.div_mul_cancel dec_trivial,
+              ... = b : !rat.div_mul_cancel dec_trivial,
   exists.intro n (calc
     a + n⁻¹ + n⁻¹ + n⁻¹ = a + (1 + 1 + 1) * n⁻¹ : by rewrite[*rat.right_distrib,*rat.one_mul,-*rat.add.assoc]
                     ... = a + of_nat 3 * n⁻¹    : {show 1+1+1=of_nat 3, from dec_trivial}
@@ -49,7 +48,7 @@ theorem squeeze {a b : ℚ} (H : ∀ j : ℕ+, a ≤ b + j⁻¹ + j⁻¹ + j⁻�
   begin
     apply rat.le_of_not_gt,
     intro Hb,
-    cases find_midpoint Hb with [c, Hc],
+    cases exists_add_lt_and_pos_of_lt Hb with [c, Hc],
     cases find_thirds b c (and.right Hc) with [j, Hbj],
     have Ha : a > b + j⁻¹ + j⁻¹ + j⁻¹, from lt.trans Hbj (and.left Hc),
     apply (not_le_of_gt Ha) !H
@@ -59,7 +58,7 @@ theorem squeeze_2 {a b : ℚ} (H : ∀ ε : ℚ, ε > 0 → a ≥ b - ε) : a �
   begin
     apply rat.le_of_not_gt,
     intro Hb,
-    cases find_midpoint Hb with [c, Hc],
+    cases exists_add_lt_and_pos_of_lt Hb with [c, Hc],
     let Hc' := H c (and.right Hc),
     apply (rat.not_le_of_gt (and.left Hc)) (iff.mpr !le_add_iff_sub_right_le Hc')
   end
@@ -203,10 +202,10 @@ theorem eq_of_bdd_var {s t : seq} (Hs : regular s) (Ht : regular t)
 theorem pnat_bound {ε : ℚ} (Hε : ε > 0) : ∃ p : ℕ+, p⁻¹ ≤ ε :=
   begin
     existsi (pceil (1 / ε)),
-    rewrite -(rat.div_div (rat.ne_of_gt Hε)) at {2},
+    rewrite -(rat.one_div_one_div ε) at {2},
     apply pceil_helper,
     apply le.refl,
-    apply div_pos_of_pos Hε
+    apply one_div_pos_of_pos Hε
   end
 
 theorem bdd_of_eq_var {s t : seq} (Hs : regular s) (Ht : regular t) (Heq : s ≡ t) :
@@ -622,7 +621,7 @@ theorem mul_bound_helper {s t : seq} (Hs : regular s) (Ht : regular t) (a b c : 
           apply rat.ne_of_gt,
           repeat (apply rat.mul_pos | apply rat.add_pos | apply rat_of_pnat_is_pos | apply inv_pos),
         end,
-        rewrite (rat.div_helper H),
+        rewrite (!rat.div_helper H),
         apply rat.le.refl
     end,
     apply rat.add_le_add,
@@ -700,7 +699,7 @@ theorem mul_zero_equiv_zero {s t : seq} (Hs : regular s) (Ht : regular t) (Htz :
     apply zero_is_reg,
     intro ε Hε,
     let Bd := bdd_of_eq_var Ht zero_is_reg Htz (ε / (Kq s))
-                            (pos_div_of_pos_of_pos Hε (Kq_bound_pos Hs)),
+                            (div_pos_of_pos_of_pos Hε (Kq_bound_pos Hs)),
     cases Bd with [N, HN],
     existsi N,
     intro n Hn,
@@ -1029,10 +1028,17 @@ definition neg (x : ℝ) : ℝ :=
                                    quot.sound (rneg_well_defined Hab)))
 prefix [priority real.prio] `-` := neg
 
-definition zero : ℝ := quot.mk r_zero
+open rat -- no coercions before
+
+definition of_rat [coercion] (a : ℚ) : ℝ := quot.mk (s.r_const a)
+definition of_num [coercion] [reducible] (n : num) : ℝ := of_rat (rat.of_num n)
+
+--definition zero : ℝ := 0
+--definition one : ℝ := 1
+--definition zero : ℝ := quot.mk r_zero
 --notation 0 := zero
 
-definition one : ℝ := quot.mk r_one
+--definition one : ℝ := quot.mk r_one
 
 theorem add_comm (x y : ℝ) : x + y = y + x :=
   quot.induction_on₂ x y (λ s t, quot.sound (r_add_comm s t))
@@ -1040,13 +1046,13 @@ theorem add_comm (x y : ℝ) : x + y = y + x :=
 theorem add_assoc (x y z : ℝ) : x + y + z = x + (y + z) :=
   quot.induction_on₃ x y z (λ s t u, quot.sound (r_add_assoc s t u))
 
-theorem zero_add (x : ℝ) : zero + x = x :=
+theorem zero_add (x : ℝ) : 0 + x = x :=
   quot.induction_on x (λ s, quot.sound (r_zero_add s))
 
-theorem add_zero (x : ℝ) : x + zero = x :=
+theorem add_zero (x : ℝ) : x + 0 = x :=
   quot.induction_on x (λ s, quot.sound (r_add_zero s))
 
-theorem neg_cancel (x : ℝ) : -x + x = zero :=
+theorem neg_cancel (x : ℝ) : -x + x = 0 :=
   quot.induction_on x (λ s, quot.sound (r_neg_cancel s))
 
 theorem mul_assoc (x y z : ℝ) : x * y * z = x * (y * z) :=
@@ -1055,10 +1061,10 @@ theorem mul_assoc (x y z : ℝ) : x * y * z = x * (y * z) :=
 theorem mul_comm (x y : ℝ) : x * y = y * x :=
   quot.induction_on₂ x y (λ s t, quot.sound (r_mul_comm s t))
 
-theorem one_mul (x : ℝ) : one * x = x :=
+theorem one_mul (x : ℝ) : 1 * x = x :=
   quot.induction_on x (λ s, quot.sound (r_one_mul s))
 
-theorem mul_one (x : ℝ) : x * one = x :=
+theorem mul_one (x : ℝ) : x * 1 = x :=
   quot.induction_on x (λ s, quot.sound (r_mul_one s))
 
 theorem distrib (x y z : ℝ) : x * (y + z) = x * y + x * z :=
@@ -1067,8 +1073,8 @@ theorem distrib (x y z : ℝ) : x * (y + z) = x * y + x * z :=
 theorem distrib_l (x y z : ℝ) : (x + y) * z = x * z + y * z :=
   by rewrite [mul_comm, distrib, {x * _}mul_comm, {y * _}mul_comm] -- this shouldn't be necessary
 
-theorem zero_ne_one : ¬ zero = one :=
-  take H : zero = one,
+theorem zero_ne_one : ¬ (0 : ℝ) = 1 :=
+  take H : 0 = 1,
   absurd (quot.exact H) (r_zero_nequiv_one)
 
 protected definition comm_ring [reducible] : algebra.comm_ring ℝ :=
@@ -1076,7 +1082,7 @@ protected definition comm_ring [reducible] : algebra.comm_ring ℝ :=
     fapply algebra.comm_ring.mk,
     exact add,
     exact add_assoc,
-    exact zero,
+    exact of_num 0,
     exact zero_add,
     exact add_zero,
     exact neg,
@@ -1084,17 +1090,13 @@ protected definition comm_ring [reducible] : algebra.comm_ring ℝ :=
     exact add_comm,
     exact mul,
     exact mul_assoc,
-    apply one,
+    apply of_num 1,
     apply one_mul,
     apply mul_one,
     apply distrib,
     apply distrib_l,
     apply mul_comm
   end
-
-open rat -- no coercions before
-
-definition of_rat [coercion] (a : ℚ) : ℝ := quot.mk (s.r_const a)
 
 theorem of_rat_add (a b : ℚ) : of_rat a + of_rat b = of_rat (a + b) :=
    quot.sound (s.r_add_consts a b)

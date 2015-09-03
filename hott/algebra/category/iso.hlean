@@ -206,7 +206,15 @@ namespace iso
     variables {X : Type} {x y : X} {F G : X → ob}
     definition transport_hom_of_eq (p : F = G) (f : hom (F x) (F y))
       : p ▸ f = hom_of_eq (apd10 p y) ∘ f ∘ inv_of_eq (apd10 p x) :=
-    eq.rec_on p !id_leftright⁻¹
+    by induction p; exact !id_leftright⁻¹
+
+    definition transport_hom_of_eq_right (p : x = y) (f : hom c (F x))
+      : p ▸ f = hom_of_eq (ap F p) ∘ f :=
+    by induction p; exact !id_left⁻¹
+
+    definition transport_hom_of_eq_left (p : x = y) (f : hom (F x) c)
+      : p ▸ f = f ∘ inv_of_eq (ap F p) :=
+    by induction p; exact !id_right⁻¹
 
     definition transport_hom (p : F ~ G) (f : hom (F x) (F y))
       : eq_of_homotopy p ▸ f = hom_of_eq (p y) ∘ f ∘ inv_of_eq (p x) :=
@@ -315,29 +323,32 @@ namespace iso
   H⁻¹ ▸ comp_inverse_cancel_left q g
   definition comp_eq_of_eq_comp_inverse (H : w = f ∘ q⁻¹) : w ∘ q = f :=
   H⁻¹ ▸ inverse_comp_cancel_right f q
-  definition inverse_comp_eq_of_eq_comp (H : z = q ∘ p) : q⁻¹ ∘ z = p :=
-  H⁻¹ ▸ inverse_comp_cancel_left q p
-  definition comp_inverse_eq_of_eq_comp (H : x = r ∘ q) : x ∘ q⁻¹ = r :=
-  H⁻¹ ▸ comp_inverse_cancel_right r q
   definition eq_comp_of_inverse_comp_eq (H : q⁻¹ ∘ g = y) : g = q ∘ y :=
   (comp_eq_of_eq_inverse_comp H⁻¹)⁻¹
   definition eq_comp_of_comp_inverse_eq (H : f ∘ q⁻¹ = w) : f = w ∘ q :=
   (comp_eq_of_eq_comp_inverse H⁻¹)⁻¹
+  variable {Hq}
+  definition inverse_comp_eq_of_eq_comp (H : z = q ∘ p) : q⁻¹ ∘ z = p :=
+  H⁻¹ ▸ inverse_comp_cancel_left q p
+  definition comp_inverse_eq_of_eq_comp (H : x = r ∘ q) : x ∘ q⁻¹ = r :=
+  H⁻¹ ▸ comp_inverse_cancel_right r q
   definition eq_inverse_comp_of_comp_eq (H : q ∘ p = z) : p = q⁻¹ ∘ z :=
   (inverse_comp_eq_of_eq_comp H⁻¹)⁻¹
   definition eq_comp_inverse_of_comp_eq (H : r ∘ q = x) : r = x ∘ q⁻¹ :=
   (comp_inverse_eq_of_eq_comp H⁻¹)⁻¹
+
   definition eq_inverse_of_comp_eq_id' (H : h ∘ q = id) : h = q⁻¹ := (inverse_eq_left H)⁻¹
   definition eq_inverse_of_comp_eq_id (H : q ∘ h = id) : h = q⁻¹ := (inverse_eq_right H)⁻¹
+  definition inverse_eq_of_id_eq_comp (H : id = h ∘ q) : q⁻¹ = h :=
+  (eq_inverse_of_comp_eq_id' H⁻¹)⁻¹
+  definition inverse_eq_of_id_eq_comp' (H : id = q ∘ h) : q⁻¹ = h :=
+  (eq_inverse_of_comp_eq_id H⁻¹)⁻¹
+  variable [Hq]
   definition eq_of_comp_inverse_eq_id (H : i ∘ q⁻¹ = id) : i = q :=
   eq_inverse_of_comp_eq_id' H ⬝ inverse_involutive q
   definition eq_of_inverse_comp_eq_id (H : q⁻¹ ∘ i = id) : i = q :=
   eq_inverse_of_comp_eq_id H ⬝ inverse_involutive q
   definition eq_of_id_eq_comp_inverse (H : id = i ∘ q⁻¹) : q = i := (eq_of_comp_inverse_eq_id H⁻¹)⁻¹
   definition eq_of_id_eq_inverse_comp (H : id = q⁻¹ ∘ i) : q = i := (eq_of_inverse_comp_eq_id H⁻¹)⁻¹
-  definition inverse_eq_of_id_eq_comp (H : id = h ∘ q) : q⁻¹ = h :=
-  (eq_inverse_of_comp_eq_id' H⁻¹)⁻¹
-  definition inverse_eq_of_id_eq_comp' (H : id = q ∘ h) : q⁻¹ = h :=
-  (eq_inverse_of_comp_eq_id H⁻¹)⁻¹
   end
 end iso

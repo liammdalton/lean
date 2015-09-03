@@ -208,15 +208,19 @@ namespace eq
 
   infix ~ := homotopy
 
-  protected definition homotopy.refl [refl] [reducible] (f : Πx, P x) : f ~ f :=
+  protected definition homotopy.refl [refl] [reducible] [unfold-full] (f : Πx, P x) : f ~ f :=
   λ x, idp
 
-  protected definition homotopy.symm [symm] [reducible] {f g : Πx, P x} (H : f ~ g) : g ~ f :=
+  protected definition homotopy.symm [symm] [reducible] [unfold-full] {f g : Πx, P x} (H : f ~ g)
+    : g ~ f :=
   λ x, (H x)⁻¹
 
-  protected definition homotopy.trans [trans] [reducible] {f g h : Πx, P x}
+  protected definition homotopy.trans [trans] [reducible] [unfold-full] {f g h : Πx, P x}
     (H1 : f ~ g) (H2 : g ~ h) : f ~ h :=
   λ x, H1 x ⬝ H2 x
+
+  definition homotopy_of_eq {f g : Πx, P x} (H1 : f = g) : f ~ g :=
+  H1 ▸ homotopy.refl f
 
   definition apd10 [unfold 5] {f g : Πx, P x} (H : f = g) : f ~ g :=
   λx, eq.rec_on H idp
@@ -284,12 +288,12 @@ namespace eq
   definition ap_id (p : x = y) : ap id p = p :=
   eq.rec_on p idp
 
-  definition ap_compose (g : B → C) (f : A → B) {x y : A} (p : x = y) :
+  definition ap_compose [unfold 8] (g : B → C) (f : A → B) {x y : A} (p : x = y) :
     ap (g ∘ f) p = ap g (ap f p) :=
   eq.rec_on p idp
 
   -- Sometimes we don't have the actual function [compose].
-  definition ap_compose' (g : B → C) (f : A → B) {x y : A} (p : x = y) :
+  definition ap_compose' [unfold 8] (g : B → C) (f : A → B) {x y : A} (p : x = y) :
     ap (λa, g (f a)) p = ap g (ap f p) :=
   eq.rec_on p idp
 
@@ -298,6 +302,7 @@ namespace eq
   eq.rec_on p idp
 
   -- Naturality of [ap].
+  -- see also natural_square in cubical.square
   definition ap_con_eq_con_ap {f g : A → B} (p : f ~ g) {x y : A} (q : x = y) :
     ap f q ⬝ p y = p x ⬝ ap g q :=
   eq.rec_on q !idp_con
@@ -483,7 +488,6 @@ namespace eq
       (s : z = w) :
     ap (transport P p) s  ⬝  transport2 P r w = transport2 P r z  ⬝  ap (transport P q) s :=
   eq.rec_on r !idp_con⁻¹
-
 
   definition fn_tr_eq_tr_fn {P Q : A → Type} {x y : A} (p : x = y) (f : Πx, P x → Q x) (z : P x) :
     f y (p ▸ z) = (p ▸ (f x z)) :=

@@ -8,7 +8,6 @@ This construction follows Bishop and Bridges (1985).
 At this point, we no longer proceed constructively: this file makes heavy use of decidability
 and excluded middle.
 -/
-
 import data.real.basic data.real.order data.rat data.nat
 open -[coercions] rat
 open -[coercions] nat
@@ -196,11 +195,11 @@ theorem reg_inv_reg {s : seq} (Hs : regular s) (Hsep : sep s zero) : regular (s_
         apply add_invs_nonneg,
        rewrite [(s_inv_of_sep_lt_p Hs Hsep Hmlt),
                 (s_inv_of_sep_gt_p Hs Hsep (le_of_not_gt Hnlt))],
-       rewrite [(div_sub_div Hsp Hspn), div_eq_mul_one_div, *abs_mul, *mul_one, *one_mul],
+       rewrite [(!div_sub_div Hsp Hspn), div_eq_mul_one_div, *abs_mul, *mul_one, *one_mul],
        apply rat.le.trans,
        apply rat.mul_le_mul,
        apply Hs,
-       rewrite [-(mul_one 1), -(div_mul_div Hsp Hspn), abs_mul],
+       rewrite [-(mul_one 1), -(!field.div_mul_div Hsp Hspn), abs_mul],
        apply rat.mul_le_mul,
        rewrite -(s_inv_of_sep_lt_p Hs Hsep Hmlt),
        apply le_ps Hs Hsep,
@@ -218,11 +217,11 @@ theorem reg_inv_reg {s : seq} (Hs : regular s) (Hsep : sep s zero) : regular (s_
       cases em (n < ps Hs Hsep) with [Hnlt, Hnlt],
         rewrite [(s_inv_of_sep_lt_p Hs Hsep Hnlt),
                  (s_inv_of_sep_gt_p Hs Hsep (le_of_not_gt Hmlt))],
-        rewrite [(div_sub_div Hspm Hsp), div_eq_mul_one_div, *abs_mul, *mul_one, *one_mul],
+        rewrite [(!div_sub_div Hspm Hsp), div_eq_mul_one_div, *abs_mul, *mul_one, *one_mul],
         apply rat.le.trans,
         apply rat.mul_le_mul,
         apply Hs,
-        rewrite [-(mul_one 1), -(div_mul_div Hspm Hsp), abs_mul],
+        rewrite [-(mul_one 1), -(!field.div_mul_div Hspm Hsp), abs_mul],
         apply rat.mul_le_mul,
         rewrite -(s_inv_of_sep_gt_p Hs Hsep (le_of_not_gt Hmlt)),
         apply le_ps Hs Hsep,
@@ -239,11 +238,11 @@ theorem reg_inv_reg {s : seq} (Hs : regular s) (Hsep : sep s zero) : regular (s_
         apply Hnlt,
       rewrite [(s_inv_of_sep_gt_p Hs Hsep (le_of_not_gt Hnlt)),
               (s_inv_of_sep_gt_p Hs Hsep (le_of_not_gt Hmlt))],
-      rewrite [(div_sub_div Hspm Hspn), div_eq_mul_one_div, abs_mul, *one_mul, *mul_one],
+      rewrite [(!div_sub_div Hspm Hspn), div_eq_mul_one_div, abs_mul, *one_mul, *mul_one],
       apply rat.le.trans,
       apply rat.mul_le_mul,
       apply Hs,
-      rewrite [-(mul_one 1), -(div_mul_div Hspm Hspn), abs_mul],
+      rewrite [-(mul_one 1), -(!field.div_mul_div Hspm Hspn), abs_mul],
       apply rat.mul_le_mul,
       rewrite -(s_inv_of_sep_gt_p Hs Hsep (le_of_not_gt Hmlt)),
       apply le_ps Hs Hsep,
@@ -303,7 +302,7 @@ theorem mul_inv {s : seq} (Hs : regular s) (Hsep : sep s zero) : smul s (s_inv H
       s_ne_zero_of_ge_p Hs Hsep
         (show ps Hs Hsep ≤ ((ps Hs Hsep) * (ps Hs Hsep)) * ((K₂ s (s_inv Hs)) * 2 * n),
           by rewrite *pnat.mul.assoc; apply pnat.mul_le_mul_right),
-    rewrite [(s_inv_of_sep_gt_p Hs Hsep Hp), (div_div Hnz')],
+    rewrite [(s_inv_of_sep_gt_p Hs Hsep Hp), (division_ring.one_div_one_div Hnz')],
     apply rat.le.trans,
     apply rat.mul_le_mul_of_nonneg_left,
     apply Hs,
@@ -584,10 +583,10 @@ postfix [priority real.prio] `⁻¹` := inv
 theorem le_total (x y : ℝ) : x ≤ y ∨ y ≤ x :=
   quot.induction_on₂ x y (λ s t, s.r_le_total s t)
 
-theorem mul_inv' (x : ℝ) : x ≢ zero → x * x⁻¹ = one :=
+theorem mul_inv' (x : ℝ) : x ≢ 0 → x * x⁻¹ = 1 :=
   quot.induction_on x (λ s H, quot.sound (s.r_mul_inv s H))
 
-theorem inv_mul' (x : ℝ) : x ≢ zero → x⁻¹ * x = one :=
+theorem inv_mul' (x : ℝ) : x ≢ 0 → x⁻¹ * x = 1 :=
   by rewrite real.mul_comm; apply mul_inv'
 
 theorem neq_of_sep {x y : ℝ} (H : x ≢ y) : ¬ x = y :=
@@ -599,11 +598,11 @@ theorem sep_of_neq {x y : ℝ} : ¬ x = y → x ≢ y :=
 theorem sep_is_neq (x y : ℝ) : (x ≢ y) = (¬ x = y) :=
   propext (iff.intro neq_of_sep sep_of_neq)
 
-theorem mul_inv (x : ℝ) : x ≠ zero → x * x⁻¹ = one := !sep_is_neq ▸ !mul_inv'
+theorem mul_inv (x : ℝ) : x ≠ 0 → x * x⁻¹ = 1 := !sep_is_neq ▸ !mul_inv'
 
-theorem inv_mul (x : ℝ) : x ≠ zero → x⁻¹ * x = one := !sep_is_neq ▸ !inv_mul'
+theorem inv_mul (x : ℝ) : x ≠ 0 → x⁻¹ * x = 1 := !sep_is_neq ▸ !inv_mul'
 
-theorem inv_zero : zero⁻¹ = zero := quot.sound (s.r_inv_zero)
+theorem inv_zero : (0 : ℝ)⁻¹ = 0 := quot.sound (s.r_inv_zero)
 
 theorem lt_or_eq_of_le (x y : ℝ) : x ≤ y → x < y ∨ x = y :=
   quot.induction_on₂ x y (λ s t H, or.elim (s.r_lt_or_equiv_of_le s t H)
