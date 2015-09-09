@@ -10,6 +10,7 @@
 #include "kernel/instantiate.h"
 #include "kernel/inductive/inductive.h"
 #include "kernel/quotient/quotient.h"
+#include "kernel/replace_fn.h"
 #include "library/max_sharing.h"
 #include "library/module.h"
 #include "library/unfold_macros.h"
@@ -366,15 +367,40 @@ class exporter {
             export_name(inductive::inductive_decl_name(d));
             export_root_expr(inductive::inductive_decl_type(d));
             for (inductive::intro_rule const & c : inductive::inductive_decl_intros(d)) {
-                export_root_expr(inductive::intro_rule_type(c));
+                expr cty_start = inductive::intro_rule_type(c);
+                expr cty = replace(cty_start,
+                                   [=](expr const & e, unsigned offset) -> optional<expr> {
+                                       switch (e.kind()) {
+                                       case expr_kind::Constant:
+                                           if (const_name(e) == inductive::inductive_decl_name(d)) {
+                                               return some_expr(mk_constant(string_to_name("#INDNAME"),const_levels(e)));
+                                           }
+                                       default:
+                                           return none_expr();
+                                       }
+                                   });
+                export_root_expr(cty);
             }
         }
         for (inductive::inductive_decl const & d : std::get<2>(decls)) {
             m_out << "#INDTYPE " << export_name(inductive::inductive_decl_name(d)) << " "
                   << export_root_expr(inductive::inductive_decl_type(d)) << " ";
-            
+
+            // TODO pointlessly repeated
             for (inductive::intro_rule const & c : inductive::inductive_decl_intros(d)) {
-                m_out << export_root_expr(inductive::intro_rule_type(c)) << " ";
+                expr cty_start = inductive::intro_rule_type(c);
+                expr cty = replace(cty_start,
+                                   [=](expr const & e, unsigned offset) -> optional<expr> {
+                                       switch (e.kind()) {
+                                       case expr_kind::Constant:
+                                           if (const_name(e) == inductive::inductive_decl_name(d)) {
+                                               return some_expr(mk_constant("#INDNAME",const_levels(e)));
+                                           }
+                                       default:
+                                           return none_expr();
+                                       }
+                                   });
+                    m_out << export_root_expr(cty) << " ";
             }
         }
         m_out << "\n";
