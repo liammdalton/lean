@@ -296,6 +296,14 @@ section linear_ordered_field
   theorem sub_self_div_two (a : A) : a - a / 2 = a / 2 :=
     by rewrite [-{a}add_halves at {1}, add_sub_cancel]
 
+  theorem add_midpoint {a b : A} (H : a < b) : a + (b - a) / 2 < b :=
+  begin
+    rewrite [-div_sub_div_same, sub_eq_add_neg, {b / 2 + _}add.comm, -add.assoc, -sub_eq_add_neg],
+    apply add_lt_of_lt_sub_right,
+    rewrite *sub_self_div_two,
+    apply div_lt_div_of_lt_of_pos H two_pos
+  end
+
   theorem div_two_sub_self (a : A) : a / 2 - a = - (a / 2) :=
     by rewrite [-{a}add_halves at {2}, sub_add_eq_sub_sub, sub_self, zero_sub]
 
@@ -341,6 +349,15 @@ section linear_ordered_field
       by rewrite [add_self_div_two at H3, -div_add_div_same at H3, add_self_div_two at H3];
            exact H3)
       (div_pos_of_pos_of_pos (iff.mpr !sub_pos_iff_lt H) two_pos))
+
+  theorem ge_of_forall_ge_sub {a b : A} (H : ∀ ε : A, ε > 0 → a ≥ b - ε) : a ≥ b :=
+   begin
+    apply le_of_not_gt,
+    intro Hb,
+    cases exists_add_lt_and_pos_of_lt Hb with [c, Hc],
+    let Hc' := H c (and.right Hc),
+    apply (not_le_of_gt (and.left Hc)) (iff.mpr !le_add_iff_sub_right_le Hc')
+   end
 
 end linear_ordered_field
 
@@ -425,37 +442,37 @@ section discrete_linear_ordered_field
       absurd Hl' (ne_of_lt Hl)),
     lt_of_le_of_ne H1 Hn
 
-  theorem div_lt_div_of_lt (Ha : 0 < a) (H : a < b) : 1 / b < 1 / a :=
+  theorem one_div_lt_one_div_of_lt (Ha : 0 < a) (H : a < b) : 1 / b < 1 / a :=
     lt_of_not_ge
       (assume H',
       absurd H (not_lt_of_ge (le_of_one_div_le_one_div Ha H')))
 
-  theorem div_le_div_of_le (Ha : 0 < a) (H : a ≤ b) : 1 / b ≤ 1 / a :=
+  theorem one_div_le_one_div_of_le (Ha : 0 < a) (H : a ≤ b) : 1 / b ≤ 1 / a :=
     le_of_not_gt
       (assume H',
       absurd H (not_le_of_gt (lt_of_one_div_lt_one_div Ha H')))
 
-  theorem div_lt_div_of_lt_neg (Hb : b < 0) (H : a < b) : 1 / b < 1 / a :=
+  theorem one_div_lt_one_div_of_lt_of_neg (Hb : b < 0) (H : a < b) : 1 / b < 1 / a :=
     lt_of_not_ge
       (assume H',
       absurd H (not_lt_of_ge (le_of_one_div_le_one_div_of_neg Hb H')))
 
-  theorem div_le_div_of_le_neg (Hb : b < 0) (H : a ≤ b) : 1 / b ≤ 1 / a :=
+  theorem one_div_le_one_div_of_le_of_neg (Hb : b < 0) (H : a ≤ b) : 1 / b ≤ 1 / a :=
     le_of_not_gt
       (assume H',
       absurd H (not_le_of_gt (lt_of_one_div_lt_one_div_of_neg Hb H')))
 
   theorem one_lt_one_div (H1 : 0 < a) (H2 : a < 1) : 1 < 1 / a :=
-    one_div_one ▸ div_lt_div_of_lt H1 H2
+    one_div_one ▸ one_div_lt_one_div_of_lt H1 H2
 
   theorem one_le_one_div (H1 : 0 < a) (H2 : a ≤ 1) : 1 ≤ 1 / a :=
-    one_div_one ▸ div_le_div_of_le H1 H2
+    one_div_one ▸ one_div_le_one_div_of_le H1 H2
 
   theorem one_div_lt_neg_one (H1 : a < 0) (H2 : -1 < a) : 1 / a < -1 :=
-    one_div_neg_one_eq_neg_one ▸ div_lt_div_of_lt_neg H1 H2
+    one_div_neg_one_eq_neg_one ▸ one_div_lt_one_div_of_lt_of_neg H1 H2
 
   theorem one_div_le_neg_one (H1 : a < 0) (H2 : -1 ≤ a) : 1 / a ≤ -1 :=
-    one_div_neg_one_eq_neg_one ▸ div_le_div_of_le_neg H1 H2
+    one_div_neg_one_eq_neg_one ▸ one_div_le_one_div_of_le_of_neg H1 H2
 
   theorem div_lt_div_of_pos_of_lt_of_pos (Hb : 0 < b) (H : b < a) (Hc : 0 < c) : c / a < c / b :=
     begin
@@ -464,7 +481,7 @@ section discrete_linear_ordered_field
       apply mul_neg_of_pos_of_neg,
       exact Hc,
       apply iff.mpr !sub_neg_iff_lt,
-      apply div_lt_div_of_lt,
+      apply one_div_lt_one_div_of_lt,
       repeat assumption
     end
 

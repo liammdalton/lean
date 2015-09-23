@@ -9,7 +9,7 @@ Theorems about pi-types (dependent function spaces)
 
 import types.sigma arity
 
-open eq equiv is_equiv funext sigma
+open eq equiv is_equiv funext sigma unit bool is_trunc prod
 
 namespace pi
   variables {A A' : Type} {B : A → Type} {B' : A' → Type} {C : Πa, B a → Type}
@@ -170,7 +170,7 @@ namespace pi
 
   /- Equivalences -/
 
-  definition is_equiv_pi_functor [instance] [H0 : is_equiv f0]
+  definition is_equiv_pi_functor [instance] [constructor] [H0 : is_equiv f0]
     [H1 : Πa', is_equiv (f1 a')] : is_equiv (pi_functor f0 f1) :=
   begin
     apply (adjointify (pi_functor f0 f1) (pi_functor f0⁻¹
@@ -187,21 +187,69 @@ namespace pi
     end
   end
 
-  definition pi_equiv_pi_of_is_equiv [H : is_equiv f0]
+  definition pi_equiv_pi_of_is_equiv [constructor] [H : is_equiv f0]
     [H1 : Πa', is_equiv (f1 a')] : (Πa, B a) ≃ (Πa', B' a') :=
   equiv.mk (pi_functor f0 f1) _
 
-  definition pi_equiv_pi (f0 : A' ≃ A) (f1 : Πa', (B (to_fun f0 a') ≃ B' a'))
+  definition pi_equiv_pi [constructor] (f0 : A' ≃ A) (f1 : Πa', (B (to_fun f0 a') ≃ B' a'))
     : (Πa, B a) ≃ (Πa', B' a') :=
   pi_equiv_pi_of_is_equiv (to_fun f0) (λa', to_fun (f1 a'))
 
-  definition pi_equiv_pi_id {P Q : A → Type} (g : Πa, P a ≃ Q a) : (Πa, P a) ≃ (Πa, Q a) :=
+  definition pi_equiv_pi_id [constructor] {P Q : A → Type} (g : Πa, P a ≃ Q a)
+    : (Πa, P a) ≃ (Πa, Q a) :=
   pi_equiv_pi equiv.refl g
+
+  /- Equivalence if one of the types is contractible -/
+
+  definition pi_equiv_of_is_contr_left [constructor] (B : A → Type) [H : is_contr A]
+    : (Πa, B a) ≃ B (center A) :=
+  begin
+    fapply equiv.MK,
+    { intro f, exact f (center A)},
+    { intro b a, exact (center_eq a) ▸ b},
+    { intro b, rewrite [hprop_eq_of_is_contr (center_eq (center A)) idp]},
+    { intro f, apply eq_of_homotopy, intro a, induction (center_eq a),
+      rewrite [hprop_eq_of_is_contr (center_eq (center A)) idp]}
+  end
+
+  definition pi_equiv_of_is_contr_right [constructor] [H : Πa, is_contr (B a)]
+    : (Πa, B a) ≃ unit :=
+  begin
+    fapply equiv.MK,
+    { intro f, exact star},
+    { intro u a, exact !center},
+    { intro u, induction u, reflexivity},
+    { intro f, apply eq_of_homotopy, intro a, apply is_hprop.elim}
+  end
+
+  /- Interaction with other type constructors -/
+
+  -- most of these are in the file of the other type constructor
+
+  definition pi_empty_left [constructor] (B : empty → Type) : (Πx, B x) ≃ unit :=
+  begin
+    fapply equiv.MK,
+    { intro f, exact star},
+    { intro x y, contradiction},
+    { intro x, induction x, reflexivity},
+    { intro f, apply eq_of_homotopy, intro y, contradiction},
+  end
+
+  definition pi_unit_left [constructor] (B : unit → Type) : (Πx, B x) ≃ B star :=
+  !pi_equiv_of_is_contr_left
+
+  definition pi_bool_left [constructor] (B : bool → Type) : (Πx, B x) ≃ B ff × B tt :=
+  begin
+    fapply equiv.MK,
+    { intro f, exact (f ff, f tt)},
+    { intro x b, induction x, induction b: assumption},
+    { intro x, induction x, reflexivity},
+    { intro f, apply eq_of_homotopy, intro b, induction b: reflexivity},
+  end
 
   /- Truncatedness: any dependent product of n-types is an n-type -/
 
-  open is_trunc
-  definition is_trunc_pi (B : A → Type) (n : trunc_index)
+  theorem is_trunc_pi (B : A → Type) (n : trunc_index)
       [H : ∀a, is_trunc n (B a)] : is_trunc n (Πa, B a) :=
   begin
     revert B H,
@@ -221,23 +269,23 @@ namespace pi
               is_trunc_eq n (f a) (g a)}
   end
   local attribute is_trunc_pi [instance]
-  definition is_trunc_eq_pi [instance] [priority 500] (n : trunc_index) (f g : Πa, B a)
+  theorem is_trunc_pi_eq [instance] [priority 500] (n : trunc_index) (f g : Πa, B a)
       [H : ∀a, is_trunc n (f a = g a)] : is_trunc n (f = g) :=
   begin
     apply is_trunc_equiv_closed_rev,
     apply eq_equiv_homotopy
   end
 
-  definition is_trunc_not [instance] (n : trunc_index) (A : Type) : is_trunc (n.+1) ¬A :=
+  theorem is_trunc_not [instance] (n : trunc_index) (A : Type) : is_trunc (n.+1) ¬A :=
   by unfold not;exact _
 
-  definition is_hprop_pi_eq [instance] [priority 490] (a : A) : is_hprop (Π(a' : A), a = a') :=
+  theorem is_hprop_pi_eq [instance] [priority 490] (a : A) : is_hprop (Π(a' : A), a = a') :=
   is_hprop_of_imp_is_contr
   ( assume (f : Πa', a = a'),
     assert H : is_contr A, from is_contr.mk a f,
     _)
 
-  definition is_hprop_neg (A : Type) : is_hprop (¬A) := _
+  theorem is_hprop_neg (A : Type) : is_hprop (¬A) := _
 
   /- Symmetry of Π -/
   definition is_equiv_flip [instance] {P : A → A' → Type}
@@ -253,4 +301,4 @@ namespace pi
 
 end pi
 
-attribute pi.is_trunc_pi [instance] [priority 1510]
+attribute pi.is_trunc_pi [instance] [priority 1520]

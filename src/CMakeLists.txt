@@ -353,8 +353,12 @@ add_subdirectory(library/tactic)
 set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:tactic>)
 add_subdirectory(library/definitional)
 set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:definitional>)
+add_subdirectory(library/blast)
+set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:blast>)
 add_subdirectory(library/error_handling)
 set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:error_handling>)
+add_subdirectory(compiler)
+set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:compiler>)
 add_subdirectory(frontends/lean)
 set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:lean_frontend>)
 add_subdirectory(frontends/lua)
@@ -467,21 +471,19 @@ else()
 endif()
 
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/../library" DESTINATION "${LIBRARY_DIR}"
-        FILES_MATCHING PATTERN "*.lean")
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/../library" DESTINATION "${LIBRARY_DIR}"
         FILES_MATCHING
         PATTERN "*.lean"
         PATTERN "*.olean"
         PATTERN ".project"
+        PATTERN "*.md"
         PATTERN "TAGS")
 
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/../hott" DESTINATION "${LIBRARY_DIR}"
-        FILES_MATCHING PATTERN "*.hlean")
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/../hott" DESTINATION "${LIBRARY_DIR}"
         FILES_MATCHING
-        PATTERN "*.lean"
+        PATTERN "*.hlean"
         PATTERN "*.olean"
         PATTERN ".project"
+        PATTERN "*.md"
         PATTERN "TAGS")
 
 install(FILES "${CMAKE_SOURCE_DIR}/../src/emacs/lean.pgm"

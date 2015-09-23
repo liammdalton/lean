@@ -152,35 +152,52 @@ infix [priority rat.prio] >= := rat.ge
 infix [priority rat.prio] ≥  := rat.ge
 infix [priority rat.prio] >  := rat.gt
 
-theorem of_int_lt_of_int (a b : ℤ) : of_int a < of_int b ↔ (#int a < b) :=
+theorem of_int_lt_of_int_iff (a b : ℤ) : of_int a < of_int b ↔ (#int a < b) :=
 iff.symm (calc
   (#int a < b) ↔ (#int b - a > 0)          : iff.symm !int.sub_pos_iff_lt
            ... ↔ pos (of_int (#int b - a)) : iff.symm !pos_of_int
            ... ↔ pos (of_int b - of_int a) : !of_int_sub ▸ iff.rfl
            ... ↔ of_int a < of_int b       : iff.rfl)
 
-theorem of_int_le_of_int (a b : ℤ) : of_int a ≤ of_int b ↔ (#int a ≤ b) :=
+theorem of_int_lt_of_int_of_lt {a b : ℤ} (H : (#int a < b)) : of_int a < of_int b :=
+iff.mpr !of_int_lt_of_int_iff H
+
+theorem lt_of_of_int_lt_of_int {a b : ℤ} (H : of_int a < of_int b) : (#int a < b) :=
+iff.mp !of_int_lt_of_int_iff H
+
+theorem of_int_le_of_int_iff (a b : ℤ) : of_int a ≤ of_int b ↔ (#int a ≤ b) :=
 iff.symm (calc
   (#int a ≤ b) ↔ (#int b - a ≥ 0)             : iff.symm !int.sub_nonneg_iff_le
            ... ↔ nonneg (of_int (#int b - a)) : iff.symm !nonneg_of_int
            ... ↔ nonneg (of_int b - of_int a) : !of_int_sub ▸ iff.rfl
            ... ↔ of_int a ≤ of_int b          : iff.rfl)
 
-theorem of_int_pos (a : ℤ) : (of_int a > 0) ↔ (#int a > 0) := !of_int_lt_of_int
+theorem of_int_le_of_int_of_le {a b : ℤ} (H : (#int a ≤ b)) : of_int a ≤ of_int b :=
+iff.mpr !of_int_le_of_int_iff H
 
-theorem of_int_nonneg (a : ℤ) : (of_int a ≥ 0) ↔ (#int a ≥ 0) := !of_int_le_of_int
+theorem le_of_of_int_le_of_int {a b : ℤ} (H : of_int a ≤ of_int b) : (#int a ≤ b) :=
+iff.mp !of_int_le_of_int_iff H
 
-theorem of_nat_lt_of_nat (a b : ℕ) : of_nat a < of_nat b ↔ (#nat a < b) :=
-by rewrite [*of_nat_eq, propext !of_int_lt_of_int]; apply int.of_nat_lt_of_nat
+theorem of_nat_lt_of_nat_iff (a b : ℕ) : of_nat a < of_nat b ↔ (#nat a < b) :=
+by rewrite [*of_nat_eq, of_int_lt_of_int_iff, int.of_nat_lt_of_nat_iff]
 
-theorem of_nat_le_of_nat (a b : ℕ) : of_nat a ≤ of_nat b ↔ (#nat a ≤ b) :=
-by rewrite [*of_nat_eq, propext !of_int_le_of_int]; apply int.of_nat_le_of_nat
+theorem of_nat_lt_of_nat_of_lt {a b : ℕ} (H : (#nat a < b)) : of_nat a < of_nat b :=
+iff.mpr !of_nat_lt_of_nat_iff H
 
-theorem of_nat_pos (a : ℕ) : (of_nat a > 0) ↔ (#nat a > nat.zero) :=
-!of_nat_lt_of_nat
+theorem lt_of_of_nat_lt_of_nat {a b : ℕ} (H : of_nat a < of_nat b) : (#nat a < b) :=
+iff.mp !of_nat_lt_of_nat_iff H
+
+theorem of_nat_le_of_nat_iff (a b : ℕ) : of_nat a ≤ of_nat b ↔ (#nat a ≤ b) :=
+by rewrite [*of_nat_eq, of_int_le_of_int_iff, int.of_nat_le_of_nat_iff]
+
+theorem of_nat_le_of_nat_of_le {a b : ℕ} (H : (#nat a ≤ b)) : of_nat a ≤ of_nat b :=
+iff.mpr !of_nat_le_of_nat_iff H
+
+theorem le_of_of_nat_le_of_nat {a b : ℕ} (H : of_nat a ≤ of_nat b) : (#nat a ≤ b) :=
+iff.mp !of_nat_le_of_nat_iff H
 
 theorem of_nat_nonneg (a : ℕ) : (of_nat a ≥ 0) :=
-iff.mpr !of_nat_le_of_nat !nat.zero_le
+of_nat_le_of_nat_of_le !nat.zero_le
 
 theorem le.refl (a : ℚ) : a ≤ a :=
 by rewrite [↑rat.le, sub_self]; apply nonneg_zero
@@ -314,7 +331,11 @@ section migrate_algebra
   definition sign : ℚ → ℚ := algebra.sign
 
   migrate from algebra with rat
-    replacing sub → sub, dvd → dvd, has_le.ge → ge, has_lt.gt → gt,
+    hiding dvd, dvd.elim, dvd.elim_left, dvd.intro, dvd.intro_left, dvd.refl, dvd.trans,
+      dvd_mul_left, dvd_mul_of_dvd_left, dvd_mul_of_dvd_right, dvd_mul_right, dvd_neg_iff_dvd,
+      dvd_neg_of_dvd, dvd_of_dvd_neg, dvd_of_mul_left_dvd, dvd_of_mul_left_eq,
+      dvd_of_mul_right_dvd, dvd_of_mul_right_eq, dvd_of_neg_dvd, dvd_sub, dvd_zero
+    replacing sub → sub, has_le.ge → ge, has_lt.gt → gt,
               divide → divide, max → max, min → min, abs → abs, sign → sign,
               nmul → nmul, imul → imul
 
@@ -325,11 +346,40 @@ section migrate_algebra
 
 end migrate_algebra
 
-theorem rat_of_nat_abs (a : ℤ) : abs (of_int a) = of_nat (int.nat_abs a) :=
+theorem of_nat_abs (a : ℤ) : abs (of_int a) = of_nat (int.nat_abs a) :=
 assert ∀ n : ℕ, of_int (int.neg_succ_of_nat n) = - of_nat (nat.succ n), from λ n, rfl,
 int.induction_on a
-  (take b, abs_of_nonneg (!of_nat_nonneg))
-  (take b, by rewrite [this, abs_neg, abs_of_nonneg (!of_nat_nonneg)])
+  (take b, abs_of_nonneg !of_nat_nonneg)
+  (take b, by rewrite [this, abs_neg, abs_of_nonneg !of_nat_nonneg])
+
+theorem eq_zero_of_nonneg_of_forall_lt {x : ℚ} (xnonneg : x ≥ 0) (H : ∀ ε, ε > 0 → x < ε) :
+  x = 0 :=
+  decidable.by_contradiction
+    (suppose x ≠ 0,
+      have x > 0, from lt_of_le_of_ne xnonneg (ne.symm this),
+      have x < x, from H x this,
+      show false, from !lt.irrefl this)
+
+theorem eq_zero_of_nonneg_of_forall_le {x : ℚ} (xnonneg : x ≥ 0) (H : ∀ ε, ε > 0 → x ≤ ε) :
+  x = 0 :=
+have H' : ∀ ε, ε > 0 → x < ε, from
+  take ε, suppose ε > 0,
+  have ε / 2 > 0, from div_pos_of_pos_of_pos this two_pos,
+  have x ≤ ε / 2, from H _ this,
+  show x < ε, from lt_of_le_of_lt this (rat.div_two_lt_of_pos `ε > 0`),
+eq_zero_of_nonneg_of_forall_lt xnonneg H'
+
+theorem eq_zero_of_forall_abs_le {x : ℚ} (H : ∀ ε, ε > 0 → abs x ≤ ε) :
+  x = 0 :=
+decidable.by_contradiction
+  (suppose x ≠ 0,
+    have abs x = 0, from eq_zero_of_nonneg_of_forall_le !abs_nonneg H,
+    show false, from `x ≠ 0` (eq_zero_of_abs_eq_zero this))
+
+theorem eq_of_forall_abs_sub_le {x y : ℚ} (H : ∀ ε, ε > 0 → abs (x - y) ≤ ε) :
+  x = y :=
+have x - y = 0, from eq_zero_of_forall_abs_le H,
+eq_of_sub_eq_zero this
 
 section
   open int
@@ -341,40 +391,40 @@ section
     begin
       rewrite [-mul_denom],
       apply mul_nonneg H,
-      rewrite [of_int_le_of_int],
+      rewrite [of_int_le_of_int_iff],
       exact int.le_of_lt !denom_pos
     end,
-  show num q ≥ 0, from iff.mp !of_int_le_of_int this
+  show num q ≥ 0, from le_of_of_int_le_of_int this
 
   theorem num_pos_of_pos {q : ℚ} (H : q > 0) : num q > 0 :=
   have of_int (num q) > of_int 0,
     begin
       rewrite [-mul_denom],
       apply mul_pos H,
-      rewrite [of_int_lt_of_int],
+      rewrite [of_int_lt_of_int_iff],
       exact !denom_pos
     end,
-  show num q > 0, from iff.mp !of_int_lt_of_int this
+  show num q > 0, from lt_of_of_int_lt_of_int this
 
   theorem num_neg_of_neg {q : ℚ} (H : q < 0) : num q < 0 :=
   have of_int (num q) < of_int 0,
     begin
       rewrite [-mul_denom],
       apply mul_neg_of_neg_of_pos H,
-      rewrite [of_int_lt_of_int],
+      rewrite [of_int_lt_of_int_iff],
       exact !denom_pos
     end,
-  show num q < 0, from iff.mp !of_int_lt_of_int this
+  show num q < 0, from lt_of_of_int_lt_of_int this
 
   theorem num_nonpos_of_nonpos {q : ℚ} (H : q ≤ 0) : num q ≤ 0 :=
   have of_int (num q) ≤ of_int 0,
     begin
       rewrite [-mul_denom],
       apply mul_nonpos_of_nonpos_of_nonneg H,
-      rewrite [of_int_le_of_int],
+      rewrite [of_int_le_of_int_iff],
       exact int.le_of_lt !denom_pos
     end,
-  show num q ≤ 0, from iff.mp !of_int_le_of_int this
+  show num q ≤ 0, from le_of_of_int_le_of_int this
 end
 
 definition ubound : ℚ → ℕ := λ a : ℚ, nat.succ (int.nat_abs (num a))
@@ -382,10 +432,10 @@ definition ubound : ℚ → ℕ := λ a : ℚ, nat.succ (int.nat_abs (num a))
 theorem ubound_ge (a : ℚ) : of_nat (ubound a) ≥ a :=
 have h : abs a * abs (of_int (denom a)) = abs (of_int (num a)), from
   !abs_mul ▸ !mul_denom ▸ rfl,
-assert of_int (denom a) > 0, from (iff.mpr !of_int_pos) !denom_pos,
+assert of_int (denom a) > 0, from of_int_lt_of_int_of_lt !denom_pos,
 have 1 ≤ abs (of_int (denom a)), begin
     rewrite (abs_of_pos this),
-    apply iff.mpr !of_int_le_of_int,
+    apply of_int_le_of_int_of_le,
     apply denom_pos
   end,
 have abs a ≤ abs (of_int (num a)), from
@@ -394,9 +444,24 @@ calc
     a ≤ abs a                                   : le_abs_self
   ... ≤ abs (of_int (num a))                    : this
   ... ≤ abs (of_int (num a)) + 1                : rat.le_add_of_nonneg_right trivial
-  ... = of_nat (int.nat_abs (num a)) + 1        : rat_of_nat_abs
+  ... = of_nat (int.nat_abs (num a)) + 1        : of_nat_abs
   ... = of_nat (nat.succ (int.nat_abs (num a))) : of_nat_add
 
 theorem ubound_pos (a : ℚ) : nat.gt (ubound a) nat.zero := !nat.succ_pos
+
+theorem binary_nat_bound (a : ℕ) : of_nat a ≤ pow 2 a :=
+  nat.induction_on a (zero_le_one)
+   (take n, assume Hn,
+    calc
+     of_nat (nat.succ n) = (of_nat n) + 1 : of_nat_add
+       ... ≤ pow 2 n + 1 : add_le_add_right Hn
+       ... ≤ pow 2 n + rat.pow 2 n :
+             add_le_add_left (pow_ge_one_of_ge_one two_ge_one _)
+       ... = pow 2 (nat.succ n) : pow_two_add)
+
+theorem binary_bound (a : ℚ) : ∃ n : ℕ, a ≤ pow 2 n :=
+  exists.intro (ubound a) (calc
+      a ≤ of_nat (ubound a) : ubound_ge
+    ... ≤ pow 2 (ubound a) : binary_nat_bound)
 
 end rat

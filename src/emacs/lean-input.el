@@ -341,12 +341,14 @@ order for the change to take effect."
   ("-1f"       . ("⁻¹ᶠ"))
   ("-1g"       . ("⁻¹ᵍ"))
   ("-1h"       . ("⁻¹ʰ"))
+  ("-1i"       . ("⁻¹ⁱ"))
   ("-1m"       . ("⁻¹ᵐ"))
   ("-1o"       . ("⁻¹ᵒ"))
   ("-1r"       . ("⁻¹ʳ"))
   ("-1p"       . ("⁻¹ᵖ"))
   ("-1v"       . ("⁻¹ᵛ"))
   ("-2"        . ("⁻²"))
+  ("-2o"       . ("⁻²ᵒ"))
   ("-3"        . ("⁻³"))
   ("qed"       . ("∎"))
   ("x"         . ("×"))
@@ -676,13 +678,15 @@ order for the change to take effect."
   ;; \omicron \Omicron
   ;; \pi \Pi
   ("Gr"  . ("ρ"))  ("GR"  . ("Ρ"))
-  ("Gs"  . ("σ"))  ("GS"  . ("Σ")) ("S"  . ("Σ"))
+  ("Gs"  . ("σ"))  ("GS"  . ("Σ")) 
   ("Gt"  . ("τ"))  ("GT"  . ("Τ"))
   ("Gu"  . ("υ"))  ("GU"  . ("Υ"))
   ("Gf"  . ("φ"))  ("GF"  . ("Φ"))
   ("Gc"  . ("χ"))  ("GC"  . ("Χ"))
   ("Gp"  . ("ψ"))  ("GP"  . ("Ψ"))
   ("Go"  . ("ω"))  ("GO"  . ("Ω"))
+  ;; even shorter versions for central type constructors
+  ("S"   . ("Σ"))  ("P"   . ("Π")) 
 
   ;; Mathematical characters
 
@@ -991,6 +995,8 @@ order for the change to take effect."
   ("(x)"  . ,(lean-input-to-string-list "⒳Ⓧⓧ"))
   ("(y)"  . ,(lean-input-to-string-list "⒴Ⓨⓨ"))
   ("(z)"  . ,(lean-input-to-string-list "⒵Ⓩⓩ"))
+  ("y"    . ("ɏ"))
+
 
   ))
   "A list of translations specific to the Lean input method.

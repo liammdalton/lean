@@ -349,8 +349,8 @@ namespace rat
 /- operations -/
 
 definition of_int [coercion] (i : ℤ) : ℚ := ⟦prerat.of_int i⟧
-definition of_nat [coercion] (n : ℕ) : ℚ := ⟦prerat.of_int n⟧
-definition of_num [coercion] [reducible] (n : num) : ℚ := of_int (int.of_num n)
+definition of_nat [coercion] (n : ℕ) : ℚ := nat.to.rat n
+definition of_num [coercion] [reducible] (n : num) : ℚ := num.to.rat n
 
 definition add : ℚ → ℚ → ℚ :=
 quot.lift₂
@@ -413,16 +413,28 @@ calc
 theorem of_int.inj {a b : ℤ} (H : of_int a = of_int b) : a = b :=
 prerat.of_int.inj (quot.exact H)
 
+theorem eq_of_of_int_eq_of_int {a b : ℤ} (H : of_int a = of_int b) : a = b :=
+of_int.inj H
+
 theorem of_nat_eq (a : ℕ) : of_nat a = of_int (int.of_nat a) := rfl
 
 theorem of_nat_add (a b : ℕ) : of_nat (#nat a + b) = of_nat a + of_nat b :=
-by rewrite [*of_nat_eq, int.of_nat_add, rat.of_int_add]
+by rewrite [of_nat_eq, int.of_nat_add, rat.of_int_add]
 
 theorem of_nat_mul (a b : ℕ) : of_nat (#nat a * b) = of_nat a * of_nat b :=
-by rewrite [*of_nat_eq, int.of_nat_mul, rat.of_int_mul]
+by rewrite [of_nat_eq, int.of_nat_mul, rat.of_int_mul]
 
 theorem of_nat_sub {a b : ℕ} (H : #nat a ≥ b) : of_nat (#nat a - b) = of_nat a - of_nat b :=
-by rewrite [*of_nat_eq, int.of_nat_sub H, rat.of_int_sub]
+by rewrite [of_nat_eq, int.of_nat_sub H, rat.of_int_sub]
+
+theorem of_nat.inj {a b : ℕ} (H : of_nat a = of_nat b) : a = b :=
+int.of_nat.inj (of_int.inj H)
+
+theorem eq_of_of_nat_eq_of_nat {a b : ℕ} (H : of_nat a = of_nat b) : a = b :=
+of_nat.inj H
+
+theorem of_nat_eq_of_nat_iff (a b : ℕ) : of_nat a = of_nat b ↔ a = b :=
+iff.intro of_nat.inj !congr_arg
 
 theorem add.comm (a b : ℚ) : a + b = b + a :=
 quot.induction_on₂ a b (take u v, quot.sound !prerat.add.comm)
@@ -529,8 +541,6 @@ section migrate_algebra
   definition divide (a b : rat) := algebra.divide a b
   infix [priority rat.prio] `/` := divide
 
-  definition dvd (a b : rat) := algebra.dvd a b
-
   definition pow (a : ℚ) (n : ℕ) : ℚ := algebra.pow a n
   infix [priority rat.prio] ^ := pow
   definition nmul (n : ℕ) (a : ℚ) : ℚ := algebra.nmul n a
@@ -538,7 +548,11 @@ section migrate_algebra
   definition imul (i : ℤ) (a : ℚ) : ℚ := algebra.imul i a
 
   migrate from algebra with rat
-    replacing sub → rat.sub, divide → divide, dvd → dvd, pow → pow, nmul → nmul, imul → imul
+    hiding dvd, dvd.elim, dvd.elim_left, dvd.intro, dvd.intro_left, dvd.refl, dvd.trans,
+      dvd_mul_left, dvd_mul_of_dvd_left, dvd_mul_of_dvd_right, dvd_mul_right, dvd_neg_iff_dvd,
+      dvd_neg_of_dvd, dvd_of_dvd_neg, dvd_of_mul_left_dvd, dvd_of_mul_left_eq,
+      dvd_of_mul_right_dvd, dvd_of_mul_right_eq, dvd_of_neg_dvd, dvd_sub, dvd_zero
+    replacing sub → rat.sub, divide → divide, pow → pow, nmul → nmul, imul → imul
 
 end migrate_algebra
 
@@ -546,7 +560,7 @@ theorem eq_num_div_denom (a : ℚ) : a = num a / denom a :=
 have H : of_int (denom a) ≠ 0, from assume H', ne_of_gt (denom_pos a) (of_int.inj H'),
 iff.mpr (!eq_div_iff_mul_eq H) (mul_denom a)
 
-theorem of_int_div {a b : ℤ} (H : b ∣ a) : of_int (a div b) = of_int a / of_int b :=
+theorem of_int_div {a b : ℤ} (H : (#int b ∣ a)) : of_int (a div b) = of_int a / of_int b :=
 decidable.by_cases
   (assume bz : b = 0,
     by rewrite [bz, div_zero, int.div_zero])
@@ -558,11 +572,18 @@ decidable.by_cases
           by rewrite [Hc, !int.mul_div_cancel_left bnz, mul.comm]),
     iff.mpr (!eq_div_iff_mul_eq bnz') H')
 
+theorem of_nat_div {a b : ℕ} (H : (#nat b ∣ a)) : of_nat (#nat a div b) = of_nat a / of_nat b :=
+have H' : (#int int.of_nat b ∣ int.of_nat a), by rewrite [int.of_nat_dvd_of_nat_iff]; exact H,
+by+ rewrite [of_nat_eq, int.of_nat_div, of_int_div H']
+
 theorem of_int_pow (a : ℤ) (n : ℕ) : of_int (a^n) = (of_int a)^n :=
 begin
   induction n with n ih,
     apply eq.refl,
   rewrite [pow_succ, int.pow_succ, of_int_mul, ih]
 end
+
+theorem of_nat_pow (a : ℕ) (n : ℕ) : of_nat (#nat a^n) = (of_nat a)^n :=
+by rewrite [of_nat_eq, int.of_nat_pow, of_int_pow]
 
 end rat

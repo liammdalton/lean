@@ -20,8 +20,8 @@ namespace category
     (G : D ⇒ C)
     (η : 1 ⟹ G ∘f F)
     (ε : F ∘f G ⟹ 1)
-    (H : Π(c : C), (ε (F c)) ∘ (F (η c)) = ID (F c))
-    (K : Π(d : D), (G (ε d)) ∘ (η (G d)) = ID (G d))
+    (H : Π(c : C), ε (F c) ∘ F (η c) = ID (F c))
+    (K : Π(d : D), G (ε d) ∘ η (G d) = ID (G d))
 
   abbreviation right_adjoint := @is_left_adjoint.G
   abbreviation unit          := @is_left_adjoint.η
@@ -62,6 +62,42 @@ namespace category
     : is_equiv (@(to_fun_hom F) c c') :=
   !H
 
+  definition hom_equiv_F_hom_F [constructor] (F : C ⇒ D)
+    [H : fully_faithful F] (c c' : C) : (c ⟶ c') ≃ (F c ⟶ F c') :=
+  equiv.mk _ !H
+
+  definition iso_of_F_iso_F (F : C ⇒ D)
+    [H : fully_faithful F] (c c' : C) (g : F c ≅ F c') : c ≅ c' :=
+  begin
+    induction g with g G, induction G with h p q, fapply iso.MK,
+      { rexact (@(to_fun_hom F) c c')⁻¹ᶠ g},
+      { rexact (@(to_fun_hom F) c' c)⁻¹ᶠ h},
+      { exact abstract begin
+        apply eq_of_fn_eq_fn' (@(to_fun_hom F) c c),
+        rewrite [respect_comp, respect_id,
+                 right_inv (@(to_fun_hom F) c c'), right_inv (@(to_fun_hom F) c' c), p],
+        end end},
+      { exact abstract begin
+        apply eq_of_fn_eq_fn' (@(to_fun_hom F) c' c'),
+        rewrite [respect_comp, respect_id,
+                 right_inv (@(to_fun_hom F) c c'), right_inv (@(to_fun_hom F) c' c), q],
+        end end}
+  end
+
+  definition iso_equiv_F_iso_F [constructor] (F : C ⇒ D)
+    [H : fully_faithful F] (c c' : C) : (c ≅ c') ≃ (F c ≅ F c') :=
+  begin
+    fapply equiv.MK,
+    { exact to_fun_iso F},
+    { apply iso_of_F_iso_F},
+    { exact abstract begin
+      intro f, induction f with f F', induction F' with g p q, apply iso_eq,
+      esimp [iso_of_F_iso_F], apply right_inv end end},
+    { exact abstract begin
+      intro f, induction f with f F', induction F' with g p q, apply iso_eq,
+      esimp [iso_of_F_iso_F], apply right_inv end end},
+  end
+
   definition is_iso_unit [instance] (F : C ⇒ D) [H : is_equivalence F] : is_iso (unit F) :=
   !is_equivalence.is_iso_unit
 
@@ -91,10 +127,10 @@ namespace category
       rewrite [↑functor.compose, -respect_comp G],
       rewrite [nf_fn_eq_fn_nf_pt ε ε' d,nf_fn_eq_fn_nf_pt η' η (G d),▸*],
       rewrite [respect_comp G],
-      rewrite [assoc,-assoc (G (ε d))],
+      rewrite [assoc,▸*,-assoc (G (ε d))],
       rewrite [↑functor.compose, -respect_comp G],
       rewrite [H' (G d)],
-      rewrite [respect_id,id_right],
+      rewrite [respect_id,▸*,id_right],
       apply K},
     assert lem₃ : Π (d : carrier D),
                     (to_fun_hom G' (natural_map ε d) ∘
@@ -109,10 +145,10 @@ namespace category
       rewrite [nf_fn_eq_fn_nf_pt ε' ε d,nf_fn_eq_fn_nf_pt η η' (G' d)],
       esimp,
       rewrite [respect_comp G'],
-      rewrite [assoc,-assoc (G' (ε' d))],
+      rewrite [assoc,▸*,-assoc (G' (ε' d))],
       rewrite [↑functor.compose, -respect_comp G'],
       rewrite [H (G' d)],
-      rewrite [respect_id,id_right],
+      rewrite [respect_id,▸*,id_right],
       apply K'},
     fapply lem₁,
     { fapply functor.eq_of_pointwise_iso,
@@ -129,16 +165,17 @@ namespace category
       rewrite functor.hom_of_eq_eq_of_pointwise_iso,
       apply nat_trans_eq, intro c, esimp,
       refine !assoc⁻¹ ⬝ ap (λx, _ ∘ x) (nf_fn_eq_fn_nf_pt η η' c) ⬝ !assoc ⬝ _,
-      esimp, rewrite [-respect_comp G',H c,respect_id G',id_left]},
+      esimp, rewrite [-respect_comp G',H c,respect_id G',▸*,id_left]},
    { clear lem₁, refine transport_hom_of_eq_left _ ε ⬝ _,
      krewrite inv_of_eq_compose_left,
      rewrite functor.inv_of_eq_eq_of_pointwise_iso,
      apply nat_trans_eq, intro d, esimp,
-     rewrite [respect_comp,assoc,nf_fn_eq_fn_nf_pt ε' ε d,-assoc,▸*,H (G' d),id_right]}
+     krewrite [respect_comp],
+     rewrite [assoc,nf_fn_eq_fn_nf_pt ε' ε d,-assoc,▸*,H (G' d),id_right]}
    end
 
   definition full_of_fully_faithful (H : fully_faithful F) : full F :=
-  λc c', is_surjective.mk (λg, tr (fiber.mk ((@(to_fun_hom F) c c')⁻¹ᶠ g) !right_inv))
+  λc c' g, tr (fiber.mk ((@(to_fun_hom F) c c')⁻¹ᶠ g) !right_inv)
 
   definition faithful_of_fully_faithful (H : fully_faithful F) : faithful F :=
   λc c' f f' p, is_injective_of_is_embedding p
@@ -161,6 +198,36 @@ namespace category
   end
 
 /-
+  section
+    variables (η : Πc, G (F c) ≅ c) (ε : Πd, F (G d) ≅ d) -- we need some kind of naturality
+    include η ε
+    --definition inverse_of_unit_counit
+
+     private definition adj_η (c : C) : G (F c) ≅ c :=
+     to_fun_iso G (to_fun_iso F (η c)⁻¹ⁱ) ⬝i to_fun_iso G (ε (F c)) ⬝i η c
+     open iso
+
+     private theorem adjointify_adjH (c : C) :
+       to_hom (ε (F c)) ∘ F (to_hom (adj_η η ε c)⁻¹ⁱ) = id  :=
+     begin
+       exact sorry
+     end
+
+     private theorem adjointify_adjK (d : D) :
+       G (to_hom (ε d)) ∘ to_hom (adj_η η ε (G d))⁻¹ⁱ = id :=
+     begin
+       exact sorry
+     end
+
+    variables (F G)
+    definition is_equivalence.mk : is_equivalence F :=
+    begin
+      fconstructor,
+      { exact G},
+      { }
+    end
+
+  end
 
   definition fully_faithful_of_is_equivalence (F : C ⇒ D) [H : is_equivalence F]
     : fully_faithful F :=
@@ -173,19 +240,6 @@ namespace category
       apply inverse_comp_eq_of_eq_comp,
       exact sorry /-this is basically the naturality of the counit-/ },
     { exact sorry},
-  end
-
-  section
-    variables (F G)
-    variables (η : G ∘f F ≅ 1) (ε : F ∘f G ≅ 1)
-    include η ε
-    --definition inverse_of_unit_counit
-
-    definition is_equivalence.mk : is_equivalence F :=
-    begin
-      exact sorry
-    end
-
   end
 
   definition fully_faithful_equiv (F : C ⇒ D) : fully_faithful F ≃ (faithful F × full F) :=

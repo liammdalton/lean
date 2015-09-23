@@ -6,7 +6,8 @@ Author: Floris van Doorn, Jakob von Raumer
 import .functor .iso
 open eq category functor is_trunc equiv sigma.ops sigma is_equiv function pi funext iso
 
-structure nat_trans {C D : Precategory} (F G : C ⇒ D) :=
+structure nat_trans {C : Precategory} {D : Precategory} (F G : C ⇒ D)
+  : Type :=
  (natural_map : Π (a : C), hom (F a) (G a))
  (naturality : Π {a b : C} (f : hom a b), G f ∘ natural_map a = natural_map b ∘ F f)
 
@@ -31,10 +32,10 @@ namespace nat_trans
 
   infixr `∘n`:60 := nat_trans.compose
 
-  protected definition id [reducible] {F : C ⇒ D} : nat_trans F F :=
+  protected definition id [reducible] [constructor] {F : C ⇒ D} : nat_trans F F :=
   mk (λa, id) (λa b f, !id_right ⬝ !id_left⁻¹)
 
-  protected definition ID [reducible] (F : C ⇒ D) : nat_trans F F :=
+  protected definition ID [reducible] [constructor] (F : C ⇒ D) : nat_trans F F :=
   (@nat_trans.id C D F)
 
   notation 1 := nat_trans.id

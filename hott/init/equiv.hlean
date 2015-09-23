@@ -72,7 +72,7 @@ namespace is_equiv
   private abbreviation adjointify_left_inv' (a : A) : g (f a) = a :=
   ap g (ap f (inverse (sec a))) ⬝ ap g (ret (f a)) ⬝ sec a
 
-  private definition adjointify_adj' (a : A) : ret (f a) = ap f (adjointify_left_inv' a) :=
+  private theorem adjointify_adj' (a : A) : ret (f a) = ap f (adjointify_left_inv' a) :=
   let fgretrfa := ap f (ap g (ret (f a))) in
   let fgfinvsect := ap f (ap g (ap f (sec a)⁻¹)) in
   let fgfa := f (g (f a)) in
@@ -309,7 +309,7 @@ namespace equiv
   definition eq_equiv_fn_eq_of_equiv [constructor] (f : A ≃ B) (a b : A) : (a = b) ≃ (f a = f b) :=
   equiv.mk (ap f) !is_equiv_ap
 
-  definition equiv_ap (P : A → Type) {a b : A} (p : a = b) : (P a) ≃ (P b) :=
+  definition equiv_ap [constructor] (P : A → Type) {a b : A} (p : a = b) : (P a) ≃ (P b) :=
   equiv.mk (transport P p) !is_equiv_tr
 
   definition eq_of_fn_eq_fn (f : A ≃ B) {x y : A} (q : f x = f y) : x = y :=
@@ -325,7 +325,7 @@ namespace equiv
   definition equiv_of_equiv_of_eq [trans] {A B C : Type} (p : A = B) (q : B ≃ C) : A ≃ C := p⁻¹ ▸ q
   definition equiv_of_eq_of_equiv [trans] {A B C : Type} (p : A ≃ B) (q : B = C) : A ≃ C := q   ▸ p
 
-  definition equiv_lift (A : Type) : A ≃ lift A := equiv.mk up _
+  definition equiv_lift [constructor] (A : Type) : A ≃ lift A := equiv.mk up _
 
   definition equiv_rect (f : A ≃ B) (P : B → Type) (g : Πa, P (f a)) (b : B) : P b :=
   right_inv f b ▸ g (f⁻¹ b)

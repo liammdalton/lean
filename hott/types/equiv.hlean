@@ -36,7 +36,7 @@ namespace is_equiv
     fapply is_trunc_equiv_closed,
       {apply fiber.sigma_char},
     fapply is_contr_fiber_of_is_equiv,
-    apply (to_is_equiv (arrow_equiv_arrow_right (equiv.mk f H))),
+    apply (to_is_equiv (arrow_equiv_arrow_right B (equiv.mk f H))),
   end
 
   definition is_contr_right_coherence (u : Σ(g : B → A), f ∘ g ~ id)
@@ -91,10 +91,6 @@ namespace is_equiv
 
   definition is_hprop_is_contr_fun (f : A → B) : is_hprop (is_contr_fun f) := _
 
-  /-
-    we cannot make the next theorem an instance, because it loops together with
-    is_contr_fiber_of_is_equiv
-  -/
   definition is_equiv_of_is_contr_fun [H : is_contr_fun f] : is_equiv f :=
   adjointify _ (λb, point (center (fiber f b)))
                (λb, point_eq (center (fiber f b)))

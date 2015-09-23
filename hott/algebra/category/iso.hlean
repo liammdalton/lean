@@ -131,13 +131,13 @@ structure iso {ob : Type} [C : precategory ob] (a b : ob) :=
   (to_hom : hom a b)
   [struct : is_iso to_hom]
 
+  infix `≅`:50 := iso
+  attribute iso.struct [instance] [priority 4000]
+
 namespace iso
   variables {ob : Type} [C : precategory ob]
   variables {a b c : ob} {g : b ⟶ c} {f : a ⟶ b} {h : b ⟶ a}
   include C
-
-  infix `≅`:50 := iso
-  attribute struct [instance] [priority 400]
 
   attribute to_hom [coercion]
 
@@ -159,6 +159,9 @@ namespace iso
 
   protected definition trans [constructor] ⦃a b c : ob⦄ (H1 : a ≅ b) (H2 : b ≅ c) : a ≅ c :=
   mk (to_hom H2 ∘ to_hom H1)
+
+  infixl `⬝i`:75 := iso.trans
+  postfix [parsing-only] `⁻¹ⁱ`:(max + 1) := iso.symm
 
   definition iso_mk_eq {f f' : a ⟶ b} [H : is_iso f] [H' : is_iso f'] (p : f = f')
       : iso.mk f = iso.mk f' :=

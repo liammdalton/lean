@@ -88,16 +88,16 @@ theorem pnat.to_rat_of_nat (n : ℕ+) : rat_of_pnat n = of_nat n~ := rfl
 theorem rat_of_nat_nonneg (n : ℕ) : 0 ≤ of_nat n := trivial
 
 theorem rat_of_pnat_ge_one (n : ℕ+) : rat_of_pnat n ≥ 1 :=
-  (iff.mpr !of_nat_le_of_nat) (pnat_pos n)
+  of_nat_le_of_nat_of_le (pnat_pos n)
 
 theorem rat_of_pnat_is_pos (n : ℕ+) : rat_of_pnat n > 0 :=
-  (iff.mpr !of_nat_pos) (pnat_pos n)
+  of_nat_lt_of_nat_of_lt (pnat_pos n)
 
 theorem of_nat_le_of_nat_of_le {m n : ℕ} (H : m ≤ n) : of_nat m ≤ of_nat n :=
-  (iff.mpr !of_nat_le_of_nat) H
+  of_nat_le_of_nat_of_le H
 
 theorem of_nat_lt_of_nat_of_lt {m n : ℕ} (H : m < n) : of_nat m < of_nat n :=
-  (iff.mpr !of_nat_lt_of_nat) H
+  of_nat_lt_of_nat_of_lt H
 
 theorem rat_of_pnat_le_of_pnat_le {m n : ℕ+} (H : m ≤ n) : rat_of_pnat m ≤ rat_of_pnat n :=
   of_nat_le_of_nat_of_le H
@@ -106,7 +106,7 @@ theorem rat_of_pnat_lt_of_pnat_lt {m n : ℕ+} (H : m < n) : rat_of_pnat m < rat
   of_nat_lt_of_nat_of_lt H
 
 theorem pnat_le_of_rat_of_pnat_le {m n : ℕ+} (H : rat_of_pnat m ≤ rat_of_pnat n) : m ≤ n :=
-  (iff.mp !of_nat_le_of_nat) H
+  le_of_of_nat_le_of_nat H
 
 definition inv (n : ℕ+) : ℚ := (1 : ℚ) / rat_of_pnat n
 postfix `⁻¹` := inv
@@ -116,7 +116,7 @@ theorem inv_pos (n : ℕ+) : n⁻¹ > 0 := one_div_pos_of_pos !rat_of_pnat_is_po
 theorem inv_le_one (n : ℕ+) : n⁻¹ ≤ (1 : ℚ) :=
   begin
     rewrite [↑inv, -one_div_one],
-    apply div_le_div_of_le,
+    apply one_div_le_one_div_of_le,
     apply rat.zero_lt_one,
     apply rat_of_pnat_ge_one
   end
@@ -124,7 +124,7 @@ theorem inv_le_one (n : ℕ+) : n⁻¹ ≤ (1 : ℚ) :=
 theorem inv_lt_one_of_gt {n : ℕ+} (H : n~ > 1) : n⁻¹ < (1 : ℚ) :=
   begin
     rewrite [↑inv, -one_div_one],
-    apply div_lt_div_of_lt,
+    apply one_div_lt_one_div_of_lt,
     apply rat.zero_lt_one,
     rewrite pnat.to_rat_of_nat,
     apply (of_nat_lt_of_nat_of_lt H)
@@ -158,7 +158,7 @@ theorem one_lt_two : pone < 2 := !nat.le.refl
 theorem inv_two_mul_lt_inv (n : ℕ+) : (2 * n)⁻¹ < n⁻¹ :=
   begin
     rewrite ↑inv,
-    apply div_lt_div_of_lt,
+    apply one_div_lt_one_div_of_lt,
     apply rat_of_pnat_is_pos,
     have H : n~ < (2 * n)~, begin
       rewrite -one_mul at {1},
@@ -172,10 +172,10 @@ theorem inv_two_mul_lt_inv (n : ℕ+) : (2 * n)⁻¹ < n⁻¹ :=
 theorem inv_two_mul_le_inv (n : ℕ+) : (2 * n)⁻¹ ≤ n⁻¹ := rat.le_of_lt !inv_two_mul_lt_inv
 
 theorem inv_ge_of_le {p q : ℕ+} (H : p ≤ q) : q⁻¹ ≤ p⁻¹ :=
-  div_le_div_of_le !rat_of_pnat_is_pos (rat_of_pnat_le_of_pnat_le H)
+  one_div_le_one_div_of_le !rat_of_pnat_is_pos (rat_of_pnat_le_of_pnat_le H)
 
 theorem inv_gt_of_lt {p q : ℕ+} (H : p < q) : q⁻¹ < p⁻¹ :=
-  div_lt_div_of_lt !rat_of_pnat_is_pos (rat_of_pnat_lt_of_pnat_lt H)
+  one_div_lt_one_div_of_lt !rat_of_pnat_is_pos (rat_of_pnat_lt_of_pnat_lt H)
 
 theorem ge_of_inv_le {p q : ℕ+} (H : p⁻¹ ≤ q⁻¹) : q ≤ p :=
   pnat_le_of_rat_of_pnat_le (le_of_one_div_le_one_div !rat_of_pnat_is_pos H)
@@ -274,10 +274,10 @@ theorem pnat_cancel' (n m : ℕ+) : (n * n * m)⁻¹ * (rat_of_pnat n * rat_of_p
 definition pceil (a : ℚ) : ℕ+ := tag (ubound a) !ubound_pos
 
 theorem pceil_helper {a : ℚ} {n : ℕ+} (H : pceil a ≤ n) (Ha : a > 0) : n⁻¹ ≤ 1 / a :=
-  rat.le.trans (inv_ge_of_le H) (div_le_div_of_le Ha (ubound_ge a))
+  rat.le.trans (inv_ge_of_le H) (one_div_le_one_div_of_le Ha (ubound_ge a))
 
 theorem inv_pceil_div (a b : ℚ) (Ha : a > 0) (Hb : b > 0) : (pceil (a / b))⁻¹ ≤ b / a :=
-  !one_div_one_div ▸ div_le_div_of_le
+  !one_div_one_div ▸ one_div_le_one_div_of_le
     (one_div_pos_of_pos (div_pos_of_pos_of_pos Hb Ha))
     (!div_div_eq_mul_div⁻¹ ▸ !rat.one_mul⁻¹ ▸ !ubound_ge)
 
@@ -311,5 +311,21 @@ theorem nonneg_of_ge_neg_invs (a : ℚ) (H : ∀ n : ℕ+, -n⁻¹ ≤ a) : 0 �
                              ... < -a / 1
           : div_lt_div_of_pos_of_lt_of_pos dec_trivial dec_trivial H2
                              ... = -a : !div_one)))
+
+theorem pnat_bound {ε : ℚ} (Hε : ε > 0) : ∃ p : ℕ+, p⁻¹ ≤ ε :=
+  begin
+    existsi (pceil (1 / ε)),
+    rewrite -(rat.one_div_one_div ε) at {2},
+    apply pceil_helper,
+    apply le.refl,
+    apply one_div_pos_of_pos Hε
+  end
+
+theorem p_add_fractions (n : ℕ+) : (2 * n)⁻¹ + (2 * 3 * n)⁻¹ + (3 * n)⁻¹ = n⁻¹ :=
+  assert T : 2⁻¹ + 2⁻¹ * 3⁻¹ + 3⁻¹ = 1, from dec_trivial,
+  by rewrite[*inv_mul_eq_mul_inv,-*rat.right_distrib,T,rat.one_mul]
+
+theorem rat_power_two_le (k : ℕ+) : rat_of_pnat k ≤ rat.pow 2 k~ :=
+  !binary_nat_bound
 
 end pnat

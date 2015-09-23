@@ -425,6 +425,7 @@ void test_inductive() {
         check(lean_inductive_decl_get_types(d, &types, &ex));
         check(lean_list_inductive_type_is_cons(types));
         check(lean_env_is_constructor(new_env, cons_name, &r_name, &ex) && lean_name_eq(list_name, r_name));
+        lean_list_inductive_type_del(types);
         lean_inductive_decl_del(d);
         lean_name_del(cons_name);
         lean_name_del(r_name);
@@ -464,11 +465,92 @@ void test_inductive() {
     lean_env_del(new_env);
 }
 
+void test_parser() {
+    lean_exception ex = 0;
+    lean_env env      = mk_env();
+    lean_ios ios;
+    lean_env new_env;
+    lean_ios new_ios;
+    lean_options o;
+    check(lean_options_mk_empty(&o, &ex));
+    check(lean_ios_mk_std(o, &ios, &ex));
+    check(lean_parse_commands(env, ios, "import standard open nat definition double (a : nat) := a + a check double 4 eval double 4",
+                              &new_env, &new_ios, &ex));
+    {
+        lean_name double_name = mk_name("double");
+        lean_decl double_decl;
+        lean_expr double_decl_value;
+        char const * s;
+        check(lean_env_get_decl(new_env, double_name, &double_decl, &ex));
+        check(lean_decl_get_value(double_decl, &double_decl_value, &ex));
+        check(lean_expr_to_pp_string(new_env, new_ios, double_decl_value, &s, &ex));
+        printf("definition of double\n%s\n", s);
+        lean_name_del(double_name);
+        lean_decl_del(double_decl);
+        lean_expr_del(double_decl_value);
+        lean_string_del(s);
+    }
+
+    {
+        lean_expr e;
+        lean_list_name ps;
+        // remark: we can use notation from the namespace nat because we have executed 'open nat'
+        // when we created new_env
+        check(lean_parse_expr(new_env, new_ios, "double (2 + 3)", &e, &ps, &ex));
+        char const * s;
+        check(lean_expr_to_pp_string(new_env, new_ios, e, &s, &ex));
+        printf("parsed expression: %s\n", s);
+        lean_string_del(s);
+        lean_expr_del(e);
+        lean_list_name_del(ps);
+    }
+
+    lean_options_del(o);
+    lean_env_del(env);
+    lean_env_del(new_env);
+    lean_ios_del(ios);
+    lean_ios_del(new_ios);
+}
+
+void test_parser_error() {
+    lean_exception ex = 0;
+    lean_env env      = mk_env();
+    lean_ios ios;
+    lean_env new_env;
+    lean_ios new_ios;
+    lean_options o;
+    check(lean_options_mk_empty(&o, &ex));
+    check(lean_ios_mk_std(o, &ios, &ex));
+    check(!lean_parse_commands(env, ios, "import data.nat open nat definition double (a : nat) := a + true",
+                               &new_env, &new_ios, &ex));
+    {
+        lean_exception ex2 = 0;
+        char const * s1 = lean_exception_get_message(ex);
+        char const * s2 = lean_exception_get_detailed_message(ex);
+        char const * s3;
+        printf("\nexception kind: %d\n", lean_exception_get_kind(ex));
+        printf("exception message: %s\n", s1);
+        printf("exception detailed message: %s\n", s2);
+        check(lean_exception_to_pp_string(env, ios, ex, &s3, &ex2));
+        printf("exception: %s\n", s3);
+        lean_string_del(s1);
+        lean_string_del(s2);
+        lean_string_del(s3);
+    }
+    lean_options_del(o);
+    lean_exception_del(ex);
+    lean_env_del(env);
+    lean_ios_del(ios);
+}
+
+
 int main() {
     test_add_univ();
     test_id();
     test_path();
     test_import();
     test_inductive();
+    test_parser();
+    test_parser_error();
     return 0;
 }

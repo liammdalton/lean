@@ -91,7 +91,7 @@ namespace eq
   theorem idp_con_idp {p : a = a} (q : p = idp) : idp_con p ⬝ q = ap (λp, idp ⬝ p) q :=
   by cases q;reflexivity
 
-  definition ap_weakly_constant [unfold 8] {A B : Type} {f : A → B} {b : B} (p : Πx, f x = b)
+  definition ap_is_constant [unfold 8] {A B : Type} {f : A → B} {b : B} (p : Πx, f x = b)
     {x y : A} (q : x = y) : ap f q = p x ⬝ (p y)⁻¹ :=
   by induction q;exact !con.right_inv⁻¹
 
@@ -432,6 +432,8 @@ namespace eq
   by induction p; exact !pathover_idp ⬝e !equiv_eq_closed_right !idp_con⁻¹
 
   -- a lot of this library still needs to be ported from Coq HoTT
+
+  -- the behavior of equality in other types is described in the corresponding type files
 
   -- encode decode method
 

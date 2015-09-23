@@ -9,7 +9,7 @@ Theorems about arrow types (function spaces)
 
 import types.pi
 
-open eq equiv is_equiv funext pi equiv.ops
+open eq equiv is_equiv funext pi equiv.ops is_trunc unit
 
 namespace pi
 
@@ -21,31 +21,59 @@ namespace pi
   /- Functorial action -/
   variables (f0 : A' → A) (f1 : B → B')
 
-  definition arrow_functor : (A → B) → (A' → B') := pi_functor f0 (λa, f1)
+  definition arrow_functor [unfold-full] : (A → B) → (A' → B') := pi_functor f0 (λa, f1)
 
   /- Equivalences -/
 
-  definition is_equiv_arrow_functor
+  definition is_equiv_arrow_functor [constructor]
     [H0 : is_equiv f0] [H1 : is_equiv f1] : is_equiv (arrow_functor f0 f1) :=
   is_equiv_pi_functor f0 (λa, f1)
 
-  definition arrow_equiv_arrow_rev (f0 : A' ≃ A) (f1 : B ≃ B') : (A → B) ≃ (A' → B') :=
+  definition arrow_equiv_arrow_rev [constructor] (f0 : A' ≃ A) (f1 : B ≃ B')
+    : (A → B) ≃ (A' → B') :=
   equiv.mk _ (is_equiv_arrow_functor f0 f1)
 
-  definition arrow_equiv_arrow (f0 : A ≃ A') (f1 : B ≃ B') : (A → B) ≃ (A' → B') :=
+  definition arrow_equiv_arrow [constructor] (f0 : A ≃ A') (f1 : B ≃ B') : (A → B) ≃ (A' → B') :=
   arrow_equiv_arrow_rev (equiv.symm f0) f1
 
-  definition arrow_equiv_arrow_right (f1 : B ≃ B') : (A → B) ≃ (A → B') :=
+  variable (A)
+  definition arrow_equiv_arrow_right [constructor] (f1 : B ≃ B') : (A → B) ≃ (A → B') :=
   arrow_equiv_arrow_rev equiv.refl f1
 
-  definition arrow_equiv_arrow_left_rev (f0 : A' ≃ A) : (A → B) ≃ (A' → B) :=
+  variables {A} (B)
+  definition arrow_equiv_arrow_left_rev [constructor] (f0 : A' ≃ A) : (A → B) ≃ (A' → B) :=
   arrow_equiv_arrow_rev f0 equiv.refl
 
-  definition arrow_equiv_arrow_left (f0 : A ≃ A') : (A → B) ≃ (A' → B) :=
+  definition arrow_equiv_arrow_left [constructor] (f0 : A ≃ A') : (A → B) ≃ (A' → B) :=
   arrow_equiv_arrow f0 equiv.refl
 
-  definition arrow_equiv_arrow_right' (f1 : A → (B ≃ B')) : (A → B) ≃ (A → B') :=
+  variables {B}
+  definition arrow_equiv_arrow_right' [constructor] (f1 : A → (B ≃ B')) : (A → B) ≃ (A → B') :=
   pi_equiv_pi_id f1
+
+  /- Equivalence if one of the types is contractible -/
+
+  variables (A B)
+  definition arrow_equiv_of_is_contr_left [constructor] [H : is_contr A] : (A → B) ≃ B :=
+  !pi_equiv_of_is_contr_left
+
+  definition arrow_equiv_of_is_contr_right [constructor] [H : is_contr B] : (A → B) ≃ unit :=
+  !pi_equiv_of_is_contr_right
+
+  /- Interaction with other type constructors -/
+
+  -- most of these are in the file of the other type constructor
+
+  definition arrow_empty_left [constructor] : (empty → B) ≃ unit :=
+  !pi_empty_left
+
+  definition arrow_unit_left [constructor] : (unit → B) ≃ B :=
+  !arrow_equiv_of_is_contr_left
+
+  definition arrow_unit_right [constructor] : (A → unit) ≃ unit :=
+  !arrow_equiv_of_is_contr_right
+
+  variables {A B}
 
   /- Transport -/
 
@@ -82,5 +110,13 @@ namespace pi
   definition arrow_pathover_constant {B : Type} {C : A → Type} {f : B → C a} {g : B → C a'}
     {p : a = a'} (r : Π(b : B), f b =[p] g b) : f =[p] g :=
   pi_pathover_constant r
+
+  /-
+     The fact that the arrow type preserves truncation level is a direct consequence
+     of the fact that pi's preserve truncation level
+  -/
+
+  definition is_trunc_arrow (B : Type) (n : trunc_index) [H : is_trunc n B] : is_trunc n (A → B) :=
+  _
 
 end pi
