@@ -11,6 +11,7 @@ Author: Leonardo de Moura
 #include "library/max_sharing.h"
 #include "library/module.h"
 #include "library/unfold_macros.h"
+#include "library/blast/blast_serializer.h"
 
 namespace lean {
 template<typename T>
@@ -350,4 +351,6 @@ void export_module_as_lowtext(std::ostream & out, environment const & env) {
 void export_all_as_lowtext(std::ostream & out, environment const & env) {
     exporter(out, env, true)();
 }
+
+
 }

@@ -33,6 +33,7 @@ Author: Leonardo de Moura
 #include "library/definition_cache.h"
 #include "library/declaration_index.h"
 #include "library/export.h"
+#include "library/blast_export.h"
 #include "library/error_handling/error_handling.h"
 #include "frontends/lean/parser.h"
 #include "frontends/lean/pp.h"
@@ -135,6 +136,7 @@ static void display_help(std::ostream & out) {
     std::cout << "Exporting data:\n";
     std::cout << "  --export=file -E  export final environment as textual low-level file\n";
     std::cout << "  --export-all=file -A  export final environment (and all dependencies) as textual low-level file\n";
+    std::cout << "  --export-blast=file -B export final environment (and all dependencies) for blast\n";
 }
 
 static char const * get_file_extension(char const * fname) {
@@ -164,6 +166,7 @@ static struct option g_long_options[] = {
     {"output",       required_argument, 0, 'o'},
     {"export",       required_argument, 0, 'E'},
     {"export-all",   required_argument, 0, 'A'},
+    {"export-blast", required_argument, 0, 'B'},
     {"memory",       required_argument, 0, 'M'},
     {"trust",        required_argument, 0, 't'},
     {"discard",      no_argument,       0, 'r'},
@@ -267,6 +270,7 @@ int main(int argc, char ** argv) {
     optional<unsigned> column;
     optional<std::string> export_txt;
     optional<std::string> export_all_txt;
+    optional<std::string> export_blast_txt;
     bool show_goal = false;
     bool show_hole = false;
     bool show_info = false;
@@ -380,6 +384,9 @@ int main(int argc, char ** argv) {
             break;
         case 'A':
             export_all_txt = std::string(optarg);
+            break;
+        case 'B':
+            export_blast_txt = std::string(optarg);
             break;
         default:
             std::cerr << "Unknown command line option\n";
@@ -537,6 +544,11 @@ int main(int argc, char ** argv) {
             std::ofstream out(*export_all_txt);
             export_all_as_lowtext(out, env);
         }
+        if (export_blast_txt) {
+            std::ofstream out(*export_blast_txt);
+            export_all_for_blast(out, env);
+        }
+
         return ok ? 0 : 1;
     } catch (lean::throwable & ex) {
         lean::display_error(diagnostic(env, ios), nullptr, ex);

@@ -7,6 +7,8 @@ Author: Leonardo de Moura
 #pragma once
 #include "kernel/environment.h"
 namespace lean {
+
 void export_module_as_lowtext(std::ostream & out, environment const & env);
 void export_all_as_lowtext(std::ostream & out, environment const & env);
+
 }
