@@ -59,7 +59,7 @@ void write_export_declaration(serializer & s, environment const & env, declarati
 
     if (d.is_definition()) { s << d.get_value(); }
     if (idecls) { 
-        /* Not currently handling mutually inductive types */
+        /* TODO(dselsam) not currently handling mutually inductive types */
         assert(length(std::get<2>(*idecls)) == 1); 
         inductive_decl idecl = head(std::get<2>(*idecls));
         list<intro_rule> irs = inductive_decl_intros(idecl);
@@ -74,29 +74,6 @@ void write_export_declaration(serializer & s, environment const & env, declarati
 
 }
 
-export_declaration read_export_declaration(deserializer & d) {
-    struct export_declaration edecl;
-    edecl.is_inductive_type = d.read_bool();
-    edecl.is_constructor = d.read_bool();
-    edecl.is_recursor = d.read_bool();
-    edecl.is_quot_assumption = d.read_bool();
-    edecl.in_prop = d.read_bool();
-    edecl.reducible_status = d.read_char();
-    edecl.n = read_name(d);
-    edecl.type = read_expr(d);
-    if (d.read_bool()) {
-        /* is definition */
-        edecl.val = read_expr(d);
-    }
-    if (edecl.is_inductive_type) {
-        while (d.read_bool()) {
-            edecl.constructor_types.push_back(read_expr(d));
-        }
-    }
-    return edecl;
-}
-
-#include <iostream>
 void export_all_for_blast(std::ostream & out, environment const & env) {
     serializer s(out);
     env.for_each_declaration([&](declaration const & d) {
@@ -106,13 +83,5 @@ void export_all_for_blast(std::ostream & out, environment const & env) {
     s << false;
 }
 
-std::vector<export_declaration> import_blast(std::istream & in) {
-    deserializer d(in);
-    std::vector<export_declaration> edecls;
-    while (d.read_bool()) {
-        edecls.push_back(read_export_declaration(d));
-    }
-    return edecls;
-}
 
 }
