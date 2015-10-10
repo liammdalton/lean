@@ -1,16 +1,19 @@
 #include "library/blast/blast_serializer.h"
 #include "library/kernel_serializer.h"
 #include "kernel/expr.h"
+#include "kernel/for_each_fn.h"
 #include "kernel/environment.h"
 #include "kernel/declaration.h"
 
 #include "kernel/inductive/inductive.h"
 #include "util/debug.h"
 #include <utility>
+#include <set>
 #include <assert.h>
 
 namespace lean {
 
+using std::set;
 using inductive::is_inductive_decl;
 using inductive::inductive_decl;
 using inductive::inductive_decls;
@@ -79,6 +82,29 @@ void export_all_for_blast(std::ostream & out, environment const & env) {
     env.for_each_declaration([&](declaration const & d) {
             s << true;
             write_export_declaration(s,env,d);
+        });
+    s << false;
+}
+
+void export_dependency_dataset_for_blast(std::ostream & out, environment const & env) {
+    serializer s(out);
+    
+    env.for_each_declaration([&](declaration const & lem) {
+            if (lem.is_theorem()) {
+                set<name> dependencies;
+                for_each(lem.get_value(), [&](expr const & e, unsigned) {
+                        if (is_constant(e) && !is_prefix_of(name("eq"),const_name(e))) {
+                            auto dep = env.get(const_name(e));
+                            if (dep.is_theorem()) {
+                                dependencies.insert(dep.get_name());
+                            }
+                        }
+                        return true;
+                    });
+                for (name n : dependencies) {
+                    s << true << lem.get_name() << n;
+                }
+            }
         });
     s << false;
 }

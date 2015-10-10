@@ -10,5 +10,6 @@
 namespace lean {
 
 void export_all_for_blast(std::ostream & out, environment const & env);
+void export_dependency_dataset_for_blast(std::ostream & out, environment const & env);
 
 }

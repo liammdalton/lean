@@ -547,6 +547,7 @@ int main(int argc, char ** argv) {
         if (export_blast_txt) {
             std::ofstream out(*export_blast_txt);
             export_all_for_blast(out, env);
+            export_dependency_dataset_for_blast(out, env);
         }
 
         return ok ? 0 : 1;
