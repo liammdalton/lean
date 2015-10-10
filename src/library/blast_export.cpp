@@ -6,6 +6,9 @@
 #include "kernel/declaration.h"
 
 #include "kernel/inductive/inductive.h"
+#include "library/unfold_macros.h"
+#include "library/max_sharing.h"
+
 #include "util/debug.h"
 #include <utility>
 #include <set>
@@ -45,7 +48,7 @@ int reducible_status_to_int(reducible_status status) {
 
 bool in_prop(declaration const & d) { return d.is_axiom() || d.is_theorem(); }
 
-void write_export_declaration(serializer & s, environment const & env, declaration const & d) {
+void write_export_declaration(serializer & s, environment const & env, declaration const & d, max_sharing_fn & max_sharing) {
     optional<inductive_decls> idecls = is_inductive_decl(env,d.get_name());
     optional<name> ir_name = is_intro_rule(env,d.get_name());
     optional<name> er_name = is_elim_rule(env,d.get_name());
@@ -57,10 +60,10 @@ void write_export_declaration(serializer & s, environment const & env, declarati
       << in_prop(d)
       << reducible_status_to_int(get_reducible_status(env,d.get_name()))
       << d.get_name() 
-      << d.get_type() 
+      << max_sharing(unfold_all_macros(env, d.get_type()))
       << d.is_definition();
 
-    if (d.is_definition()) { s << d.get_value(); }
+    if (d.is_definition()) { s << max_sharing(unfold_all_macros(env,d.get_value())); }
     if (idecls) { 
         /* TODO(dselsam) not currently handling mutually inductive types */
         assert(length(std::get<2>(*idecls)) == 1); 
@@ -79,9 +82,11 @@ void write_export_declaration(serializer & s, environment const & env, declarati
 
 void export_all_for_blast(std::ostream & out, environment const & env) {
     serializer s(out);
+    max_sharing_fn max_sharing;
+
     env.for_each_declaration([&](declaration const & d) {
             s << true;
-            write_export_declaration(s,env,d);
+            write_export_declaration(s,env,d,max_sharing);
         });
     s << false;
 }
