@@ -46,6 +46,7 @@ definition congruence  : tactic := builtin
 definition rotate_left (k : num) := builtin
 definition rotate_right (k : num) := builtin
 definition rotate (k : num) := rotate_left k
+definition norm_num    : tactic := builtin
 
 -- This is just a trick to embed expressions into tactics.
 -- The nested expressions are "raw". They tactic should
@@ -100,6 +101,10 @@ definition krewrite_tac (e : expr_list) : tactic := builtin
 --  - t : tactic for discharging conditions
 --  - l : location
 definition simp_tac (e : expr_list) (n : identifier_list) (x : identifier_list) (t : option tactic) (l : expr) : tactic := builtin
+-- Arguments:
+--  - ls : lemmas to be used (if not provided, then blast will choose them)
+--  - ds : definitions that can be unfolded (if not provided, then blast will choose them)
+definition blast (ls : opt_identifier_list) (ds : opt_identifier_list) : tactic := builtin
 
 -- with_options_tac is just a marker for the builtin 'with_options' notation
 definition with_options_tac (o : expr) (t : tactic) : tactic := builtin

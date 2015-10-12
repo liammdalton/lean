@@ -6,10 +6,10 @@ Author: Leonardo de Moura, Jeremy Avigad
 prelude
 import init.num init.wf
 
-definition pair := @prod.mk
+definition pair [constructor] := @prod.mk
 notation A × B := prod A B
 -- notation for n-ary tuples
-notation `(` h `,` t:(foldl `,` (e r, prod.mk r e) h) `)` := t
+notation `(` h `, ` t:(foldl `, ` (e r, prod.mk r e) h) `)` := t
 
 namespace prod
   notation [parsing-only] A * B := prod A B

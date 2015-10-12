@@ -18,8 +18,11 @@ Author: Leonardo de Moura
 #include "util/memory_pool.h"
 #include "kernel/expr.h"
 #include "kernel/expr_eq_fn.h"
+#include "kernel/expr_sets.h"
 #include "kernel/free_vars.h"
 #include "kernel/for_each_fn.h"
+#include "kernel/abstract.h"
+#include "kernel/instantiate.h"
 
 #ifndef LEAN_INITIAL_EXPR_CACHE_CAPACITY
 #define LEAN_INITIAL_EXPR_CACHE_CAPACITY 1024*16
@@ -303,27 +306,39 @@ expr_macro::~expr_macro() {
 
 // =======================================
 // Constructors
-
-#ifdef LEAN_CACHE_EXPRS
-typedef lru_cache<expr, expr_hash, is_bi_equal_proc> expr_cache;
 LEAN_THREAD_VALUE(bool, g_expr_cache_enabled, true);
-MK_THREAD_LOCAL_GET(expr_cache, get_expr_cache, LEAN_INITIAL_EXPR_CACHE_CAPACITY);
-bool enable_expr_caching(bool f) {
-    bool r = g_expr_cache_enabled;
-    g_expr_cache_enabled = f;
-    return r;
-}
+typedef typename std::unordered_set<expr, expr_hash, is_bi_equal_proc> expr_cache;
+MK_THREAD_LOCAL_GET_DEF(expr_cache, get_expr_cache);
 inline expr cache(expr const & e) {
     if (g_expr_cache_enabled) {
-        if (auto r = get_expr_cache().insert(e))
-            return *r;
+        expr_cache & cache = get_expr_cache();
+        auto it = cache.find(e);
+        if (it != cache.end()) {
+            return *it;
+        } else {
+            cache.insert(e);
+        }
     }
     return e;
 }
-#else
-inline expr cache(expr && e) { return e; }
-bool enable_expr_caching(bool) { return true; } // NOLINT
-#endif
+bool enable_expr_caching(bool f) {
+    bool r1 = enable_level_caching(f);
+    bool r2 = g_expr_cache_enabled;
+    lean_verify(r1 == r2);
+    expr_cache new_cache;
+    get_expr_cache().swap(new_cache);
+    if (f) {
+        clear_abstract_cache();
+        clear_instantiate_cache();
+        cache(mk_Prop());
+        cache(mk_Type());
+    }
+    g_expr_cache_enabled = f;
+    return r2;
+}
+bool is_cached(expr const & e) {
+    return get_expr_cache().find(e) != get_expr_cache().end();
+}
 
 expr mk_var(unsigned idx, tag g) {
     return cache(expr(new (get_var_allocator().allocate()) expr_var(idx, g)));
@@ -653,6 +668,7 @@ void initialize_expr() {
 }
 
 void finalize_expr() {
+    enable_expr_caching(false);
     delete g_Prop;
     delete g_Type1;
     delete g_dummy;

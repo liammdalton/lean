@@ -31,7 +31,7 @@ namespace iso
   abbreviation inverse [unfold 6] := @is_iso.inverse
   abbreviation left_inverse [unfold 6] := @is_iso.left_inverse
   abbreviation right_inverse [unfold 6] := @is_iso.right_inverse
-  postfix `⁻¹` := inverse
+  postfix ⁻¹ := inverse
   --a second notation for the inverse, which is not overloaded
   postfix [parsing-only] `⁻¹ʰ`:std.prec.max_plus := inverse -- input using \-1h
 
@@ -48,7 +48,7 @@ namespace iso
   split_epi.mk !right_inverse
 
   definition is_iso_id [instance] [priority 500] (a : ob) : is_iso (ID a) :=
-  is_iso.mk !id_comp !id_comp
+  is_iso.mk !id_id !id_id
 
   definition is_iso_inverse [instance] [priority 200] (f : a ⟶ b) [H : is_iso f] : is_iso f⁻¹ :=
   is_iso.mk !right_inverse !left_inverse
@@ -89,13 +89,13 @@ namespace iso
   by cases p;apply inverse_unique
 
   definition retraction_id (a : ob) : retraction_of (ID a) = id :=
-  retraction_eq !id_comp
+  retraction_eq !id_id
 
   definition section_id (a : ob) : section_of (ID a) = id :=
-  section_eq !id_comp
+  section_eq !id_id
 
   definition id_inverse (a : ob) [H : is_iso (ID a)] : (ID a)⁻¹ = id :=
-  inverse_eq_left !id_comp
+  inverse_eq_left !id_id
 
   definition split_mono_comp [instance] [priority 150] (g : b ⟶ c) (f : a ⟶ b)
     [Hf : split_mono f] [Hg : split_mono g] : split_mono (g ∘ f) :=
@@ -131,7 +131,7 @@ structure iso {ob : Type} [C : precategory ob] (a b : ob) :=
   (to_hom : hom a b)
   [struct : is_iso to_hom]
 
-  infix `≅`:50 := iso
+  infix ` ≅ `:50 := iso
   attribute iso.struct [instance] [priority 4000]
 
 namespace iso
@@ -145,12 +145,14 @@ namespace iso
     (H1 : g ∘ f = id) (H2 : f ∘ g = id) :=
   @(mk f) (is_iso.mk H1 H2)
 
+  variable {C}
   definition to_inv [unfold 5] (f : a ≅ b) : b ⟶ a := (to_hom f)⁻¹
   definition to_left_inverse  [unfold 5] (f : a ≅ b) : (to_hom f)⁻¹ ∘ (to_hom f) = id :=
   left_inverse  (to_hom f)
   definition to_right_inverse [unfold 5] (f : a ≅ b) : (to_hom f) ∘ (to_hom f)⁻¹ = id :=
   right_inverse (to_hom f)
 
+  variable [C]
   protected definition refl [constructor] (a : ob) : a ≅ a :=
   mk (ID a)
 
@@ -160,15 +162,17 @@ namespace iso
   protected definition trans [constructor] ⦃a b c : ob⦄ (H1 : a ≅ b) (H2 : b ≅ c) : a ≅ c :=
   mk (to_hom H2 ∘ to_hom H1)
 
-  infixl `⬝i`:75 := iso.trans
+  infixl ` ⬝i `:75 := iso.trans
   postfix [parsing-only] `⁻¹ⁱ`:(max + 1) := iso.symm
 
   definition iso_mk_eq {f f' : a ⟶ b} [H : is_iso f] [H' : is_iso f'] (p : f = f')
       : iso.mk f = iso.mk f' :=
   apd011 iso.mk p !is_hprop.elim
 
+  variable {C}
   definition iso_eq {f f' : a ≅ b} (p : to_hom f = to_hom f') : f = f' :=
   by (cases f; cases f'; apply (iso_mk_eq p))
+  variable [C]
 
   -- The structure for isomorphism can be characterized up to equivalence by a sigma type.
   protected definition sigma_char ⦃a b : ob⦄ : (Σ (f : hom a b), is_iso f) ≃ (a ≅ b) :=
@@ -202,7 +206,7 @@ namespace iso
 
   definition iso_of_eq_con (p : a = b) (q : b = c)
     : iso_of_eq (p ⬝ q) = iso.trans (iso_of_eq p) (iso_of_eq q) :=
-  eq.rec_on q (eq.rec_on p (iso_eq !id_comp⁻¹))
+  eq.rec_on q (eq.rec_on p (iso_eq !id_id⁻¹))
 
   section
     open funext

@@ -18,10 +18,10 @@ The rows indicate the chapters, the columns the sections.
 | Ch 1  | . | . | . | . | + | + | + | + | + | .  | +  | +  |    |    |    |
 | Ch 2  | + | + | + | + | . | + | + | + | + | +  | +  | +  | +  | +  | +  |
 | Ch 3  | + | + | + | + | ½ | + | + | - | + | .  | +  |    |    |    |    |
-| Ch 4  | - | + | - | + | . | + | - | - | + |    |    |    |    |    |    |
+| Ch 4  | - | + | + | + | . | + | ½ | + | + |    |    |    |    |    |    |
 | Ch 5  | - | . | ½ | - | - | . | . | ½ |   |    |    |    |    |    |    |
-| Ch 6  | . | + | + | + | + | ½ | ½ | ¼ | ¼ | ¼  | ¾  | -  | .  |    |    |
-| Ch 7  | + | + | + | - | - | - | - |   |   |    |    |    |    |    |    |
+| Ch 6  | . | + | + | + | + | ½ | ½ | + | ¾ | ¼  | ¾  | -  | .  |    |    |
+| Ch 7  | + | + | + | - | ½ | - | - |   |   |    |    |    |    |    |    |
 | Ch 8  | ¾ | - | - | - | - | - | - | - | - | -  |    |    |    |    |    |
 | Ch 9  | ¾ | + | + | ¼ | ¾ | ½ | - | - | - |    |    |    |    |    |    |
 | Ch 10 | - | - | - | - | - |   |   |   |   |    |    |    |    |    |    |
@@ -86,12 +86,12 @@ Chapter 4: Equivalences
 
 - 4.1 (Quasi-inverses): not formalized
 - 4.2 (Half adjoint equivalences): [init.equiv](init/equiv.hlean) and [types.equiv](types/equiv.hlean)
-- 4.3 (Bi-invertible maps): not formalized
+- 4.3 (Bi-invertible maps): [function](function.hlean) ("biinv f" is "is_retraction f × is_section f")
 - 4.4 (Contractible fibers): [types.equiv](types/equiv.hlean)
 - 4.5 (On the definition of equivalences): no formalizable content
 - 4.6 (Surjections and embeddings): [function](function.hlean)
-- 4.7 (Closure properties of equivalences): not formalized
-- 4.8 (The object classifier): not formalized
+- 4.7 (Closure properties of equivalences): 4.7.1 in [init.equiv](init/equiv.hlean); 4.7.2 in [function](function.hlean); 4.7.5 and 4.7.7 in [types.sigma](types/sigma.hlean) (sigma_functor is a generalization of total(f)); and 4.7.6 in 4.7.6 in [types.fiber](types/fiber.hlean).
+- 4.8 (The object classifier): 4.8.1 and 4.8.2 in [types.fiber](types/fiber.hlean); 4.8.3 and 4.8.4 in [types.univ](types/univ.hlean)
 - 4.9 (Univalence implies function extensionality): [init.funext](init/funext.hlean)
 
 Chapter 5: Induction
@@ -110,15 +110,15 @@ Chapter 6: Higher inductive types
 ---------
 
 - 6.1 (Introduction): no formalizable content
-- 6.2 (Induction principles and dependent paths): dependent paths in [init.pathover](init/pathover.hlean), circle in [hit.circle](hit/circle.hlean)
-- 6.3 (The interval): [hit.interval](hit/interval.hlean)
-- 6.4 (Circles and spheres): [hit.circle](hit/circle.hlean)
-- 6.5 (Suspensions): [hit.suspension](hit/suspension.hlean) (we define the circle to be the suspension of bool, but Lemma 6.5.1 is similar to proving the ordinary induction principle for the circle in [hit.circle](hit/circle.hlean)) and a bit in [hit.sphere](hit/sphere.hlean) and [types.pointed](types/pointed.hlean)
-- 6.6 (Cell complexes): we define the torus using the quotient, see [hit.two_quotient](hit/two_quotient.hlean) and [hit.torus](hit/torus.hlean) (no dependent eliminator defined yet)
-- 6.7 (Hubs and spokes): [hit.two_quotient](hit/two_quotient.hlean) and [hit.torus](hit/torus.hlean) (no dependent eliminator defined yet)
-- 6.8 (Pushouts): [hit.pushout](hit/pushout.hlean) (not everything yet)
-- 6.9 (Truncations): [hit.trunc](hit/trunc.hlean) (not everything yet)
-- 6.10 (Quotients): [hit.set_quotient](hit/set_quotient.hlean), [types.int](types/int/int.md) (folder) (not everything yet)
+- 6.2 (Induction principles and dependent paths): dependent paths in [init.pathover](init/pathover.hlean), circle in [homotopy.circle](homotopy/circle.hlean)
+- 6.3 (The interval): [homotopy.interval](homotopy/interval.hlean)
+- 6.4 (Circles and spheres): [homotopy.sphere](homotopy/sphere.hlean) and [homotopy.circle](homotopy/circle.hlean)
+- 6.5 (Suspensions): [homotopy.suspension](homotopy/suspension.hlean) (we define the circle to be the suspension of bool, but Lemma 6.5.1 is similar to proving the ordinary induction principle for the circle in [homotopy.circle](homotopy/circle.hlean)) and a bit in [homotopy.sphere](homotopy/sphere.hlean) and [types.pointed](types/pointed.hlean)
+- 6.6 (Cell complexes): we define the torus using the quotient, see [hit.two_quotient](hit/two_quotient.hlean) and [homotopy.torus](homotopy/torus.hlean) (no dependent eliminator defined yet)
+- 6.7 (Hubs and spokes): [hit.two_quotient](hit/two_quotient.hlean) and [homotopy.torus](homotopy/torus.hlean) (no dependent eliminator defined yet)
+- 6.8 (Pushouts): [hit.pushout](hit/pushout.hlean). Some of the "standard homotopy-theoretic constructions" have separate files, although not all of them have been defined explicitly yet
+- 6.9 (Truncations): [hit.trunc](hit/trunc.hlean) (except Lemma 6.9.3)
+- 6.10 (Quotients): [hit.set_quotient](hit/set_quotient.hlean) (up to 6.10.3). We define integers differently, to make them compute, in the folder [types.int](types/int/int.md). 6.10.13 is in [types.int.hott](types/int/hott.hlean)
 - 6.11 (Algebra): [algebra.group](algebra/group.hlean), [algebra.fundamental_group](algebra/fundamental_group.hlean) (no homotopy groups yet)
 - 6.12 (The flattening lemma): not formalized yet
 - 6.13 (The general syntax of higher inductive definitions): no formalizable content
@@ -130,14 +130,16 @@ Chapter 7: Homotopy n-types
 - 7.2 (Uniqueness of identity proofs and Hedberg’s theorem): [init.hedberg](init/hedberg.hlean) and [types.trunc](types/trunc.hlean)
 - 7.3 (Truncations): [init.hit](init/hit.hlean), [hit.trunc](hit/trunc.hlean) and [types.trunc](types/trunc.hlean)
 - 7.4 (Colimits of n-types): not formalized
-- 7.5 (Connectedness): not formalized
+- 7.5 (Connectedness): [homotopy.connectedness](homotopy/connectedness.hlean) (just the beginning so far)
 - 7.6 (Orthogonal factorization): not formalized 
 - 7.7 (Modalities): not formalized, and may be unformalizable in general because it's unclear how to define modalities
 
 Chapter 8: Homotopy theory
 ---------
 
-- 8.1 (π_1(S^1)): [hit.circle](hit/circle.hlean) (only one of the proofs)
+Unless otherwise noted, the files are in the folder [homotopy](homotopy/homotopy.md)
+
+- 8.1 (π_1(S^1)): [homotopy.circle](homotopy/circle.hlean) (only one of the proofs)
 - 8.2 (Connectedness of suspensions): not formalized
 - 8.3 (πk≤n of an n-connected space and π_{k<n}(S^n)): not formalized
 - 8.4 (Fiber sequences and the long exact sequence): not formalized 

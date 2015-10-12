@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 */
 #pragma once
+#include <string>
 #include <utility>
 #include <limits>
 #include "util/pair.h"
@@ -93,6 +94,7 @@ private:
     optional<result> pp_notation(expr const & e);
 
     result add_paren_if_needed(result const & r, unsigned bp);
+    std::pair<bool, token_table const *> needs_space_sep(token_table const * t, std::string const &s1, std::string const &s2) const;
 
     result pp_overriden_local_ref(expr const & e);
     bool ignore_local_ref(expr const & e);

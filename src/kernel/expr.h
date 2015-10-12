@@ -477,6 +477,7 @@ inline expr mk_app(expr const & e1, expr const & e2, expr const & e3, expr const
 /** \brief Return application (...((f x_{n-1}) x_{n-2}) ... x_0) */
 expr mk_app_vars(expr const & f, unsigned n, tag g = nulltag);
 
+/** \brief Enable hash-consing (caching) for expressions (and universe levels) */
 bool enable_expr_caching(bool f);
 /** \brief Helper class for temporarily enabling/disabling expression caching */
 struct scoped_expr_caching {
@@ -484,6 +485,8 @@ struct scoped_expr_caching {
     scoped_expr_caching(bool f) { m_old = enable_expr_caching(f); }
     ~scoped_expr_caching() { enable_expr_caching(m_old); }
 };
+/** \brief Return true iff \c e is in the cache */
+bool is_cached(expr const & e);
 // =======================================
 
 // =======================================
