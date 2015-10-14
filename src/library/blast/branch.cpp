@@ -10,14 +10,6 @@ Author: Leonardo de Moura
 
 namespace lean {
 namespace blast {
-void branch::fix_hypothesis(unsigned idx) {
-    auto h = m_context.find(idx);
-    lean_assert(h);
-    hypothesis new_h(*h);
-    new_h.mark_fixed();
-    m_context.insert(idx, new_h);
-}
-
 struct hypothesis_depth_lt {
     branch const & m_branch;
     hypothesis_depth_lt(branch const & b): m_branch(b) {}
@@ -50,13 +42,13 @@ void branch::add_forward_dep(unsigned hidx_user, unsigned hidx_provider) {
 }
 
 void branch::add_deps(expr const & e, hypothesis & h_user, unsigned hidx_user) {
-    if (!has_lref(e) && !has_mref(e))
+    if (!has_href(e) && !has_mref(e))
         return; // nothing to be done
     for_each(e, [&](expr const & l, unsigned) {
-            if (!has_lref(l) && !has_mref(l)) {
+            if (!has_href(l) && !has_mref(l)) {
                 return false;
-            } else if (is_lref(l)) {
-                unsigned hidx_provider = lref_index(l);
+            } else if (is_href(l)) {
+                unsigned hidx_provider = href_index(l);
                 hypothesis const * h_provider = get(hidx_provider);
                 lean_assert(h_provider);
                 if (h_user.m_depth <= h_provider->m_depth)
@@ -77,27 +69,30 @@ void branch::add_deps(expr const & e, hypothesis & h_user, unsigned hidx_user) {
 
 void branch::add_deps(hypothesis & h_user, unsigned hidx_user) {
     add_deps(h_user.m_type, h_user, hidx_user);
-    if (h_user.m_value)
-        add_deps(*h_user.m_value, h_user, hidx_user);
+    if (!blast::is_local(h_user.m_value)) {
+        add_deps(h_user.m_value, h_user, hidx_user);
+    }
 }
 
-expr branch::add_hypothesis(name const & n, expr const & type, optional<expr> const & value, optional<expr> const & jst) {
+expr branch::add_hypothesis(name const & n, expr const & type, expr const & value) {
     hypothesis new_h;
     new_h.m_name          = n;
     new_h.m_type          = type;
     new_h.m_value         = value;
-    new_h.m_justification = jst;
     unsigned new_hidx = m_next;
     m_next++;
     add_deps(new_h, new_hidx);
     m_context.insert(new_hidx, new_h);
-    return blast::mk_lref(new_hidx);
+    if (new_h.is_assumption())
+        m_assumption.insert(new_hidx);
+    m_todo.insert(new_hidx);
+    return blast::mk_href(new_hidx);
 }
 
 static name * g_prefix = nullptr;
 
-expr branch::add_hypothesis(expr const & type, optional<expr> const & value, optional<expr> const & jst) {
-    return add_hypothesis(name(*g_prefix, m_next), type, value, jst);
+expr branch::add_hypothesis(expr const & type, expr const & value) {
+    return add_hypothesis(name(*g_prefix, m_next), type, value);
 }
 
 bool branch::hidx_depends_on(unsigned hidx_user, unsigned hidx_provider) const {
@@ -111,12 +106,12 @@ bool branch::hidx_depends_on(unsigned hidx_user, unsigned hidx_provider) const {
 void branch::set_target(expr const & t) {
     m_target = t;
     m_target_deps.clear();
-    if (has_lref(t) || has_mref(t)) {
+    if (has_href(t) || has_mref(t)) {
         for_each(t, [&](expr const & e, unsigned) {
-                if (!has_lref(e) && !has_mref(e)) {
+                if (!has_href(e) && !has_mref(e)) {
                     return false;
-                } else if (is_lref(e)) {
-                    m_target_deps.insert(lref_index(e));
+                } else if (is_href(e)) {
+                    m_target_deps.insert(href_index(e));
                     return false;
                 } else if (is_mref(e)) {
                     m_mvar_idxs.insert(mref_index(e));

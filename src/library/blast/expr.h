@@ -12,19 +12,15 @@ namespace lean {
 namespace blast {
 // API for creating maximally shared terms used by the blast tactic.
 // The API assumes there is a single blast tactic using theses terms.
-// The hash-consing tables are thread local.
+// The expression hash-consing tables are thread local and implemented
+// in the kernel
 
 // Remark: All procedures assume the children levels and expressions are maximally shared.
 // That is, it assumes they have been created using the APIs provided by this module.
 
 // Auxiliary object for resetting the the thread local hash-consing tables.
-// Its destructor restores the state of the hash-consing tables.
-class scope_hash_consing {
-    void * m_level_table;
-    void * m_expr_table;
-    void * m_var_array;
-    void * m_mref_array;
-    void * m_lref_array;
+// It also uses an assertion to make sure it is not being used in a recursion.
+class scope_hash_consing : public scoped_expr_caching {
 public:
     scope_hash_consing();
     ~scope_hash_consing();
@@ -37,18 +33,24 @@ level mk_imax(level const & l1, level const & l2);
 level mk_succ(level const & l);
 level mk_param_univ(name const & n);
 level mk_global_univ(name const & n);
-level mk_meta_univ(name const & n);
+level mk_uref(unsigned idx);
+
+bool is_uref(level const & l);
+unsigned uref_index(level const & l);
 
 expr mk_var(unsigned idx);
-// mk_lref and mk_mref are helper functions for creating local constants and meta-variables used in the blast tactic.
+// mk_href and mk_mref are helper functions for creating hypotheses and meta-variables used in the blast tactic.
 // Remark: the local constants and metavariables manipulated by the blast tactic do **not** store their types.
-expr mk_lref(unsigned idx);
+expr mk_href(unsigned idx);
 expr mk_mref(unsigned idx);
 expr mk_sort(level const & l);
 expr mk_constant(name const & n, levels const & ls);
+expr mk_local(name const & n, name const & pp_n, expr const & t, binder_info const & bi);
 expr mk_app(expr const & f, expr const & a);
 expr mk_app(expr const & f, unsigned num_args, expr const * args);
 expr mk_app(unsigned num_args, expr const * args);
+expr mk_rev_app(expr const & f, unsigned num_args, expr const * args);
+expr mk_rev_app(unsigned num_args, expr const * args);
 expr mk_binding(expr_kind k, name const & n, expr const & t, expr const & e, binder_info const & bi);
 inline expr mk_pi(name const & n, expr const & t, expr const & e, binder_info const & bi) {
     return blast::mk_binding(expr_kind::Pi, n, t, e, bi);
@@ -67,44 +69,30 @@ inline expr mk_lambda(name const & n, expr const & t, expr const & e) {
 }
 expr mk_macro(macro_definition const & m, unsigned num, expr const * args);
 
-bool is_lref(expr const & e);
-unsigned lref_index(expr const & e);
+bool is_href(expr const & e);
+unsigned href_index(expr const & e);
 bool is_mref(expr const & e);
 unsigned mref_index(expr const & e);
-/** \brief Return true iff \c e contain lref's */
-bool has_lref(expr const & e);
+/** \brief Return true iff \c e contain href's */
+bool has_href(expr const & e);
 /** \brief Return true iff \c e contain mref's */
 bool has_mref(expr const & e);
 
+bool is_local(expr const & e);
+unsigned local_index(expr const & e);
+expr const & local_type(expr const & e);
+bool has_local(expr const & e);
+
 level update_succ(level const & l, level const & new_arg);
 level update_max(level const & l, level const & new_lhs, level const & new_rhs);
-
-level replace(level const & l, std::function<optional<level>(level const & l)> const & f);
 
 expr update_app(expr const & e, expr const & new_fn, expr const & new_arg);
 expr update_metavar(expr const & e, expr const & new_type);
 expr update_binding(expr const & e, expr const & new_domain, expr const & new_body);
 expr update_sort(expr const & e, level const & new_level);
 expr update_constant(expr const & e, levels const & new_levels);
+expr update_local(expr const & e, expr const & new_type);
 expr update_macro(expr const & e, unsigned num, expr const * args);
-
-expr replace(expr const & e, std::function<optional<expr>(expr const &, unsigned)> const & f);
-inline expr replace(expr const & e, std::function<optional<expr>(expr const &)> const & f) {
-    return blast::replace(e, [&](expr const & e, unsigned) { return f(e); });
-}
-
-expr lift_free_vars(expr const & e, unsigned s, unsigned d);
-expr lift_free_vars(expr const & e, unsigned d);
-
-expr instantiate(expr const & e, unsigned n, expr const * s);
-expr instantiate_rev(expr const & e, unsigned n, expr const * s);
-
-level instantiate(level const & l, level_param_names const & ps, levels const & ls);
-expr  instantiate_univ_params(expr const & e, level_param_names const & ps, levels const & ls);
-expr  instantiate_type_univ_params(declaration const & d, levels const & ls);
-expr  instantiate_value_univ_params(declaration const & d, levels const & ls);
-
-expr abstract_lrefs(expr const & e, unsigned n, expr const * s);
 
 void initialize_expr();
 void finalize_expr();

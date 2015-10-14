@@ -150,17 +150,32 @@ auto scanner::read_quoted_symbol() -> token_kind {
     if (std::isdigit(curr()))
         throw_exception("first character of a quoted symbols cannot be a digit");
     m_buffer.clear();
+    bool start = true;
+    bool trailing_space = false;
     while (true) {
         check_not_eof("unexpected quoted identifier");
         char c = curr();
         next();
-        if (c == '`') {
-            m_name_val = name(m_buffer.c_str());
-            return token_kind::QuotedSymbol;
-        } else if (c != ' ' && c != '\"' && c != '\n' && c != '\t') {
-            m_buffer += c;
-        } else {
-            throw_exception("invalid quoted symbol, invalid character");
+        switch (c) {
+            case '`':
+                if (start)
+                    throw_exception("unexpected end of quoted symbol");
+                m_name_val = name(m_buffer.c_str());
+                return token_kind::QuotedSymbol;
+            case '\"':
+            case '\n':
+            case '\t':
+                throw_exception("invalid quoted symbol, invalid character");
+            case ' ':
+                if (!start)
+                    trailing_space = true;
+                m_buffer += c;
+                break;
+            default:
+                start = false;
+                if (trailing_space)
+                    throw_exception("unexpected space inside of quoted symbol");
+                m_buffer += c;
         }
     }
 }
@@ -314,10 +329,10 @@ static bool is_id_first(buffer<char> const & cs, unsigned i) {
     return is_letter_like_unicode(u);
 }
 
-static bool is_id_rest(buffer<char> const & cs, unsigned i)  {
-    if (std::isalnum(cs[i]) || cs[i] == '_' || cs[i] == '\'')
+bool is_id_rest(char const * begin, char const * end) {
+    if (std::isalnum(*begin) || *begin == '_' || *begin == '\'')
         return true;
-    unsigned u = utf8_to_unicode(cs.begin() + i, cs.end());
+    unsigned u = utf8_to_unicode(begin, end);
     return is_letter_like_unicode(u) || is_super_sub_script_alnum_unicode(u);
 }
 
@@ -337,7 +352,7 @@ auto scanner::read_key_cmd_id() -> token_kind {
             unsigned i = id_sz;
             next_utf(cs);
             num_utfs++;
-            if (is_id_rest(cs, i)) {
+            if (is_id_rest(&cs[i], cs.end())) {
             } else if (cs[i] == '.') {
                 next_utf(cs);
                 num_utfs++;

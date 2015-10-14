@@ -458,14 +458,14 @@ namespace eq
 
   -- In Coq the variables P, Q and b are explicit, but in Lean we can probably have them implicit
   -- using the following notation
-  notation p `▸D`:65 x:64 := transportD _ p _ x
+  notation p ` ▸D `:65 x:64 := transportD _ p _ x
 
   -- Transporting along higher-dimensional paths
   definition transport2 [unfold 7] (P : A → Type) {x y : A} {p q : x = y} (r : p = q) (z : P x) :
     p ▸ z = q ▸ z :=
   ap (λp', p' ▸ z) r
 
-  notation p `▸2`:65 x:64 := transport2 _ p _ x
+  notation p ` ▸2 `:65 x:64 := transport2 _ p _ x
 
   -- An alternative definition.
   definition tr2_eq_ap10 (Q : A → Type) {x y : A} {p q : x = y} (r : p = q)
@@ -486,7 +486,7 @@ namespace eq
     {x1 x2 : A} (p : x1 = x2) (y : B x1) (z : C x1) (w : D x1 y z) : D x2 (p ▸ y) (p ▸ z) :=
   eq.rec_on p w
 
-  notation p `▸D2`:65 x:64 := transportD2 _ _ _ p _ _ x
+  notation p ` ▸D2 `:65 x:64 := transportD2 _ _ _ p _ _ x
 
   definition ap_tr_con_tr2 (P : A → Type) {x y : A} {p q : x = y} {z w : P x} (r : p = q)
       (s : z = w) :
@@ -559,7 +559,7 @@ namespace eq
   definition inverse2 [unfold 6] {p q : x = y} (h : p = q) : p⁻¹ = q⁻¹ :=
   eq.rec_on h idp
 
-  infixl `◾`:75 := concat2
+  infixl ` ◾ `:75 := concat2
   postfix [parsing-only] `⁻²`:(max+10) := inverse2 --this notation is abusive, should we use it?
 
   /- Whiskering -/
@@ -584,11 +584,11 @@ namespace eq
     whisker_right h idp = h :=
   eq.rec_on h (eq.rec_on p idp)
 
-  definition whisker_right_idp_left (p : x = y) (q : y = z) :
+  definition whisker_right_idp_left [unfold-full] (p : x = y) (q : y = z) :
     whisker_right idp q = idp :> (p ⬝ q = p ⬝ q) :=
   idp
 
-  definition whisker_left_idp_right (p : x = y) (q : y = z) :
+  definition whisker_left_idp_right [unfold-full] (p : x = y) (q : y = z) :
     whisker_left p idp = idp :> (p ⬝ q = p ⬝ q) :=
   idp
 
@@ -596,11 +596,11 @@ namespace eq
     (idp_con p) ⁻¹ ⬝ whisker_left idp h ⬝ idp_con q = h :=
   eq.rec_on h (eq.rec_on p idp)
 
-  definition con2_idp {p q : x = y} (h : p = q) :
+  definition con2_idp [unfold-full] {p q : x = y} (h : p = q) :
     h ◾ idp = whisker_right h idp :> (p ⬝ idp = q ⬝ idp) :=
   idp
 
-  definition idp_con2 {p q : x = y} (h : p = q) :
+  definition idp_con2 [unfold-full] {p q : x = y} (h : p = q) :
     idp ◾ h = whisker_left idp h :> (idp ⬝ p = idp ⬝ q) :=
   idp
 

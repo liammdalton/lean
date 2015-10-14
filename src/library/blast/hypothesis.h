@@ -25,23 +25,21 @@ class hypothesis {
     friend class branch;
     name               m_name;     // for pretty printing
     unsigned           m_active:1;
-    unsigned           m_fixed:1;  // occurs in the type of a metavariable, so we should not update its type.
     unsigned           m_depth;
     hypothesis_idx_set m_deps;     // hypotheses used by the type and/or value of this hypothesis.
     expr               m_type;
-    optional<expr>     m_value;
-    optional<expr>     m_justification;
+    expr               m_value;    // justification for this object.
+    // Remark: if blast::is_local(m_value) is true, then the hypothesis is an assumption
 public:
-    hypothesis():m_active(true), m_fixed(false), m_depth(0) {}
+    hypothesis():m_active(false), m_depth(0) {}
     name const & get_name() const { return m_name; }
     bool is_active() const { return m_active; }
     unsigned get_depth() const { return m_depth; }
     hypothesis_idx_set const & get_backward_deps() const { return m_deps; }
     expr const & get_type() const { return m_type; }
-    optional<expr> const & get_value() const { return m_value; }
-    optional<expr> const & get_justification() const { return m_justification; }
-    void mark_fixed() { m_fixed = true; }
+    expr const & get_value() const { return m_value; }
     /** \brief Return true iff this hypothesis depends on \c h. */
-    bool depends_on(expr const & h) const { return m_deps.contains(lref_index(h)); }
+    bool depends_on(expr const & h) const { return m_deps.contains(href_index(h)); }
+    bool is_assumption() const { return blast::is_local(m_value); }
 };
 }}
