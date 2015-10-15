@@ -13,6 +13,8 @@ Author: Leonardo de Moura
 #include "util/interrupt.h"
 #include "util/optional.h"
 #include "util/exception.h"
+#include <iostream>
+
 
 namespace lean {
 template<typename T>
@@ -27,6 +29,8 @@ class worker_queue {
     mutex                      m_result_mutex;
     mutex                      m_todo_mutex;
     condition_variable         m_todo_cv;
+    mutex                      m_no_todo_mutex;
+    condition_variable         m_no_todo_cv;
     unsigned                   m_todo_qhead;
     atomic<bool>               m_done;
     atomic<int>                m_failed_thread; // if >= 0, it has the index of a failing thread.
@@ -37,12 +41,13 @@ class worker_queue {
             check_interrupted();
             unique_lock<mutex> lk(m_todo_mutex);
             if (m_todo_qhead < m_todo.size()) {
+                //std::cout << "doing..." << std::endl;
                 task r = m_todo[m_todo_qhead];
                 m_todo_qhead++;
                 return optional<task>(r);
-            } else if (m_done) {
-                return optional<task>();
             } else {
+                //std::cout << "done..." << std::endl;
+                m_no_todo_cv.notify_one();
                 m_todo_cv.wait(lk);
             }
         }
@@ -68,6 +73,7 @@ public:
                                 while (auto t = next_task()) {
                                     add_result((*t)());
                                 }
+                                lean_assert(false);
                                 m_todo_cv.notify_all();
                             } catch (interrupted &) {
                             } catch (throwable & ex) {
@@ -83,7 +89,9 @@ public:
     worker_queue(unsigned num_threads):worker_queue(num_threads, [](){ return; }) {}
     ~worker_queue() { if (!m_done) join(); }
 
+
     void add(std::function<T()> const & fn) {
+        //std::cout << "add..." << std::endl;
         lean_assert(!m_done);
         {
             lock_guard<mutex> l(m_todo_mutex);
@@ -94,34 +102,25 @@ public:
 
     std::vector<T> const & join() {
         lean_assert(!m_done);
-        m_done = true;
+//        m_done = true;
         if (m_threads.empty()) {
             for (auto const & fn : m_todo) {
                 m_result.push_back(fn());
             }
-            m_todo.clear();
         } else {
-            try {
-                while (auto t = next_task()) {
-                    add_result((*t)());
-                }
-                m_todo_cv.notify_all();
-                for (thread_ptr & t : m_threads)
-                    t->join();
-            } catch (...) {
-                for (auto & th : m_threads)
-                    th->request_interrupt();
-                for (auto & th : m_threads)
-                    th->join();
-                throw;
+            unique_lock<mutex> lk(m_todo_mutex);
+            while (m_todo_qhead < m_todo.size()) {
+                //std::cout << "main..." << std::endl;
+                m_no_todo_cv.wait(lk);
             }
-            if (m_failed_thread >= 0)
-                m_thread_exceptions[m_failed_thread]->rethrow();
-            if (m_interrupted)
-                throw interrupted();
+            //std::cout << "return..." << std::endl;
         }
+        m_todo.clear();
+        m_todo_qhead = 0;
         return m_result;
     }
+
+    void clear_results() { m_result.clear(); }
 
     void interrupt() {
         m_interrupted = true;
