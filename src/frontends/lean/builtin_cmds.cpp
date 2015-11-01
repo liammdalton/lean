@@ -1145,7 +1145,7 @@ static environment unelaborate_cmd(parser & p) {
     expr e; level_param_names ls;
     std::tie(e, ls) = parse_local_expr(p);
 
-    expr u = unelaborate(env,list<expr>(),e);
+    expr u = unelaborate(env,p.ios(),list<expr>(),e);
 
     auto reg              = p.regular_stream();
     flycheck_information info(reg);
