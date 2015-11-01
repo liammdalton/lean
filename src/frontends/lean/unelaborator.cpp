@@ -29,36 +29,39 @@ class unelaborate_fn {
         buffer<expr> _args;
         expr const & _f = get_app_args(e, args);
 
+        expr f = unelaborate(_f);
+        
         buffer<expr> args;
         for (int i = 0; i < _args.size(); i++) {
             args.push_back(unelaborate(_args[i]));
         }
-
-        expr f = unelaborate(_f);
 
         if (!is_constant(f)) return mk_app(f,args);
 
         expr f_type = m_tc.infer(f);
 
         buffer<bool> explicit_mask;
-        buffer<bool> higher_order_mask;
+        buffer<bool> explicit_or_ho_mask;
 
         expr f_ = f;
         while (is_pi(f_)) {
             explicit_mask.push_back(is_explicit(binding_info(f_)));
-            higher_order_mask.push_back(is_pi(m_tc.whnf(binding_domain(f_))));
+            explicit_or_ho_mask.push_back(explicit_mask.back() || is_pi(m_tc.whnf(binding_domain(f_))));
             f_ = binding_body(f_);
         }
 
         expr actual = mk_app(f,args);
-        
-        /* (1) First we try only passing explicits. */
+
         buffer<expr> explicit_args;
+        buffer<expr> explicit_or_ho_args;        
         for (int i = 0; i < args.size(); i++) {
             if (explicit_mask[i]) explicit_args.push_back(args[i]);
+            if (explicit_or_ho_mask[i]) explicit_or_ho_args.push_back(args[i]);
+            
         }
-
-        auto r_explicit = m_builder.mk_app(f,explicit_args.size(),explicit_args.data());
+        
+        /* (1) First we try only passing explicits. */
+        auto r_explicit = m_builder.mk_app(f,explicit_args.size(),explicit_args.data(),true,explicit_mask);
 
         /* We are able to reconstruct the expression exactly while only looking 
            at the explicit arguments. Thus we return the expression without any
@@ -66,22 +69,16 @@ class unelaborate_fn {
         if (r_explicit && *r_explicit = actual) return actual;
         
         /* (2) Next we try only passing explicits and higher-order implicits. */
-        buffer<expr> explicit_or_ho_args;
-        for (int i = 0; i < args.size(); i++) {
-            if (explicit_mask[i] || higher_order_mask[i])
-                explicit_or_ho_args.push_back(args[i]);
-        }
-
-        /* TODO this method does not exist yet. It may even be easier construct a new function with
-           modified binding_infos and call the regular [app_builder] makers. */
-        auto r_explicit_or_ho = m_builder.mk_app_partial(f,explicit_or_ho_args.size(),explicit_or_ho_args.data());
+        auto r_explicit_or_ho = m_builder.mk_app(f,explicit_or_ho_args.size(),
+                                                 explicit_or_ho_args.data(),true,explicit_or_ho_mask);
 
         /* We are able to reconstruct the expression exactly while only looking 
-           at the explicit arguments. Thus we return the expression without any
-           additional annotation. */
+           at the explicit arguments and the higher-order implicit arguments.
+           We annotate the expression with '@@' to indicate this to the pretty printer. */
         if (r_explicit_or_ho && *r_explicit_or_ho = actual) return mk_partial_explicit(actual);
 
-        /* (3) We need to pass first-order implicit arguments as well. We can make this more precise
+        /* (3) We need to pass first-order implicit arguments as well. We annotate the expression with
+           '@' to indicate this to the pretty printer. We can make the unelaboration more precise
            in the future by allowing [app_builder] to take a mask, and searching for implicit arguments
            that we can print as underscores. */
         return mk_explicit(actual);
