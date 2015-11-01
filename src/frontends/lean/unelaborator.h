@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2015 Microsoft Corporation. All rights reserved.
+Copyright (c) 2015 Daniel Selsam. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-Author: Leonardo de Moura
+Author: Daniel Selsam
 */
 #pragma once
 #include "library/explicit.h"
