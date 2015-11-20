@@ -4,25 +4,35 @@ namespace churchrosser
 
 variables {A : Type} (R : relation A)
 
+inductive rc : A → A → Prop :=
+| base : ∀ a, rc a a
+| core : ∀ {a b}, R a b → rc a b
+
+inductive sc : A → A → Prop :=
+| step1 : ∀{a b}, R a b → sc a b
+| step2 : ∀{a b}, R b a → sc a b
+
 inductive tc : A → A → Prop :=
 | step  : ∀{a b}, R a b → tc a b
 | trans : ∀{a b c}, R a b → tc b c → tc a c
 
+inductive rsc : A → A → Prop :=
+| base : ∀ a, rsc a a
+| core : ∀ {a b}, sc R a b → rsc a b
+
 inductive rtc : A → A → Prop :=
 | base  : ∀a, rtc a a
-| step  : ∀{a b}, R a b → rtc a b
 | trans : ∀{a b c}, R a b → rtc b c → rtc a c
 
 inductive rstc : A → A → Prop :=
 | base  : ∀a, rstc a a
-| step1  : ∀{a b}, R a b → rstc a b
-| step2  : ∀{a b}, R b a → rstc a b
-| trans1 : ∀{a b c}, R a b → rstc b c → rstc a c
-| trans2 : ∀a b c, R b a → rstc b c → rstc a c
+| trans : ∀{a b c}, sc R a b → rstc b c → rstc a c
 
-lemma tc_of_rtc : subrelation (rtc R) (tc R) := by blast
-lemma rtc_of_rstc [backward] : subrelation (rstc R) (rtc R) := by blast
-lemma tc_of_rstc : subrelation (rstc R) (tc R) := by blast
+lemma tc_of_rtc : subrelation (tc R) (rtc R) := by blast
+lemma rtc_of_rstc [backward] : subrelation (rtc R) (rstc R) := by blast
+lemma tc_of_rstc : subrelation (tc R) (rstc R) := by blast
+lemma R_of_sc [backward] : subrelation R (sc R) := by blast
+lemma sc_of_rstc : subrelation (sc R) (rstc R) := by blast
 
 lemma tc_trans [backward] : transitive (tc R) := by blast
 lemma rtc_trans [backward] : transitive (rtc R) := by blast
@@ -51,12 +61,26 @@ assume H : rstc R x y,
 begin
   induction H,
     blast,
-    blast,
-    blast,
     induction v_0,
-      eapply exists.intro a_3,
-        have rtc R b a_3, by blast,
-        have rtc R a a_3, from rtc.trans a_1 this,
+    have rtc_b_a3 : rtc R b a_3, by blast,
+      induction a_1,
+        --
+        have rtc_a_a3 : rtc R a a_3, from rtc.trans a_1 rtc_b_a3,
+        blast,
+        --
+        have rtc_b_a3 : rtc R b a_3, by blast,
+        have join_a_a3 : joinable R a a_3, from H_semi a_1 rtc_b_a3,
+        induction join_a_a3,
+        induction a_4,
+--        have rtc R c a_5, from rtc.trans
+
+
+--        exact (H_semi a_1 rtc_b_a3)
+
+--        have joinable
+
+--      have rtc R a a_3, by rtc_trans `R a b` this,
+/-
         blast,
     induction v_0,
       have rtc_b_a3 : rtc R b a_3, by blast,
@@ -69,6 +93,7 @@ begin
       eapply exists.intro a_4,
       split, blast,
       apply rtc_trans, blast, blast
+-/
 end
 
 end churchrosser
