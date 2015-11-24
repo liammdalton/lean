@@ -17,7 +17,7 @@ constraints: [P l_x ↔ false]
 P l_x =?= P a
 l_x =?= a -- INFEASIBLE (P a ↔ false)
 
-Comment: the frozen strategy seems to make less sense for iff when we know there can only be two partitions in the end.
+Comment: the frozen strategy seems to make less sense for iff in classical mode when we know there can only be two partitions in the end.
 
 -----
 
