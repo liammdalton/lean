@@ -46,13 +46,39 @@ class qcf {
     }
 
     list<congruence_closure> falsify(expr const & phi, bool neg, congruence_closure const & cc) {
-        if (!phi.has_local()) {
-            /* phi is ground */
+        expr lhs, rhs, not_phi;
+        if (is_and(phi, lhs, rhs)) {
+
+        } else if (is_or(phi, lhs, rhs)) {
+
+        } else if (is_not(phi, not_phi)) {
+            return falsify(not_phi, !neg, cc);
+        } else if (is_pi(phi)) {
+
+        } else if (is_iff(phi)) {
+            // TODO(dhs): split into two implications
+
+        } else if (!is_prop(phi)) {
+            // TODO(dhs): do I return [to_list(cc)] in both cases?
+            if (neg) { return to_list(cc); }
+            else { return list<congruence_closure>(); }
+        } else if (!has_local(phi)) {
             congruence_closure new_cc = cc;
-            new_cc.assume(polarize(phi, neg));
+            new_cc.assume(phi);
             if (new_cc.is_inconsistent()) { return to_list(new_cc); }
             else { return list<congruence_closure>(); }
+        } else {
+            congruence_closure new_cc = cc;
+            new_cc.assume(polarize(phi, neg));
+            if (new_cc.is_inconsistent()) { return list<congruence_closure>(); }
+            else { // } return match(
+                    // bool is_relation_app(expr const & e, name & rop, expr & lhs, expr & rhs);
+
+
         }
+
+    }
+
         // TODO(dhs): finish
         return list<congruence_closure>(); // FIXME
     }
@@ -62,6 +88,9 @@ class qcf {
         return list<congruence_closure>(); // FIXME
     }
 
+    // TODO(dhs): we probably want to return the new expressions
+    // instead of adding them to state directly, since we might want
+    // to simplify them or otherwise post-filter first.
     void mk_hypothesis(congruence_closure const & cc) {
         expr proof = m_proof;
         expr type = m_type;
@@ -74,9 +103,16 @@ class qcf {
         curr_state().mk_hypothesis(type, proof);
     }
 
+    /* Sets [m_type] and [m_proof] */
+    void gather_universals(expr const & type, expr const & proof) {
+        // TODO(dhs): implement
+        expr m_type = type;
+        expr m_proof = proof;
+    }
+
     /* Populates [m_locals] */
-    expr preprocess_type(expr const & _type) {
-        expr type = whnf(_type);
+    expr telescope_type() {
+        expr type = whnf(m_type);
         buffer<expr> ls;
         while (is_pi(type)) {
             expr d = instantiate_rev(binding_domain(m_type), ls.size(), ls.data());
@@ -90,11 +126,11 @@ class qcf {
 
 public:
     // TODO(dhs): what do I do about polymorphic constants?
+    // [tmp_type_context] with urefs?
     action_result operator()(expr const & type, expr const & proof) {
-        expr m_type = type;
-        expr m_proof = proof;
-        expr phi = preprocess_type(type);
-        // TODO get cc extension
+        gather_universals(type, proof);
+        expr phi = telescope_type();
+
         list<congruence_closure> ccs = falsify(phi, false, get_cc());
         if (is_nil(ccs)) {
             return action_result::failed();
@@ -105,7 +141,6 @@ public:
             return action_result::new_branch();
         }
     }
-
 };
 
 action_result qfc_action(list<gexpr> const & lemmas) {
