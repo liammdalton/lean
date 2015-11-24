@@ -80,7 +80,7 @@ Example 5: basic type classes
 foo : ∀ {A : Type} [s : monoid A] (a : A), @eq A (@mul A (@monoid.to.has_mul A s) (@one A (@monoid.to_has_one A s)) a) a
 
 { X } { t } { x } { @one X (@monoid.to_has_one X t) }
-{ mul A (@monoid.to.has_mul A s) (@one A (@monoid.to_has_one A s)) a }
+{ mul X (@monoid.to.has_mul X t) (@one X (@monoid.to_has_one X t)) x }
 
 comment: everything gets assigned, the result is M-feasible, and so we instantiate in the obvious way.
 also, nothing is skipped -- do we just use the assigned type class instances in this case?
