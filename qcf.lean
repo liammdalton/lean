@@ -88,6 +88,7 @@ also, nothing is skipped -- do we just use the assigned type class instances in 
 ------
 
 Conjecture for approach:
+0. No pre-processing.
 1. Always a create a local whenever we hit a Pi. Falsify whenever it is a Prop (or some subset of Props?).
 2. Check which ones are assigned at the end, and use the app-builder to apply foo to the assignments when they exist, or else the original locals when there is no assignment.
 3. If the app-builder succeeds, abstract the locals with no assignments.
