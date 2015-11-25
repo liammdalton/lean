@@ -90,7 +90,7 @@ also, nothing is skipped -- do we just use the assigned type class instances in 
 Conjecture for approach:
 0. No pre-processing.
 1. Always a create a local whenever we hit a Pi. Falsify whenever it is a Prop (or some subset of Props?).
-2. Check which ones are assigned at the end, and use the app-builder to apply foo to the assignments when they exist, or else the original locals when there is no assignment.
+2. Check which ones are assigned at the end, and use the app-builder to apply foo to the assignments when they exist, or else the original locals when there is no assignment. Note that in this model, we would pass all arguments to the app_builder, and so it would really only be used to settle the universe levels and perhaps to check consistency.
 3. If the app-builder succeeds, abstract the locals with no assignments.
 4. The result might not be type correct. Do we need to check at the end? Or do I do more bookkeeping before and reject cases earlier so that I know the result is type correct at this stage?
 -/
