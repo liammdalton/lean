@@ -16,6 +16,7 @@ Author: Leonardo de Moura
 #include "library/blast/forward/forward_actions.h"
 #include "library/blast/unit/unit_action.h"
 #include "library/blast/no_confusion_action.h"
+#include "library/blast/dummy_branch_extension.h"
 #include "library/blast/simplifier/simplifier_actions.h"
 #include "library/blast/recursor_action.h"
 #include "library/blast/assert_cc_action.h"
@@ -67,6 +68,7 @@ class simple_strategy : public strategy {
         Try(assumption_action());
         Try(recursor_action());
         Try(constructor_action());
+        Try(dummy_action());
 
         TryStrategy(apply_backward_strategy());
         Try(qfc_action(list<gexpr>()));

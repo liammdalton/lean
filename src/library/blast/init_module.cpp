@@ -15,6 +15,7 @@ Author: Leonardo de Moura
 #include "library/blast/backward/init_module.h"
 #include "library/blast/forward/init_module.h"
 #include "library/blast/unit/init_module.h"
+#include "library/blast/dummy_branch_extension.h"
 
 namespace lean {
 void initialize_blast_module() {
@@ -29,8 +30,10 @@ void initialize_blast_module() {
     initialize_blast_tactic();
     blast::initialize_recursor_action();
     blast::initialize_congruence_closure();
+    blast::initialize_dummy_action();
 }
 void finalize_blast_module() {
+    blast::finalize_dummy_action();
     blast::finalize_congruence_closure();
     blast::finalize_recursor_action();
     finalize_blast_tactic();
