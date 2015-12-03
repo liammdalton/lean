@@ -6,16 +6,26 @@ Author: Leonardo de Moura
 */
 #pragma once
 #include <memory>
+#include <string>
+#include "util/sstream.h"
 #include "kernel/environment.h"
 #include "library/io_state.h"
 #include "library/reducible.h"
 #include "library/tmp_type_context.h"
 
 namespace lean {
-class app_builder_exception : public exception {
-public:
-    // We may provide more information in the future.
-    app_builder_exception():exception("app_builder_exception") {}
+
+struct app_builder_exception : public exception {
+    app_builder_exception(std::string const & msg):exception(msg) {}
+    app_builder_exception(char const * msg, name const & n):
+        exception(sstream() << "[app_builder exception] " << msg << " '" << n << "'") {}
+    app_builder_exception(char const * msg, name const & n, expr const & e):
+        exception(sstream() << "[app_builder exception] " << msg << " '" << n << "' (" << e << ")") {}
+    app_builder_exception(char const * msg, expr const & e):
+        exception(sstream() << "[app_builder exception] " << msg << " (" << e << ")") {}
+    virtual ~app_builder_exception() {}
+    virtual throwable * clone() const { return new app_builder_exception(m_msg); }
+    virtual void rethrow() const { throw *this; }
 };
 
 /** \brief Helper for creating simple applications where some arguments are inferred using

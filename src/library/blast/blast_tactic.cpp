@@ -28,7 +28,9 @@ tactic mk_blast_tactic(list<name> const & ls, list<name> const & ds) {
                     throw_tactic_exception_if_enabled(s, "blast tactic failed");
                     return none_proof_state();
                 }
-            } catch (blast_exception & ex) {
+            } catch (exception & ex) {
+                // TODO(dhs, leo): make blast catch app builder exceptions, and then
+                // only catch blast exceptions here
                 throw_tactic_exception_if_enabled(s, ex.what());
                 return none_proof_state();
             }
