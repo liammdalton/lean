@@ -248,18 +248,19 @@ struct app_builder::imp {
     expr mk_app(name const & c, unsigned nargs, expr const * args) {
         optional<entry> e = get_entry(c, nargs);
         if (!e)
-            throw app_builder_exception();
+            throw app_builder_exception("unknown declaration", c);
         init_ctx_for(*e);
         unsigned i = nargs;
         for (auto m : e->m_expl_args) {
-            if (i == 0)
-                throw app_builder_exception();
+            if (i == 0) {
+                throw app_builder_exception("too many arguments", c);
+            }
             --i;
             if (!m_ctx->assign(m, args[i]))
-                throw app_builder_exception();
+                throw app_builder_exception("assignment failed", c, args[i]);
         }
         if (!check_all_assigned(*e))
-            throw app_builder_exception();
+            throw app_builder_exception("could not assign all metas", c);
         return m_ctx->instantiate_uvars_mvars(e->m_app);
     }
 
@@ -283,7 +284,7 @@ struct app_builder::imp {
         } else {
             optional<entry> e = get_entry(c, mask_sz, mask);
             if (!e)
-                throw app_builder_exception();
+                throw app_builder_exception("unknown declaration", c);
             init_ctx_for(*e);
             unsigned i    = mask_sz;
             unsigned j    = nargs;
@@ -294,12 +295,12 @@ struct app_builder::imp {
                     --j;
                     expr const & m = head(it);
                     if (!m_ctx->assign(m, args[j]))
-                        throw app_builder_exception();
+                        throw app_builder_exception("assignment failed", c, args[j]);
                     it = tail(it);
                 }
             }
             if (!check_all_assigned(*e))
-                throw app_builder_exception();
+                throw app_builder_exception("could not assign all metas", c);
             return m_ctx->instantiate_uvars_mvars(e->m_app);
         }
     }
@@ -307,7 +308,7 @@ struct app_builder::imp {
     level get_level(expr const & A) {
         expr Type = m_ctx->whnf(m_ctx->infer(A));
         if (!is_sort(Type))
-            throw app_builder_exception();
+            throw app_builder_exception("tried to get level of non-Sort", A);
         return sort_level(Type);
     }
 
@@ -335,7 +336,7 @@ struct app_builder::imp {
         expr p    = m_ctx->whnf(m_ctx->infer(H));
         expr lhs, rhs;
         if (!is_eq(p, lhs, rhs))
-            throw app_builder_exception();
+            throw app_builder_exception("tried to apply [eq.symm] to non-equality", H);
         expr A    = m_ctx->infer(lhs);
         level lvl = get_level(A);
         return ::lean::mk_app(mk_constant(get_eq_symm_name(), {lvl}), A, lhs, rhs, H);
@@ -345,7 +346,7 @@ struct app_builder::imp {
         expr p    = m_ctx->whnf(m_ctx->infer(H));
         expr lhs, rhs;
         if (!is_iff(p, lhs, rhs))
-            throw app_builder_exception();
+            throw app_builder_exception("tried to apply [iff.symm] to non-iff", H);
         return ::lean::mk_app(mk_constant(get_iff_symm_name()), lhs, rhs, H);
     }
 
@@ -353,8 +354,10 @@ struct app_builder::imp {
         expr p1    = m_ctx->whnf(m_ctx->infer(H1));
         expr p2    = m_ctx->whnf(m_ctx->infer(H2));
         expr lhs1, rhs1, lhs2, rhs2;
-        if (!is_eq(p1, lhs1, rhs1) || !is_eq(p2, lhs2, rhs2))
-            throw app_builder_exception();
+        if (!is_eq(p1, lhs1, rhs1))
+            throw app_builder_exception("tried to apply [eq.trans] to non-equality", H1);
+        if (!is_eq(p2, lhs2, rhs2))
+            throw app_builder_exception("tried to apply [eq.trans] to non-equality", H2);
         expr A     = m_ctx->infer(lhs1);
         level lvl  = get_level(A);
         return ::lean::mk_app({mk_constant(get_eq_trans_name(), {lvl}), A, lhs1, rhs1, rhs2, H1, H2});
@@ -364,8 +367,10 @@ struct app_builder::imp {
         expr p1    = m_ctx->whnf(m_ctx->infer(H1));
         expr p2    = m_ctx->whnf(m_ctx->infer(H2));
         expr lhs1, rhs1, lhs2, rhs2;
-        if (!is_iff(p1, lhs1, rhs1) || !is_iff(p2, lhs2, rhs2))
-            throw app_builder_exception();
+        if (!is_iff(p1, lhs1, rhs1))
+            throw app_builder_exception("tried to apply [iff.trans] to non-iff", H1);
+        if (!is_iff(p2, lhs2, rhs2))
+            throw app_builder_exception("tried to apply [iff.trans] to non-iff", H2);
         return ::lean::mk_app({mk_constant(get_iff_trans_name()), lhs1, rhs1, rhs2, H1, H2});
     }
 
@@ -396,7 +401,7 @@ struct app_builder::imp {
         } else if (auto info = m_refl_getter(relname)) {
             return mk_app(info->m_name, 1, &a);
         } else {
-            throw app_builder_exception();
+            throw app_builder_exception("relation not registered as reflexive", relname);
         }
     }
 
@@ -408,7 +413,7 @@ struct app_builder::imp {
         } else if (auto info = m_symm_getter(relname)) {
             return mk_app(info->m_name, 1, &H);
         } else {
-            throw app_builder_exception();
+            throw app_builder_exception("relation not registered as symmetric", relname);
         }
     }
 
@@ -421,7 +426,7 @@ struct app_builder::imp {
             expr args[2] = {H1, H2};
             return mk_app(info->m_name, 2, args);
         } else {
-            throw app_builder_exception();
+            throw app_builder_exception("relation not registered as transitive", relname);
         }
     }
 
@@ -446,12 +451,12 @@ struct app_builder::imp {
         expr p       = m_ctx->whnf(m_ctx->infer(H2));
         expr lhs, rhs;
         if (!is_eq(p, lhs, rhs))
-            throw app_builder_exception();
+            throw app_builder_exception("tried to apply [eq.rec] to non-eq major premise", H2);
         expr A      = m_ctx->infer(lhs);
         level A_lvl = get_level(A);
         expr mtype  = m_ctx->whnf(m_ctx->infer(motive));
         if (!is_pi(mtype) || !is_sort(binding_body(mtype)))
-            throw app_builder_exception();
+            throw app_builder_exception("motive of [eq.rec] has invalid type", motive);
         level l_1    = sort_level(binding_body(mtype));
         name const & eqrec = is_standard(m_ctx->env()) ? get_eq_rec_name() : get_eq_nrec_name();
         return ::lean::mk_app({mk_constant(eqrec, {l_1, A_lvl}), A, lhs, motive, H1, rhs, H2});
@@ -463,12 +468,12 @@ struct app_builder::imp {
         expr p       = m_ctx->whnf(m_ctx->infer(H2));
         expr lhs, rhs;
         if (!is_eq(p, lhs, rhs))
-            throw app_builder_exception();
+            throw app_builder_exception("tried to apply [eq.drec] to non-eq major premise", H2);
         expr A      = m_ctx->infer(lhs);
         level A_lvl = get_level(A);
         expr mtype  = m_ctx->whnf(m_ctx->infer(motive));
         if (!is_pi(mtype) || !is_pi(binding_body(mtype)) || !is_sort(binding_body(binding_body(mtype))))
-            throw app_builder_exception();
+            throw app_builder_exception("motive of [eq.drec] has invalid type", motive);
         level l_1    = sort_level(binding_body(binding_body(mtype)));
         name const & eqrec = is_standard(m_ctx->env()) ? get_eq_drec_name() : get_eq_rec_name();
         return ::lean::mk_app({mk_constant(eqrec, {l_1, A_lvl}), A, lhs, motive, H1, rhs, H2});
@@ -530,42 +535,42 @@ struct app_builder::imp {
     expr mk_partial_add(expr const & A) {
         level lvl = get_level(A);
         auto A_has_add = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_add_name(), {lvl}), A));
-        if (!A_has_add) throw app_builder_exception();
+        if (!A_has_add) throw app_builder_exception("cannot synthesize [has_add]", A);
         return ::lean::mk_app(mk_constant(get_add_name(), {lvl}), A, *A_has_add);
     }
 
     expr mk_partial_mul(expr const & A) {
         level lvl = get_level(A);
         auto A_has_mul = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_mul_name(), {lvl}), A));
-        if (!A_has_mul) throw app_builder_exception();
+        if (!A_has_mul) throw app_builder_exception("cannot synthesize [has_mul]", A);
         return ::lean::mk_app(mk_constant(get_mul_name(), {lvl}), A, *A_has_mul);
     }
 
     expr mk_zero(expr const & A) {
         level lvl = get_level(A);
         auto A_has_zero = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_zero_name(), {lvl}), A));
-        if (!A_has_zero) throw app_builder_exception();
+        if (!A_has_zero) throw app_builder_exception("cannot synthesize [has_zero]", A);
         return ::lean::mk_app(mk_constant(get_zero_name(), {lvl}), A, *A_has_zero);
     }
 
     expr mk_one(expr const & A) {
         level lvl = get_level(A);
         auto A_has_one = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_one_name(), {lvl}), A));
-        if (!A_has_one) throw app_builder_exception();
+        if (!A_has_one) throw app_builder_exception("cannot synthesize [has_one]", A);
         return ::lean::mk_app(mk_constant(get_one_name(), {lvl}), A, *A_has_one);
     }
 
     expr mk_partial_left_distrib(expr const & A) {
         level lvl = get_level(A);
         auto A_distrib = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_algebra_distrib_name(), {lvl}), A));
-        if (!A_distrib) throw app_builder_exception();
+        if (!A_distrib) throw app_builder_exception("cannot synthesize [distrib]", A);
         return ::lean::mk_app(mk_constant(get_algebra_left_distrib_name(), {lvl}), A, *A_distrib);
     }
 
     expr mk_partial_right_distrib(expr const & A) {
         level lvl = get_level(A);
         auto A_distrib = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_algebra_distrib_name(), {lvl}), A));
-        if (!A_distrib) throw app_builder_exception();
+        if (!A_distrib) throw app_builder_exception("cannot synthesize [distrib]", A);
         return ::lean::mk_app(mk_constant(get_algebra_right_distrib_name(), {lvl}), A, *A_distrib);
     }
 
