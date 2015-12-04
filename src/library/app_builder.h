@@ -6,16 +6,33 @@ Author: Leonardo de Moura
 */
 #pragma once
 #include <memory>
+#include <string>
+#include "util/sstream.h"
 #include "kernel/environment.h"
+#include "kernel/ext_exception.h"
 #include "library/io_state.h"
 #include "library/reducible.h"
 #include "library/tmp_type_context.h"
 
 namespace lean {
-class app_builder_exception : public exception {
+
+class app_builder_exception : public ext_exception {
+protected:
+    pp_fn          m_pp_fn;
 public:
-    // We may provide more information in the future.
-    app_builder_exception():exception("app_builder_exception") {}
+    app_builder_exception(pp_fn const & fn):ext_exception("app_builder exception"), m_pp_fn(fn) {}
+    virtual ~app_builder_exception() noexcept {}
+    virtual format pp(formatter const & fmt) const override { return m_pp_fn(fmt); }
+    virtual throwable * clone() const override { return new app_builder_exception(m_pp_fn); }
+
+    static app_builder_exception unknown_declaration(name const & n);
+    static app_builder_exception failed_to_assign(name const & n, expr const & m_type, expr const & arg_type);
+    static app_builder_exception not_all_assigned(name const & n);
+    static app_builder_exception too_many_args(name const & n);
+    static app_builder_exception invalid_argument(name const & n, expr const & arg_type);
+    static app_builder_exception invalid_argument(name const & n, char const * arg_name, expr const & arg_type);
+    static app_builder_exception cannot_synthesize(name const & n, expr const & type);
+    static app_builder_exception relation_not_registered(name const & n, char const * property);
 };
 
 /** \brief Helper for creating simple applications where some arguments are inferred using
