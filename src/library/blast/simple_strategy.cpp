@@ -22,6 +22,7 @@ Author: Leonardo de Moura
 #include "library/blast/assert_cc_action.h"
 #include "library/blast/strategy.h"
 #include "library/blast/trace.h"
+#include "library/blast/by_contradiction_action.h"
 
 namespace lean {
 namespace blast {
@@ -71,6 +72,7 @@ class simple_strategy : public strategy {
         Try(ematch_action());
         TryStrategy(apply_backward_strategy());
         Try(qfc_action(list<gexpr>()));
+        Try(by_contradiction_action());
 
         // TODO(Leo): add more actions...
 

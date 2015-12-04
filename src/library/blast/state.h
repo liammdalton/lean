@@ -335,9 +335,14 @@ public:
     expr mk_pi(buffer<expr> const & hrefs, expr const & b) const {
         return mk_pi(hrefs.size(), hrefs.data(), b);
     }
+    expr mk_lambda(expr const & href, expr const & b) const {
+        return mk_lambda(1, &href, b);
+    }
+    expr mk_pi(expr const & href, expr const & b) const {
+        return mk_pi(1, &href, b);
+    }
     expr mk_lambda(list<expr> const & hrefs, expr const & b) const;
     expr mk_pi(list<expr> const & hrefs, expr const & b) const;
-
 
     /************************
        Target (aka what needs to be synthesized)

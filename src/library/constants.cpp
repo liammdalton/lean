@@ -19,9 +19,12 @@ name const * g_bool_ff = nullptr;
 name const * g_bool_tt = nullptr;
 name const * g_char = nullptr;
 name const * g_char_mk = nullptr;
+name const * g_classical_by_contradiction = nullptr;
 name const * g_congr = nullptr;
 name const * g_congr_arg = nullptr;
 name const * g_congr_fun = nullptr;
+name const * g_decidable = nullptr;
+name const * g_decidable_by_contradiction = nullptr;
 name const * g_dite = nullptr;
 name const * g_div = nullptr;
 name const * g_empty = nullptr;
@@ -196,9 +199,12 @@ void initialize_constants() {
     g_bool_tt = new name{"bool", "tt"};
     g_char = new name{"char"};
     g_char_mk = new name{"char", "mk"};
+    g_classical_by_contradiction = new name{"classical", "by_contradiction"};
     g_congr = new name{"congr"};
     g_congr_arg = new name{"congr_arg"};
     g_congr_fun = new name{"congr_fun"};
+    g_decidable = new name{"decidable"};
+    g_decidable_by_contradiction = new name{"decidable", "by_contradiction"};
     g_dite = new name{"dite"};
     g_div = new name{"div"};
     g_empty = new name{"empty"};
@@ -374,9 +380,12 @@ void finalize_constants() {
     delete g_bool_tt;
     delete g_char;
     delete g_char_mk;
+    delete g_classical_by_contradiction;
     delete g_congr;
     delete g_congr_arg;
     delete g_congr_fun;
+    delete g_decidable;
+    delete g_decidable_by_contradiction;
     delete g_dite;
     delete g_div;
     delete g_empty;
@@ -551,9 +560,12 @@ name const & get_bool_ff_name() { return *g_bool_ff; }
 name const & get_bool_tt_name() { return *g_bool_tt; }
 name const & get_char_name() { return *g_char; }
 name const & get_char_mk_name() { return *g_char_mk; }
+name const & get_classical_by_contradiction_name() { return *g_classical_by_contradiction; }
 name const & get_congr_name() { return *g_congr; }
 name const & get_congr_arg_name() { return *g_congr_arg; }
 name const & get_congr_fun_name() { return *g_congr_fun; }
+name const & get_decidable_name() { return *g_decidable; }
+name const & get_decidable_by_contradiction_name() { return *g_decidable_by_contradiction; }
 name const & get_dite_name() { return *g_dite; }
 name const & get_div_name() { return *g_div; }
 name const & get_empty_name() { return *g_empty; }
