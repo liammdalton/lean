@@ -10,22 +10,25 @@ Author: Leonardo de Moura
 #include "util/sstream.h"
 #include "kernel/environment.h"
 #include "library/io_state.h"
+#include "library/generic_exception.h"
 #include "library/reducible.h"
 #include "library/tmp_type_context.h"
 
 namespace lean {
 
-struct app_builder_exception : public exception {
-    app_builder_exception(std::string const & msg):exception(msg) {}
-    app_builder_exception(char const * msg, name const & n):
-        exception(sstream() << "[app_builder exception] " << msg << " '" << n << "'") {}
-    app_builder_exception(char const * msg, name const & n, expr const & e):
-        exception(sstream() << "[app_builder exception] " << msg << " '" << n << "' (" << e << ")") {}
-    app_builder_exception(char const * msg, expr const & e):
-        exception(sstream() << "[app_builder exception] " << msg << " (" << e << ")") {}
-    virtual ~app_builder_exception() {}
-    virtual throwable * clone() const { return new app_builder_exception(m_msg); }
-    virtual void rethrow() const { throw *this; }
+struct app_builder_exception : public generic_exception {
+    app_builder_exception(pp_fn const & fn):generic_exception("app_builder exception", none_expr(), fn) {}
+    app_builder_exception(sstream const & strm):app_builder_exception(strm.str()) {}
+    app_builder_exception(std::string const & msg):
+        generic_exception(msg.c_str(), none_expr(), [=](formatter const &) { return format(msg); }) {}
+    app_builder_exception(char const * msg):app_builder_exception(std::string(msg)) {}
+
+    static app_builder_exception unknown_declaration(name const & n);
+    static app_builder_exception failed_to_assign(name const & n, expr const & m_type, expr const & arg_type);
+    static app_builder_exception not_all_assigned(name const & n);
+    static app_builder_exception invalid_argument(name const & n, expr const & arg_type);
+    static app_builder_exception invalid_argument(name const & n, char const * arg_name, expr const & arg_type);
+    static app_builder_exception cannot_synthesize(name const & n, expr const & type);
 };
 
 /** \brief Helper for creating simple applications where some arguments are inferred using
