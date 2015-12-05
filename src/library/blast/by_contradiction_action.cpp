@@ -5,8 +5,10 @@ Author: Daniel Selsam
 */
 #include "library/constants.h"
 #include "library/blast/blast.h"
+#include "library/blast/intros_action.h"
 #include "library/blast/proof_expr.h"
 #include "library/blast/trace.h"
+#include "library/blast/util.h"
 
 namespace lean {
 namespace blast {
@@ -26,6 +28,11 @@ action_result by_contradiction_action() {
     state &  s  = curr_state();
     expr target = whnf(s.get_target());
     if (!is_prop(target)) return action_result::failed();
+    expr not_target;
+    if (is_not(target, not_target)) {
+        s.set_target(relaxed_whnf(target));
+        return intros_action(1);
+    }
     optional<expr> target_decidable = mk_class_instance(mk_app(mk_constant(get_decidable_name()), target));
     if (!target_decidable) return action_result::failed();
     expr href = s.mk_hypothesis(target);
