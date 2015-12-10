@@ -160,6 +160,18 @@ public:
     expr mk_partial_left_distrib(expr const & A);
     expr mk_partial_right_distrib(expr const & A);
 
+    expr mk_bit0(expr const & A, expr const & n);
+    expr mk_bit1(expr const & A, expr const & n);
+
+    expr mk_neg(expr const & A, expr const & e);
+    expr mk_le(expr const & A, expr const & lhs, expr const & rhs);
+    expr mk_lt(expr const & A, expr const & lhs, expr const & rhs);
+
+    expr mk_ordered_semiring(expr const & A);
+    expr mk_ordered_ring(expr const & A);
+    expr mk_linear_ordered_comm_ring(expr const & A);
+    expr mk_linear_ordered_field(expr const & A);
+
     /** \brief Create (@sorry type) */
     expr mk_sorry(expr const & type);
 

@@ -5,6 +5,7 @@ Author: Robert Y. Lewis
 */
 #include "library/norm_num.h"
 #include "library/constants.h"
+#include "library/util.h"
 
 namespace lean {
 static bool is_numeral_aux(expr const & e, bool is_first) {

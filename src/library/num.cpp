@@ -18,11 +18,6 @@ bool has_num_decls(environment const & env) {
         env.find(get_bit1_name());
 }
 
-bool is_const_app(expr const & e, name const & n, unsigned nargs) {
-    expr const & f = get_app_fn(e);
-    return is_constant(f) && const_name(f) == n && get_app_num_args(e) == nargs;
-}
-
 bool is_zero(expr const & e) {
     return is_const_app(e, get_zero_name(), 2);
 }

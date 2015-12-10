@@ -52,6 +52,8 @@ name const * g_field = nullptr;
 name const * g_funext = nullptr;
 name const * g_has_add = nullptr;
 name const * g_has_div = nullptr;
+name const * g_has_le = nullptr;
+name const * g_has_lt = nullptr;
 name const * g_has_mul = nullptr;
 name const * g_has_neg = nullptr;
 name const * g_has_one = nullptr;
@@ -62,6 +64,7 @@ name const * g_has_zero_zero = nullptr;
 name const * g_heq = nullptr;
 name const * g_heq_refl = nullptr;
 name const * g_heq_to_eq = nullptr;
+name const * g_id = nullptr;
 name const * g_iff = nullptr;
 name const * g_iff_elim_left = nullptr;
 name const * g_iff_elim_right = nullptr;
@@ -83,11 +86,15 @@ name const * g_is_trunc_is_hset = nullptr;
 name const * g_ite = nullptr;
 name const * g_left_distrib = nullptr;
 name const * g_le_refl = nullptr;
+name const * g_le = nullptr;
 name const * g_lift = nullptr;
 name const * g_lift_down = nullptr;
 name const * g_lift_up = nullptr;
+name const * g_linear_ordered_comm_ring = nullptr;
+name const * g_linear_ordered_field = nullptr;
 name const * g_linear_ordered_ring = nullptr;
 name const * g_linear_ordered_semiring = nullptr;
+name const * g_lt = nullptr;
 name const * g_monoid = nullptr;
 name const * g_mul = nullptr;
 name const * g_mul_one = nullptr;
@@ -167,6 +174,18 @@ name const * g_or_neg_resolve_right = nullptr;
 name const * g_or_rec = nullptr;
 name const * g_or_resolve_left = nullptr;
 name const * g_or_resolve_right = nullptr;
+name const * g_ordered_ring = nullptr;
+name const * g_ordered_semiring = nullptr;
+name const * g_ordered_arith_pos_bit0 = nullptr;
+name const * g_ordered_arith_pos_bit1 = nullptr;
+name const * g_ordered_arith_zero_lt_one = nullptr;
+name const * g_ordered_arith_zero_not_lt_zero = nullptr;
+name const * g_ordered_arith_zero_not_lt_neg = nullptr;
+name const * g_ordered_arith_zero_not_le_neg = nullptr;
+name const * g_ordered_arith_resolve_lt_lt = nullptr;
+name const * g_ordered_arith_resolve_lt_le = nullptr;
+name const * g_ordered_arith_resolve_le_lt = nullptr;
+name const * g_ordered_arith_resolve_le_le = nullptr;
 name const * g_poly_unit = nullptr;
 name const * g_poly_unit_star = nullptr;
 name const * g_pos_num = nullptr;
@@ -310,6 +329,8 @@ void initialize_constants() {
     g_funext = new name{"funext"};
     g_has_add = new name{"has_add"};
     g_has_div = new name{"has_div"};
+    g_has_le = new name{"has_le"};
+    g_has_lt = new name{"has_lt"};
     g_has_mul = new name{"has_mul"};
     g_has_neg = new name{"has_neg"};
     g_has_one = new name{"has_one"};
@@ -320,6 +341,7 @@ void initialize_constants() {
     g_heq = new name{"heq"};
     g_heq_refl = new name{"heq", "refl"};
     g_heq_to_eq = new name{"heq", "to_eq"};
+    g_id = new name{"id"};
     g_iff = new name{"iff"};
     g_iff_elim_left = new name{"iff", "elim_left"};
     g_iff_elim_right = new name{"iff", "elim_right"};
@@ -341,11 +363,15 @@ void initialize_constants() {
     g_ite = new name{"ite"};
     g_left_distrib = new name{"left_distrib"};
     g_le_refl = new name{"le", "refl"};
+    g_le = new name{"le"};
     g_lift = new name{"lift"};
     g_lift_down = new name{"lift", "down"};
     g_lift_up = new name{"lift", "up"};
+    g_linear_ordered_comm_ring = new name{"linear_ordered_comm_ring"};
+    g_linear_ordered_field = new name{"linear_ordered_field"};
     g_linear_ordered_ring = new name{"linear_ordered_ring"};
     g_linear_ordered_semiring = new name{"linear_ordered_semiring"};
+    g_lt = new name{"lt"};
     g_monoid = new name{"monoid"};
     g_mul = new name{"mul"};
     g_mul_one = new name{"mul_one"};
@@ -425,6 +451,18 @@ void initialize_constants() {
     g_or_rec = new name{"or", "rec"};
     g_or_resolve_left = new name{"or", "resolve_left"};
     g_or_resolve_right = new name{"or", "resolve_right"};
+    g_ordered_ring = new name{"ordered_ring"};
+    g_ordered_semiring = new name{"ordered_semiring"};
+    g_ordered_arith_pos_bit0 = new name{"ordered_arith", "pos_bit0"};
+    g_ordered_arith_pos_bit1 = new name{"ordered_arith", "pos_bit1"};
+    g_ordered_arith_zero_lt_one = new name{"ordered_arith", "zero_lt_one"};
+    g_ordered_arith_zero_not_lt_zero = new name{"ordered_arith", "zero_not_lt_zero"};
+    g_ordered_arith_zero_not_lt_neg = new name{"ordered_arith", "zero_not_lt_neg"};
+    g_ordered_arith_zero_not_le_neg = new name{"ordered_arith", "zero_not_le_neg"};
+    g_ordered_arith_resolve_lt_lt = new name{"ordered_arith", "resolve_lt_lt"};
+    g_ordered_arith_resolve_lt_le = new name{"ordered_arith", "resolve_lt_le"};
+    g_ordered_arith_resolve_le_lt = new name{"ordered_arith", "resolve_le_lt"};
+    g_ordered_arith_resolve_le_le = new name{"ordered_arith", "resolve_le_le"};
     g_poly_unit = new name{"poly_unit"};
     g_poly_unit_star = new name{"poly_unit", "star"};
     g_pos_num = new name{"pos_num"};
@@ -569,6 +607,8 @@ void finalize_constants() {
     delete g_funext;
     delete g_has_add;
     delete g_has_div;
+    delete g_has_le;
+    delete g_has_lt;
     delete g_has_mul;
     delete g_has_neg;
     delete g_has_one;
@@ -579,6 +619,7 @@ void finalize_constants() {
     delete g_heq;
     delete g_heq_refl;
     delete g_heq_to_eq;
+    delete g_id;
     delete g_iff;
     delete g_iff_elim_left;
     delete g_iff_elim_right;
@@ -600,11 +641,15 @@ void finalize_constants() {
     delete g_ite;
     delete g_left_distrib;
     delete g_le_refl;
+    delete g_le;
     delete g_lift;
     delete g_lift_down;
     delete g_lift_up;
+    delete g_linear_ordered_comm_ring;
+    delete g_linear_ordered_field;
     delete g_linear_ordered_ring;
     delete g_linear_ordered_semiring;
+    delete g_lt;
     delete g_monoid;
     delete g_mul;
     delete g_mul_one;
@@ -684,6 +729,18 @@ void finalize_constants() {
     delete g_or_rec;
     delete g_or_resolve_left;
     delete g_or_resolve_right;
+    delete g_ordered_ring;
+    delete g_ordered_semiring;
+    delete g_ordered_arith_pos_bit0;
+    delete g_ordered_arith_pos_bit1;
+    delete g_ordered_arith_zero_lt_one;
+    delete g_ordered_arith_zero_not_lt_zero;
+    delete g_ordered_arith_zero_not_lt_neg;
+    delete g_ordered_arith_zero_not_le_neg;
+    delete g_ordered_arith_resolve_lt_lt;
+    delete g_ordered_arith_resolve_lt_le;
+    delete g_ordered_arith_resolve_le_lt;
+    delete g_ordered_arith_resolve_le_le;
     delete g_poly_unit;
     delete g_poly_unit_star;
     delete g_pos_num;
@@ -827,6 +884,8 @@ name const & get_field_name() { return *g_field; }
 name const & get_funext_name() { return *g_funext; }
 name const & get_has_add_name() { return *g_has_add; }
 name const & get_has_div_name() { return *g_has_div; }
+name const & get_has_le_name() { return *g_has_le; }
+name const & get_has_lt_name() { return *g_has_lt; }
 name const & get_has_mul_name() { return *g_has_mul; }
 name const & get_has_neg_name() { return *g_has_neg; }
 name const & get_has_one_name() { return *g_has_one; }
@@ -837,6 +896,7 @@ name const & get_has_zero_zero_name() { return *g_has_zero_zero; }
 name const & get_heq_name() { return *g_heq; }
 name const & get_heq_refl_name() { return *g_heq_refl; }
 name const & get_heq_to_eq_name() { return *g_heq_to_eq; }
+name const & get_id_name() { return *g_id; }
 name const & get_iff_name() { return *g_iff; }
 name const & get_iff_elim_left_name() { return *g_iff_elim_left; }
 name const & get_iff_elim_right_name() { return *g_iff_elim_right; }
@@ -858,11 +918,15 @@ name const & get_is_trunc_is_hset_name() { return *g_is_trunc_is_hset; }
 name const & get_ite_name() { return *g_ite; }
 name const & get_left_distrib_name() { return *g_left_distrib; }
 name const & get_le_refl_name() { return *g_le_refl; }
+name const & get_le_name() { return *g_le; }
 name const & get_lift_name() { return *g_lift; }
 name const & get_lift_down_name() { return *g_lift_down; }
 name const & get_lift_up_name() { return *g_lift_up; }
+name const & get_linear_ordered_comm_ring_name() { return *g_linear_ordered_comm_ring; }
+name const & get_linear_ordered_field_name() { return *g_linear_ordered_field; }
 name const & get_linear_ordered_ring_name() { return *g_linear_ordered_ring; }
 name const & get_linear_ordered_semiring_name() { return *g_linear_ordered_semiring; }
+name const & get_lt_name() { return *g_lt; }
 name const & get_monoid_name() { return *g_monoid; }
 name const & get_mul_name() { return *g_mul; }
 name const & get_mul_one_name() { return *g_mul_one; }
@@ -942,6 +1006,18 @@ name const & get_or_neg_resolve_right_name() { return *g_or_neg_resolve_right; }
 name const & get_or_rec_name() { return *g_or_rec; }
 name const & get_or_resolve_left_name() { return *g_or_resolve_left; }
 name const & get_or_resolve_right_name() { return *g_or_resolve_right; }
+name const & get_ordered_ring_name() { return *g_ordered_ring; }
+name const & get_ordered_semiring_name() { return *g_ordered_semiring; }
+name const & get_ordered_arith_pos_bit0_name() { return *g_ordered_arith_pos_bit0; }
+name const & get_ordered_arith_pos_bit1_name() { return *g_ordered_arith_pos_bit1; }
+name const & get_ordered_arith_zero_lt_one_name() { return *g_ordered_arith_zero_lt_one; }
+name const & get_ordered_arith_zero_not_lt_zero_name() { return *g_ordered_arith_zero_not_lt_zero; }
+name const & get_ordered_arith_zero_not_lt_neg_name() { return *g_ordered_arith_zero_not_lt_neg; }
+name const & get_ordered_arith_zero_not_le_neg_name() { return *g_ordered_arith_zero_not_le_neg; }
+name const & get_ordered_arith_resolve_lt_lt_name() { return *g_ordered_arith_resolve_lt_lt; }
+name const & get_ordered_arith_resolve_lt_le_name() { return *g_ordered_arith_resolve_lt_le; }
+name const & get_ordered_arith_resolve_le_lt_name() { return *g_ordered_arith_resolve_le_lt; }
+name const & get_ordered_arith_resolve_le_le_name() { return *g_ordered_arith_resolve_le_le; }
 name const & get_poly_unit_name() { return *g_poly_unit; }
 name const & get_poly_unit_star_name() { return *g_poly_unit_star; }
 name const & get_pos_num_name() { return *g_pos_num; }

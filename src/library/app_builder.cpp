@@ -665,6 +665,81 @@ struct app_builder::imp {
         return ::lean::mk_app(mk_constant(get_right_distrib_name(), {lvl}), A, *A_distrib);
     }
 
+    expr mk_bit0(expr const & A, expr const & n) {
+        level lvl = get_level(A);
+        auto A_has_add = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_add_name(), {lvl}), A));
+        if (!A_has_add) {
+            trace_inst_failure(A, "has_add");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_bit0_name(), {lvl}), {A, *A_has_add, n});
+    }
+
+    expr mk_bit1(expr const & A, expr const & n) {
+        level lvl = get_level(A);
+        auto A_has_one = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_one_name(), {lvl}), A));
+        if (!A_has_one) {
+            trace_inst_failure(A, "has_one");
+            throw app_builder_exception();
+        }
+        auto A_has_add = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_add_name(), {lvl}), A));
+        if (!A_has_add) {
+            trace_inst_failure(A, "has_add");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_bit1_name(), {lvl}), {A, *A_has_one, *A_has_add, n});
+    }
+
+    expr mk_neg(expr const & A, expr const & e) {
+        level lvl = get_level(A);
+        auto A_has_neg = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_neg_name(), {lvl}), A));
+        if (!A_has_neg) {
+            trace_inst_failure(A, "has_neg");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_neg_name(), {lvl}), {A, *A_has_neg, e});
+    }
+
+    expr mk_le(expr const & A, expr const & lhs, expr const & rhs) {
+        level lvl = get_level(A);
+        auto A_has_le = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_le_name(), {lvl}), A));
+        if (!A_has_le) {
+            trace_inst_failure(A, "has_le");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_le_name(), {lvl}), {A, *A_has_le, lhs, rhs});
+    }
+
+    expr mk_lt(expr const & A, expr const & lhs, expr const & rhs) {
+        level lvl = get_level(A);
+        auto A_has_lt = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_lt_name(), {lvl}), A));
+        if (!A_has_lt) {
+            trace_inst_failure(A, "has_lt");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_lt_name(), {lvl}), {A, *A_has_lt, lhs, rhs});
+    }
+
+    expr mk_ordered_semiring(expr const & A) {
+        level lvl = get_level(A);
+        return ::lean::mk_app(mk_constant(get_ordered_semiring_name(), {lvl}), A);
+    }
+
+    expr mk_ordered_ring(expr const & A) {
+        level lvl = get_level(A);
+        return ::lean::mk_app(mk_constant(get_ordered_ring_name(), {lvl}), A);
+    }
+
+    expr mk_linear_ordered_comm_ring(expr const & A) {
+        level lvl = get_level(A);
+        return ::lean::mk_app(mk_constant(get_linear_ordered_comm_ring_name(), {lvl}), A);
+    }
+
+    expr mk_linear_ordered_field(expr const & A) {
+        level lvl = get_level(A);
+        return ::lean::mk_app(mk_constant(get_linear_ordered_field_name(), {lvl}), A);
+    }
+
     expr mk_false_rec(expr const & c, expr const & H) {
         level c_lvl = get_level(c);
         if (is_standard(m_ctx->env())) {
@@ -819,6 +894,42 @@ expr app_builder::mk_partial_left_distrib(expr const & A) {
 
 expr app_builder::mk_partial_right_distrib(expr const & A) {
     return m_ptr->mk_partial_right_distrib(A);
+}
+
+expr app_builder::mk_bit0(expr const & A, expr const & n) {
+    return m_ptr->mk_bit0(A, n);
+}
+
+expr app_builder::mk_bit1(expr const & A, expr const & n) {
+    return m_ptr->mk_bit1(A, n);
+}
+
+expr app_builder::mk_neg(expr const & A, expr const & e) {
+    return m_ptr->mk_neg(A, e);
+}
+
+expr app_builder::mk_le(expr const & A, expr const & lhs, expr const & rhs) {
+    return m_ptr->mk_le(A, lhs, rhs);
+}
+
+expr app_builder::mk_lt(expr const & A, expr const & lhs, expr const & rhs) {
+    return m_ptr->mk_lt(A, lhs, rhs);
+}
+
+expr app_builder::mk_ordered_semiring(expr const & A) {
+    return m_ptr->mk_ordered_semiring(A);
+}
+
+expr app_builder::mk_ordered_ring(expr const & A) {
+    return m_ptr->mk_ordered_ring(A);
+}
+
+expr app_builder::mk_linear_ordered_comm_ring(expr const & A) {
+    return m_ptr->mk_linear_ordered_comm_ring(A);
+}
+
+expr app_builder::mk_linear_ordered_field(expr const & A) {
+    return m_ptr->mk_linear_ordered_field(A);
 }
 
 expr app_builder::mk_sorry(expr const & type) {
