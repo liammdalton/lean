@@ -1134,16 +1134,19 @@ result som_fuse(expr const & e) {
     return s.simplify(e, srss);
 }
 
-optional<expr> prove_som_fuse(expr const & e) {
+optional<expr> prove_eq_som_fuse(expr const & lhs, expr const & rhs) {
     simp_rule_sets srss = get_simp_rule_sets(env(), ios().get_options(),
                                              {*g_simplify_prove_namespace, *g_simplify_unit_namespace,
                                                      *g_simplify_neg_namespace, *g_simplify_ac_namespace,
                                                      *g_simplify_distrib_namespace});
     // TODO(dhs): we don't want to recurse inside the unknowns
     // TODO(dhs): [rel] is ignored
+    expr thm = get_app_builder().mk_eq(lhs, rhs);
     simplifier s = simplifier(get_iff_name(), simplify_all_pred);
     s.set_fuse(true);
-    return s.prove(e, srss);
+    // TODO(dhs): we really only need to simplify over 'eq', and then just rewrite once with
+    // forall x, (x = x -> true) at the end
+    return s.prove(thm, srss);
 }
 
 

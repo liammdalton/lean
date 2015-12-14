@@ -505,7 +505,7 @@ public:
             expr type_messy = infer_type(pf_messy);
 
             expr type_clean = p.get_clean_thm();
-            optional<expr> pf_messy_eq_clean = prove_som_fuse(get_app_builder().mk_eq(type_messy, type_clean));
+            optional<expr> pf_messy_eq_clean = prove_eq_som_fuse(type_messy, type_clean);
             lean_assert(pf_messy_eq_clean);
             expr id_motive = mk_app(mk_constant(get_id_name(), mk_level_one()), mk_Prop());
             expr pf_clean = get_app_builder().mk_eq_rec(id_motive, pf_messy, *pf_messy_eq_clean);
