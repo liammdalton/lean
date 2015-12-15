@@ -27,7 +27,7 @@ This module performs linear and some non-linear arithmetic, as described in the 
 
 The architecture is as follows:
 
-When the action [assert_acl_action(hypothesis_idx)] is called, we 
+When the action [assert_acl_action(hypothesis_idx)] is called, we
 call the [linearizer] to construct a list of polynomial inequalities, of the form
 
 <<
@@ -370,7 +370,7 @@ class acl_fn {
             lean_trace(*g_acl_trace_name, ios().get_diagnostic_channel() << "todo: " << p << "\n";);
             break;
         case poly_kind::Contradiction:
-            lean_trace(*g_acl_trace_name, ios().get_diagnostic_channel() << "contradiction: " << p << "\n";);            
+            lean_trace(*g_acl_trace_name, ios().get_diagnostic_channel() << "contradiction: " << p << "\n";);
             throw found_contradiction(p);
             break;
         case poly_kind::Trivial:

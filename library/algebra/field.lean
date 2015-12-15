@@ -238,6 +238,9 @@ section field
   theorem mul_div_cancel_left (Ha : a ≠ 0) : a * b / a = b :=
     by rewrite [mul.comm a, (!mul_div_cancel Ha)]
 
+  theorem field.mul_inv_cancel_left (Ha : a ≠ 0) : a * (a⁻¹ * b) = b := 
+    by rewrite [-mul.assoc, mul_inv_cancel Ha, one_mul]
+
   theorem mul_div_cancel' (Hb : b ≠ 0) : b * (a / b) = a :=
     by rewrite [mul.comm, (!div_mul_cancel Hb)]
 
