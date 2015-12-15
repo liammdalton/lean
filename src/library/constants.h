@@ -82,6 +82,7 @@ name const & get_implies_name();
 name const & get_implies_of_if_neg_name();
 name const & get_implies_of_if_pos_name();
 name const & get_implies_resolve_name();
+name const & get_inv_name();
 name const & get_is_trunc_is_hprop_name();
 name const & get_is_trunc_is_hprop_elim_name();
 name const & get_is_trunc_is_hset_name();

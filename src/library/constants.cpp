@@ -80,6 +80,7 @@ name const * g_implies = nullptr;
 name const * g_implies_of_if_neg = nullptr;
 name const * g_implies_of_if_pos = nullptr;
 name const * g_implies_resolve = nullptr;
+name const * g_inv = nullptr;
 name const * g_is_trunc_is_hprop = nullptr;
 name const * g_is_trunc_is_hprop_elim = nullptr;
 name const * g_is_trunc_is_hset = nullptr;
@@ -357,6 +358,7 @@ void initialize_constants() {
     g_implies_of_if_neg = new name{"implies_of_if_neg"};
     g_implies_of_if_pos = new name{"implies_of_if_pos"};
     g_implies_resolve = new name{"implies", "resolve"};
+    g_inv = new name{"inv"};
     g_is_trunc_is_hprop = new name{"is_trunc", "is_hprop"};
     g_is_trunc_is_hprop_elim = new name{"is_trunc", "is_hprop", "elim"};
     g_is_trunc_is_hset = new name{"is_trunc", "is_hset"};
@@ -635,6 +637,7 @@ void finalize_constants() {
     delete g_implies_of_if_neg;
     delete g_implies_of_if_pos;
     delete g_implies_resolve;
+    delete g_inv;
     delete g_is_trunc_is_hprop;
     delete g_is_trunc_is_hprop_elim;
     delete g_is_trunc_is_hset;
@@ -912,6 +915,7 @@ name const & get_implies_name() { return *g_implies; }
 name const & get_implies_of_if_neg_name() { return *g_implies_of_if_neg; }
 name const & get_implies_of_if_pos_name() { return *g_implies_of_if_pos; }
 name const & get_implies_resolve_name() { return *g_implies_resolve; }
+name const & get_inv_name() { return *g_inv; }
 name const & get_is_trunc_is_hprop_name() { return *g_is_trunc_is_hprop; }
 name const & get_is_trunc_is_hprop_elim_name() { return *g_is_trunc_is_hprop_elim; }
 name const & get_is_trunc_is_hset_name() { return *g_is_trunc_is_hset; }
