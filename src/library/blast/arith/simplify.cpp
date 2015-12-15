@@ -11,10 +11,6 @@ Author: Daniel Selsam
 namespace lean {
 namespace blast {
 
-polynomial mk_numeral(expr const & n, expr const & type);
-polynomial mk_term(expr const & e);
-polynomial mk_monomial(polynomial_numeral const & coefficient, polynomial_term const & term);
-polynomial mk_polynomial();
 
 class field_simplify_fn {
     expr m_type;
@@ -29,14 +25,38 @@ class field_simplify_fn {
         return n == get_add_name() || n == get_mul_name() || n == get_neg_name() || n == get_inv_name();
     }
 
+    void simplify_add_core(expr const & e, polynomial & p) {
+        expr e1, e2;
+        if (is_add(e, e1, e2)) {
+            simplify_add_core(e1, p);
+            simplify_add_core(e2, p);
+        } else {
+            p += simplify(e);
+        }
+    }
+
     polynomial simplify_add(expr const & e) {
+        lean_assert(is_add(e));
+        polynomial p;
+        simplify_add_core(e, p);
+        return p;
+    }
 
-
+    void simplify_mul_core(expr const & e, polynomial & p) {
+        expr e1, e2;
+        if (is_mul(e, e1, e2)) {
+            simplify_mul_core(e1, p);
+            simplify_mul_core(e2, p);
+        } else {
+            p *= simplify(e);
+        }
     }
 
     polynomial simplify_mul(expr const & e) {
-
-
+        lean_assert(is_mul(e));
+        polynomial p;
+        simplify_mul_core(e, p);
+        return p;
     }
 
     polynomial simplify_neg(expr const & e) {
@@ -47,8 +67,8 @@ class field_simplify_fn {
 
     polynomial simplify_inv(expr const & e) {
         polynomial arg = simplify(app_arg(e));
-
-
+        arg.flip_inv();
+        return arg;
     }
 
     polynomial simplify(expr const & e) {
