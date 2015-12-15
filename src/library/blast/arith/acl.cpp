@@ -344,14 +344,6 @@ static acl_branch_extension & get_acl_extension() {
     return static_cast<acl_branch_extension&>(curr_state().get_extension(g_ext_id));
 }
 
-/* Contradictions */
-struct found_contradiction {
-    poly m_contradiction;
-public:
-    found_contradiction(poly const & p): m_contradiction(p) {}
-    poly const & get_contradiction() const { return m_contradiction; }
-};
-
 /* ACL function */
 class acl_fn {
     acl_branch_extension &        m_ext;
@@ -371,7 +363,7 @@ class acl_fn {
             break;
         case poly_kind::Contradiction:
             lean_trace(*g_acl_trace_name, ios().get_diagnostic_channel() << "contradiction: " << p << "\n";);
-            throw found_contradiction(p);
+            m_contradiction = p;
             break;
         case poly_kind::Trivial:
             lean_trace(*g_acl_trace_name, ios().get_diagnostic_channel() << "trivial: " << p << "\n";);
@@ -467,38 +459,43 @@ class acl_fn {
         lean_assert(!is_nil(p.get_monomials()));
         poly_pot pot = m_ext.insert_poly_into_pot(p);
         list<poly> to_resolve_with = (p.is_positive() ? pot.get_negatives() : pot.get_positives());
-        for (poly const & q : to_resolve_with) resolve_polys(p, q);
+        for (poly const & q : to_resolve_with) {
+            resolve_polys(p, q);
+            if (m_contradiction) break;
+        }
     }
 
 public:
     acl_fn(): m_ext(get_acl_extension()) {}
 
     action_result operator()(hypothesis_idx hidx) {
-        try {
-            /* There may me some TODO items remaining from the previous invocation. */
-            m_ext.get_todo(m_todo);
+        /* There may me some TODO items remaining from the previous invocation. */
+        m_ext.get_todo(m_todo);
 
-            /* We convert the new hypothesis into 0, 1, or 2 polynormial inequalities. */
-            list<poly> new_todo = m_ext.linearize(hidx);
-            for (poly const & p : new_todo) {
-                register_todo(p);
-            }
+        /* We convert the new hypothesis into 0, 1, or 2 polynormial inequalities. */
+        list<poly> new_todo = m_ext.linearize(hidx);
+        for (poly const & p : new_todo) {
+            register_todo(p);
+            if (m_contradiction) break;
+        }
 
-            while (!m_todo.empty()) {
-                m_num_steps++;
-                if (m_num_steps > m_max_steps) {
-                    m_ext.put_todo(m_todo);
-                    break;
-                }
-                poly p = m_todo.back();
-                m_todo.pop_back();
-                process_poly(p);
+        while (!m_todo.empty() && !m_contradiction) {
+            m_num_steps++;
+            if (m_num_steps > m_max_steps) {
+                m_ext.put_todo(m_todo);
+                break;
             }
+            poly p = m_todo.back();
+            m_todo.pop_back();
+            process_poly(p);
+        }
+
+        if (!m_contradiction) {
             // TODO(dhs): If I infer new equalities, add them as hypotheses and return a new branch.
             // (not even checking for equalities yet)
             return action_result::failed();
-        } catch (found_contradiction fc) {
-            poly const & p = fc.get_contradiction();
+        } else {
+            poly const & p = m_contradiction.value();
             expr const & A = p.get_A();
 
             expr pf_messy = p.get_proof_messy();
