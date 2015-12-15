@@ -10,6 +10,7 @@ Author: Daniel Selsam
 
 namespace lean {
 namespace blast {
+namespace arith {
 
 expr mpz_to_expr_core(mpz const & n, expr const & A) {
     lean_assert(n > 0);
@@ -91,4 +92,4 @@ expr prove_zero_not_le_neg(expr const & A, mpz const & nc) {
                   {A, *A_linear_ordered_comm_ring, c_pos.first, c_pos.second});
 }
 
-}}
+}}}

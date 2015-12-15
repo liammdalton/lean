@@ -53,6 +53,7 @@ Author: Leonardo de Moura
 #include "library/blast/forward/pattern.h"
 #include "library/blast/forward/forward_lemma_set.h"
 #include "library/blast/grinder/intro_elim_lemmas.h"
+#include "library/blast/arith/simplify.h"
 #include "compiler/preprocess_rec.h"
 #include "frontends/lean/util.h"
 #include "frontends/lean/parser.h"
@@ -1509,6 +1510,23 @@ static environment simplify_cmd(parser & p) {
     return p.env();
 }
 
+static environment arith_simplify_cmd(parser & p) {
+    expr e; level_param_names ls;
+    std::tie(e, ls) = parse_local_expr(p);
+
+    blast::scope_debug scope(p.env(), p.ios());
+    auto poly = blast::arith::simplify(e);
+
+    flycheck_information info(p.regular_stream());
+    if (info.enabled()) {
+        p.display_information_pos(p.cmd_pos());
+        p.regular_stream() << "arith_simplify result:\n";
+    }
+
+    p.regular_stream() << poly << endl;
+    return p.env();
+}
+
 static environment normalizer_cmd(parser & p) {
     environment const & env = p.env();
     expr e; level_param_names ls;
@@ -1585,6 +1603,7 @@ void init_cmd_table(cmd_table & r) {
     add_cmd(r, cmd_info("#decl_stats",       "(for debugging purposes) display declaration statistics", decl_stats_cmd));
     add_cmd(r, cmd_info("#relevant_thms",    "(for debugging purposes) select relevant theorems using Meng&Paulson heuristic", relevant_thms_cmd));
     add_cmd(r, cmd_info("#simplify",         "(for debugging purposes) simplify given expression", simplify_cmd));
+    add_cmd(r, cmd_info("#arith_simplify",   "(for debugging purposes) simplify given expression using arith module", arith_simplify_cmd));
     add_cmd(r, cmd_info("#abstract_expr",    "(for debugging purposes) call abstract expr methods", abstract_expr_cmd));
 
     register_decl_cmds(r);

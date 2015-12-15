@@ -8,6 +8,7 @@ Author: Daniel Selsam
 
 namespace lean {
 namespace blast {
+namespace arith {
 
 expr mpz_to_expr(mpz const & n, expr const & A);
 
@@ -18,4 +19,4 @@ expr prove_zero_not_lt_zero(expr const & A);
 expr prove_zero_not_lt_neg(expr const & A, mpz const & nc);
 expr prove_zero_not_le_neg(expr const & A, mpz const & nc);
 
-}}
+}}}

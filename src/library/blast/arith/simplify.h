@@ -8,8 +8,8 @@ Author: Daniel Selsam
 
 namespace lean {
 namespace blast {
-
+namespace arith {
 /* API */
-polynomial field_simplify(expr const & e);
+polynomial simplify(expr const & e);
 
-}}
+}}}

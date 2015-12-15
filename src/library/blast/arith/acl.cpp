@@ -48,6 +48,7 @@ found a contradiction, and we must start to construct a formal proof of this fac
 
 namespace lean {
 namespace blast {
+namespace arith {
 
 /** Globals */
 static name * g_acl_trace_name           = nullptr;
@@ -537,11 +538,12 @@ void finalize_acl() {
     delete g_acl_max_steps_per_action;
     delete g_acl_trace_name;
 }
+}
 
 /* Entry points */
 action_result assert_acl_action(hypothesis_idx hidx) {
     if (!get_config().m_acl) return action_result::failed();
-    return acl_fn()(hidx);
+    return arith::acl_fn()(hidx);
 }
 
 }}
