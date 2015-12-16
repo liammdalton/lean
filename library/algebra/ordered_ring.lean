@@ -762,8 +762,6 @@ end
 
 theorem zero_lt_one [s : linear_ordered_comm_ring A] : (0:A) < 1 := zero_lt_one
 
-theorem div_pos_of_pos [s : linear_ordered_comm_ring A] (a b : A) (Ha : 0 < a) (Hb : 0 < b) → 0 < a * b⁻¹ := sorry
-
 -- Proving negative numbers are not positive
 theorem zero_not_lt_zero [s : linear_ordered_comm_ring A] : (0:A) < 0 → false := by apply strict_order.lt_irrefl
 theorem zero_not_le_neg [s : linear_ordered_comm_ring A] (c : A) : 0 < c → 0 ≤ - c → false :=

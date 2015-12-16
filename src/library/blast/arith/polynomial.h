@@ -13,7 +13,6 @@ Author: Daniel Selsam
 
 namespace lean {
 namespace blast {
-namespace arith {
 
 class atom {
     expr                    m_e;
@@ -101,4 +100,4 @@ std::ostream & operator<<(std::ostream & out, atom const & a);
 std::ostream & operator<<(std::ostream & out, monomial const & m);
 std::ostream & operator<<(std::ostream & out, polynomial const & p);
 
-}}}
+}}

@@ -9,7 +9,6 @@ Author: Daniel Selsam
 
 namespace lean {
 namespace blast {
-namespace arith {
 
 /* atoms */
 bool operator==(atom const & a1, atom const & a2) {
@@ -109,4 +108,4 @@ std::ostream & operator<<(std::ostream & out, polynomial const & _p) {
     out << "}";
     return out;
 }
-}}}
+}}

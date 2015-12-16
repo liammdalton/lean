@@ -25,13 +25,18 @@ Author: Daniel Selsam
 
 namespace lean {
 namespace blast {
-namespace arith {
 
 /** Globals */
 static name * g_acl_trace_name           = nullptr;
 static name * g_acl_max_steps_per_action = nullptr;
 
 static unsigned g_ext_id = 0;
+
+void addmul(mpq & q, mpq const & c, mpq const & x) {
+    mpq tmp = c;
+    tmp *= x;
+    q += tmp;
+}
 
 /** Option getters */
 unsigned get_acl_max_steps_per_action() {
@@ -203,7 +208,7 @@ class linearizer {
            [0 [<,<=] Sum_i (<numeral_i> * <unknown_i>)], pre-fused and everything.
            We will implement the downstream processing, test, and then implement the
            linearization in earnest. */
-        polynomial p = simplify(rhs);
+        polynomial p = arith::simplify(rhs);
         return poly(A, to_list(p.get_monomials().begin(), p.get_monomials().end()), p.get_offset(), strict, lproof);
     }
 public:
@@ -233,6 +238,8 @@ public:
                     return get_app_builder().mk_app(get_ordered_arith_eq_of_zero_le2_name(), h.get_self());
                 });
             return list<poly>({p1, p2});
+        } else {
+            return list<poly>();
         }
     }
 };
@@ -321,22 +328,30 @@ class acl_fn {
         while (!is_nil(ms)) {
             monomial m = head(ms);
             mpq new_coefficient{0};
-            new_coefficient += (.addmul(scale, m.get_coefficient());
-            new_monomials.emplace_back(new_coefficient, m.get_unknown_idx());
+            addmul(new_coefficient, scale, m.get_coefficient());
+            new_monomials.emplace_back(new_coefficient, m.get_atoms());
             ms = tail(ms);
         }
     }
 
     void resolve_polys(poly const & p, poly const & q) {
+        mpq p_scale, q_scale;
+
         mpq p_coefficient{p.get_major_coefficient()};
         mpq q_coefficient{q.get_major_coefficient()};
-        p_coefficient.abs();
-        q_coefficient.abs();
-        mpq p_scale{lcm(p_coefficient, q_coefficient)};
-        mpq q_scale{p_scale};
-        p_scale /= p_coefficient;
-        q_scale /= q_coefficient;
-
+        if (p_coefficient.is_integer() && q_coefficient.is_integer()) {
+            p_coefficient.abs();
+            q_coefficient.abs();
+            p_scale = lcm(p_coefficient.get_numerator(), q_coefficient.get_numerator());
+            q_scale = p_scale;
+            p_scale /= p_coefficient;
+            q_scale /= q_coefficient;
+        } else {
+            p_scale = p_coefficient;
+            p_scale.inv(); p_scale.neg();
+            q_scale = q_coefficient;
+            q_scale.inv();
+        }
         lean_trace(*g_acl_trace_name, ios().get_diagnostic_channel() << p << " |***| " << q
                    << " -- (" << p_scale << ", " << q_scale << ")\n";);
 
@@ -354,8 +369,8 @@ class acl_fn {
         monomial p_major = head(p_monomials);
         monomial q_major = head(p_monomials);
 
-        lean_assert(p_major.get_unknown_idx() == q_major.get_unknown_idx());
-        if (p_major.get_unknown_idx() != q_major.get_unknown_idx()) throw exception("ACL::resolving wrong polys");
+        lean_assert(p_major.get_atoms() == q_major.get_atoms());
+        if (p_major.get_atoms() != q_major.get_atoms()) throw exception("ACL::resolving wrong polys");
 
         p_monomials = tail(p_monomials);
         q_monomials = tail(q_monomials);
@@ -374,28 +389,28 @@ class acl_fn {
                 monomial const & p_m = head(p_monomials);
                 monomial const & q_m = head(q_monomials);
                 mpq new_coefficient{0};
-                if (is_lt(p_m, q_m)) {
-                    new_coefficient.addmul(p_scale, p_m.get_coefficient());
-                    if (!new_coefficient.is_zero()) new_monomials.emplace_back(new_coefficient, p_m.get_unknown_idx());
+                if (monomial_fuse_lt()(p_m, q_m)) {
+                    addmul(new_coefficient, p_scale, p_m.get_coefficient());
+                    if (!new_coefficient.is_zero()) new_monomials.emplace_back(new_coefficient, p_m.get_atoms());
                     p_monomials = tail(p_monomials);
-                } else if (is_lt(q_m, p_m)) {
-                    new_coefficient.addmul(q_scale, q_m.get_coefficient());
-                    if (!new_coefficient.is_zero()) new_monomials.emplace_back(new_coefficient, q_m.get_unknown_idx());
+                } else if (monomial_fuse_lt()(q_m, p_m)) {
+                    addmul(new_coefficient, q_scale, q_m.get_coefficient());
+                    if (!new_coefficient.is_zero()) new_monomials.emplace_back(new_coefficient, q_m.get_atoms());
                     q_monomials = tail(q_monomials);
                 } else {
-                    new_coefficient.addmul(p_scale, p_m.get_coefficient());
-                    new_coefficient.addmul(q_scale, q_m.get_coefficient());
-                    if (!new_coefficient.is_zero()) new_monomials.emplace_back(new_coefficient, p_m.get_unknown_idx());
+                    addmul(new_coefficient, p_scale, p_m.get_coefficient());
+                    addmul(new_coefficient, q_scale, q_m.get_coefficient());
+                    if (!new_coefficient.is_zero()) new_monomials.emplace_back(new_coefficient, p_m.get_atoms());
                     p_monomials = tail(p_monomials);
                     q_monomials = tail(q_monomials);
                 }
             }
         }
         mpq new_offset{0};
-        new_offset.addmul(p_scale, p.get_offset());
-        new_offset.addmul(q_scale, q.get_offset());
+        addmul(new_offset, p_scale, p.get_offset());
+        addmul(new_offset, q_scale, q.get_offset());
 
-        register_todo(poly(p.get_A(), new_monomials, new_offset, poly_parents(p, q, p_scale, q_scale)));
+        register_todo(poly(p.get_A(), to_list(new_monomials), new_offset, poly_parents(p, q, p_scale, q_scale)));
     }
 
     void process_poly(poly const & p) {
@@ -464,7 +479,6 @@ public:
         }
     }
 };
-}
 
 /* Setup and teardown */
 void initialize_acl() {
@@ -486,7 +500,7 @@ void finalize_acl() {
 /* Entry points */
 action_result assert_acl_action(hypothesis_idx hidx) {
     if (!get_config().m_acl) return action_result::failed();
-    return arith::acl_fn()(hidx);
+    return acl_fn()(hidx);
 }
 
 }}

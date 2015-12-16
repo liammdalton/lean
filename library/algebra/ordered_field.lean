@@ -514,3 +514,9 @@ section discrete_linear_ordered_field
       !eq_div_of_mul_eq this !eq_sign_mul_abs⁻¹)
 
 end discrete_linear_ordered_field
+
+namespace ordered_arith
+
+theorem div_pos_of_pos {A : Type} [s : linear_ordered_field A] (a b : A) : 0 < a →  0 < b → 0 < a * b⁻¹ := sorry
+
+end ordered_arith

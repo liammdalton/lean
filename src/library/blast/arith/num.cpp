@@ -10,7 +10,6 @@ Author: Daniel Selsam
 
 namespace lean {
 namespace blast {
-namespace arith {
 
 expr mpz_to_expr_core(mpz const & n, expr const & A) {
     lean_assert(n > 0);
@@ -94,22 +93,14 @@ expr prove_zero_not_lt_zero(expr const & A) {
                   {A, *A_linear_ordered_comm_ring});
 }
 
-expr prove_zero_not_lt_neg(expr const & A, mpz const & nc) {
-    blast_tmp_type_context tmp_tctx;
-    optional<expr> A_linear_ordered_comm_ring = tmp_tctx->mk_class_instance(get_app_builder().mk_linear_ordered_comm_ring(A));
-    if (!A_linear_ordered_comm_ring) throw blast_exception("Can't synthesize linear_ordered_comm_ring", A);
-    auto c_pos = prove_positive_core(neg(nc), A, *A_linear_ordered_comm_ring);
-    return mk_app(mk_constant(get_ordered_arith_zero_not_lt_neg_name(), get_level(A)),
-                  {A, *A_linear_ordered_comm_ring, c_pos.first, c_pos.second});
+expr prove_zero_not_lt_neg(expr const & A, mpq const & nc) {
+    auto c_pos = prove_positive(neg(nc), A);
+    return get_app_builder().mk_app(get_ordered_arith_zero_not_lt_neg_name(), 4, {c_pos});
 }
 
-expr prove_zero_not_le_neg(expr const & A, mpz const & nc) {
-    blast_tmp_type_context tmp_tctx;
-    optional<expr> A_linear_ordered_comm_ring = tmp_tctx->mk_class_instance(get_app_builder().mk_linear_ordered_comm_ring(A));
-    if (!A_linear_ordered_comm_ring) throw blast_exception("Can't synthesize linear_ordered_comm_ring", A);
-    auto c_pos = prove_positive_core(neg(nc), A, *A_linear_ordered_comm_ring);
-    return mk_app(mk_constant(get_ordered_arith_zero_not_le_neg_name(), get_level(A)),
-                  {A, *A_linear_ordered_comm_ring, c_pos.first, c_pos.second});
+expr prove_zero_not_le_neg(expr const & A, mpq const & nc) {
+    auto c_pos = prove_positive(neg(nc), A);
+    return get_app_builder().mk_app(get_ordered_arith_zero_not_le_neg_name(), 4, {c_pos});
 }
 
-}}}
+}}

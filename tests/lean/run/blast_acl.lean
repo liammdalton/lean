@@ -1,4 +1,4 @@
-import algebra.ordered_ring
+import algebra.ordered_field
 
 universe l
 constants (A : Type.{l}) (s : linear_ordered_comm_ring A)
