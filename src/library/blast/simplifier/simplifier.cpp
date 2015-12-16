@@ -125,6 +125,11 @@ static bool is_neg_app(expr const & e) {
     return is_const_app(e, get_neg_name(), 3);
 }
 
+static bool is_extended_num(expr const & e) {
+    // TODO(dhs): Do we need to cover operations on numerals here?
+    return is_num(e) || (is_inv(e) && is_extended_num(app_arg(e)));
+}
+
 /* Main simplifier class */
 
 class simplifier {
@@ -1034,7 +1039,7 @@ expr_pair simplifier::split_summand(expr const & e, expr const & f_mul, expr con
         buffer<expr> args;
         get_app_args(s, args);
         expr const & multiplicand = args[2];
-        if (is_num(multiplicand)) {
+        if (is_extended_num(multiplicand)) {
             numeral = mk_app(f_mul, multiplicand, numeral);
         } else {
             if (variable == one) variable = multiplicand;
@@ -1042,7 +1047,8 @@ expr_pair simplifier::split_summand(expr const & e, expr const & f_mul, expr con
         }
         s = args[3];
     }
-    if (is_num(s)) {
+    expr num_inv;
+    if (is_extended_num(s)) {
         numeral = mk_app(f_mul, s, numeral);
     } else {
         if (variable == one) variable = s;

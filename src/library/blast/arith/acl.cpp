@@ -201,7 +201,9 @@ class linearizer {
     // TODO(dhs): I disabled the unknown tracking. If it is a performance issue, I will add it again.
     bool type_ok(expr const & A) {
         blast_tmp_type_context m_tmp_tctx;
-        return static_cast<bool>(m_tmp_tctx->mk_class_instance(get_app_builder().mk_linear_ordered_comm_ring(A)));
+        bool ok = static_cast<bool>(m_tmp_tctx->mk_class_instance(get_app_builder().mk_linear_ordered_comm_ring(A)));
+        if (!ok) lean_trace(*g_acl_trace_name, tout() << "bad type: " << ppb(A) << "\n";);
+        return ok;
     }
     poly linearize(expr const & A, expr const & rhs, bool strict, hypothesis_idx hidx, lazy_proof const & lproof) {
         /* TODO(dhs): we are temporarily assuming the input comes in the form of
@@ -500,6 +502,7 @@ void finalize_acl() {
 /* Entry points */
 action_result assert_acl_action(hypothesis_idx hidx) {
     if (!get_config().m_acl) return action_result::failed();
+    lean_trace(*g_acl_trace_name, ios().get_diagnostic_channel() << "assert\n";);
     return acl_fn()(hidx);
 }
 

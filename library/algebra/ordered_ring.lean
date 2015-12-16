@@ -742,10 +742,22 @@ end norm_num
 namespace ordered_arith
 
 -- Shuffling an inequality
-theorem lt_of_zero_lt [s : linear_ordered_comm_ring A] (a b : A) : a < b → 0 < b + - a := sorry
-theorem le_of_zero_le [s : linear_ordered_comm_ring A] (a b : A) : a ≤ b → 0 ≤ b + - a := sorry
-theorem eq_of_zero_le1 [s : linear_ordered_comm_ring A] (a b : A) : a = b → 0 ≤ b + - a := sorry
-theorem eq_of_zero_le2 [s : linear_ordered_comm_ring A] (a b : A) : a = b → 0 ≤ a + - b := sorry
+theorem lt_of_zero_lt [s : linear_ordered_comm_ring A] (a b : A) : a < b → 0 < b + - a :=
+assume Hab,
+assert H : a - a < b - a, from sub_lt_sub_of_lt_of_le Hab (le_of_eq (eq.refl a)),
+begin rewrite sub_self at H, exact H end
+
+theorem le_of_zero_le [s : linear_ordered_comm_ring A] (a b : A) : a ≤ b → 0 ≤ b + - a :=
+assume Hab,
+assert H : a - a ≤ b - a, from sub_le_sub Hab (le_of_eq (eq.refl a)),
+begin rewrite sub_self at H, exact H end
+
+theorem eq_of_zero_le1 [s : linear_ordered_comm_ring A] (a b : A) : a = b → 0 ≤ b + - a :=
+assume Hab,
+begin rewrite [Hab, -sub_eq_add_neg, sub_self], apply weak_order.le_refl end
+
+theorem eq_of_zero_le2 [s : linear_ordered_comm_ring A] (a b : A) : a = b → 0 ≤ a + - b :=
+assume Hab : a = b, eq_of_zero_le1 b a (eq.symm Hab)
 
 -- Proving positive numbers are positive
 theorem pos_bit0 [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit0 a :=

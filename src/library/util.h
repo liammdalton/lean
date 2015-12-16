@@ -211,6 +211,8 @@ bool is_le(expr const & e);
 bool is_le(expr const & e, expr & lhs, expr & rhs);
 bool is_le(expr const & e, expr & A, expr & lhs, expr & rhs);
 
+bool is_inv(expr const & e);
+
 /** \brief Given <tt>iff_pr : iff_term</tt>, where \c iff_term is of the form <tt>l <-> r</tt>,
     return the term <tt>propext l r iff_pr</tt>
 */

@@ -622,6 +622,8 @@ bool is_le(expr const & e, expr & A, expr & lhs, expr & rhs) {
     return true;
 }
 
+bool is_inv(expr const & e) { return is_const_app(e, get_inv_name(), 3); }
+
 expr apply_propext(expr const & iff_pr, expr const & iff_term) {
     lean_assert(is_iff(iff_term));
     return mk_app(mk_constant(get_propext_name()), app_arg(app_fn(iff_term)), app_arg(iff_term), iff_pr);
