@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Daniel Selsam
 */
 #include "library/blast/arith/polynomial.h"
+#include "kernel/expr_maps.h"
+#include <map>
 
 namespace lean {
 namespace blast {
@@ -35,6 +37,40 @@ void polynomial::mul(polynomial p) {
     }
     m_offset *= p.get_offset();
     m_monomials = new_monomials;
+}
+
+/* fuse */
+monomial monomial::cancel() const {
+    std::vector<atom> new_atoms;
+    std::map<expr, int, expr_quick_lt> expr_to_count;
+    for (atom a : get_atoms()) {
+        expr_to_count[a.get_expr()] += (a.is_inv() ? -1 : 1);
+    }
+    for (auto p : expr_to_count) {
+        if (p.second > 0) {
+            for (auto i = 0; i < p.second; i++) {
+                new_atoms.emplace_back(p.first, false);
+            }
+        } else if (p.second < 0) {
+            for (auto i = 0; i < -p.second; i++) {
+                new_atoms.emplace_back(p.first, true);
+            }
+        }
+    }
+    return monomial(get_coefficient(), new_atoms);
+}
+
+void polynomial::fuse() {
+    std::vector<monomial> new_monomials;
+    std::map<monomial, count, monomial_quick_lt> monomial_to_coefficient;
+    for (monomial m : get_monomials()) {
+        monomial m_cancelled = m.cancel();
+        auto it = atoms_to_numerals.find(m_cancelled(variables[i]);
+        if (it != variable_to_numerals.end()) it->second = cons(numerals[i], it->second);
+        else variable_to_numerals.insert({variables[i], list<expr>(numerals[i])});
+
+
+    }
 }
 
 /* Printing */

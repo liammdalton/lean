@@ -33,6 +33,21 @@ public:
 
     mpq const & get_coefficient() const { return m_coefficient; }
     std::vector<atom> const & get_atoms() const { return m_atoms; }
+    monomial cancel() const;
+};
+
+struct atoms_quick_lt {
+    bool operator()(std::vector<atom> const & a1, monomial const & m2) const {
+        std::vector const & a1, a2;
+        if (a1.size() != a2.size()) {
+            return a1.size() < a2.size();
+        } else {
+            for (auto i = 0; i < a1.size(); i++) {
+                if (a1[i] != a2[i]) return expr_quick_lt()(a1[i], a2[i]);
+            }
+        }
+        return m2.get_coefficient() < m1.get_coefficient();
+    }
 };
 
 class polynomial {
@@ -57,6 +72,7 @@ class polynomial {
     std::vector<monomial> const & get_monomials() const { return m_monomials; }
     void add(polynomial p);
     void mul(polynomial p);
+    void fuse();
 };
 
 std::ostream & operator<<(std::ostream & out, atom const & a);
