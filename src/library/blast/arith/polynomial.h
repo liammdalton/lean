@@ -24,6 +24,8 @@ public:
     void flip_inv() { m_inv = !m_inv; }
 };
 
+
+
 class monomial {
     mpq                      m_coefficient;
     std::vector<atom>        m_atoms;
@@ -53,10 +55,12 @@ class polynomial {
     bool                     m_inv{false};
  public:
     polynomial() {}
-    polynomial(mpq const & offset): m_offset(offset) {}
-    polynomial(expr const & a) {
+    polynomial(mpq const & offset, bool inv): m_offset(offset) {
+        if (inv && !m_offset.is_zero()) m_offset.inv();
+    }
+    polynomial(expr const & e, inv) {
         std::vector<atom> atoms;
-        atoms.push_back(a);
+        atoms.emplace_back(e, inv);
         m_monomials.emplace_back(mpq(1), atoms);
     }
     polynomial(polynomial const & p):
@@ -77,4 +81,9 @@ class polynomial {
     void unset_neg() { lean_assert(m_neg); m_neg = false; }
     void push_neg();
 };
+
+std::ostream & operator<<(std::ostream & out, atom const & a);
+std::ostream & operator<<(std::ostream & out, monomial const & m);
+std::ostream & operator<<(std::ostream & out, polynomial const & p);
+
 }}}

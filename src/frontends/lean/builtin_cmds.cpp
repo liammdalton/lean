@@ -1523,7 +1523,7 @@ static environment arith_simplify_cmd(parser & p) {
         p.regular_stream() << "arith_simplify result:\n";
     }
 
-    p.regular_stream() << poly << endl;
+    p.regular_stream().get_stream() << poly << "\n";
     return p.env();
 }
 
