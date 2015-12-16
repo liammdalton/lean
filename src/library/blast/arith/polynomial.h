@@ -14,13 +14,13 @@ namespace blast {
 namespace arith {
 
 class atom {
-    expr                     m_e;
-    bool                     m_inv{false};
+    expr                    m_e;
+    int                     m_pow;
 public:
-    atom(expr const & e, bool inv): m_e(e), m_inv(inv) {}
-    atom(atom const & a): m_e(a.m_e), m_inv(a.m_inv) {}
+    atom(expr const & e, int pow): m_e(e), m_pow(pow) {}
+    atom(atom const & a): m_e(a.m_e), m_pow(a.m_pow) {}
     expr const & get_expr() const { return m_e; }
-    bool is_inv() const { return m_inv; }
+    int get_pow() const { return m_pow; }
 };
 
 class monomial {
@@ -61,7 +61,7 @@ class polynomial {
     }
     polynomial(expr const & e, bool inv, bool neg) {
         std::vector<atom> atoms;
-        atoms.emplace_back(e, inv);
+        atoms.emplace_back(e, inv ? -1 : 1);
         mpq coefficient(1);
         if (neg) coefficient.neg();
         m_monomials.emplace_back(coefficient, atoms);
