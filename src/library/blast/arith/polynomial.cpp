@@ -3,13 +3,18 @@ Copyright (c) 2015 Daniel Selsam. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Author: Daniel Selsam
 */
+#include <algorithm>
 #include "library/blast/arith/polynomial.h"
-#include "kernel/expr_maps.h"
-#include <map>
+#include "library/blast/trace.h"
 
 namespace lean {
 namespace blast {
 namespace arith {
+
+/* atoms */
+bool operator==(atom const & a1, atom const & a2) {
+    return a1.get_power() == a2.get_power() && a1.get_expr() == a2.get_expr();
+}
 
 /* add */
 void polynomial::add(polynomial p) {
@@ -40,11 +45,45 @@ void polynomial::mul(polynomial p) {
 }
 
 /* fuse */
+void monomial::fuse_atoms() {
+    std::sort(m_atoms.begin(), m_atoms.end(), atom_quick_lt());
+    std::vector<atom> new_atoms;
+    unsigned i = 0;
+    while (i < m_atoms.size()) {
+        atom a = m_atoms[i];
+        i++;
+        while (i < m_atoms.size() && m_atoms[i].get_expr() == m_atoms[i-1].get_expr()) {
+            a.add_power(m_atoms[i].get_power());
+            i++;
+        }
+        if (a.get_power() != 0) new_atoms.push_back(a);
+    }
+    m_atoms = new_atoms;
+}
+
+void polynomial::fuse_monomials() {
+    for (monomial & m : m_monomials) m.fuse_atoms();
+    std::sort(m_monomials.begin(), m_monomials.end(), monomial_quick_lt());
+    std::vector<monomial> new_monomials;
+    unsigned i = 0;
+    while (i < m_monomials.size()) {
+        monomial m = m_monomials[i];
+        if (m.get_atoms().empty()) { i++; m_offset += m.get_coefficient(); continue; }
+        i++;
+        while (i < m_monomials.size() && m_monomials[i].get_atoms() == m_monomials[i-1].get_atoms()) {
+            m.add_coefficient(m_monomials[i].get_coefficient());
+            i++;
+        }
+        if (m.get_coefficient() != 0) new_monomials.push_back(m);
+    }
+    m_monomials = new_monomials;
+}
 
 /* Printing */
+// TODO(dhs): use [io_state_stream] so that we can pretty-print
+// issue: printing mpqs
 std::ostream & operator<<(std::ostream & out, atom const & a) {
-    if (a.is_inv()) out << "inv(" << a.get_expr() << ")";
-    else out << a.get_expr();
+    out << a.get_expr() << "::" << a.get_power();
     return out;
 }
 

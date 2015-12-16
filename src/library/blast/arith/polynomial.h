@@ -7,6 +7,7 @@ Author: Daniel Selsam
 #include <memory>
 #include <vector>
 #include "kernel/expr.h"
+#include "library/expr_lt.h"
 #include "util/numerics/mpq.h"
 
 namespace lean {
@@ -20,7 +21,19 @@ public:
     atom(expr const & e, int pow): m_e(e), m_pow(pow) {}
     atom(atom const & a): m_e(a.m_e), m_pow(a.m_pow) {}
     expr const & get_expr() const { return m_e; }
-    int get_pow() const { return m_pow; }
+    int get_power() const { return m_pow; }
+    void add_power(int pow) { m_pow += pow; }
+};
+
+bool operator==(atom const & a1, atom const & a2);
+inline bool operator!=(atom const & a1, atom const & a2) { return !(a1 == a2); }
+
+struct atom_quick_lt {
+    bool operator()(atom const & a1, atom const & a2) const {
+        // TODO(dhs): confirm that we do not need to make this a total order
+        // (only used for fusing right now)
+        return expr_quick_lt()(a1.get_expr(), a2.get_expr());
+    }
 };
 
 class monomial {
@@ -33,17 +46,23 @@ public:
 
     mpq const & get_coefficient() const { return m_coefficient; }
     std::vector<atom> const & get_atoms() const { return m_atoms; }
-    monomial cancel() const;
+    void add_coefficient(mpq const & coefficient) { m_coefficient += coefficient; }
+    void fuse_atoms();
 };
 
-struct atoms_quick_lt {
-    bool operator()(std::vector<atom> const & a1, monomial const & m2) const {
-        std::vector const & a1, a2;
-        if (a1.size() != a2.size()) {
-            return a1.size() < a2.size();
+struct monomial_quick_lt {
+    bool operator()(monomial const & m1, monomial const & m2) {
+        std::vector<atom> const & as1 = m1.get_atoms();
+        std::vector<atom> const & as2 = m2.get_atoms();
+        if (as1.size() != as2.size()) {
+            return as1.size() < as2.size();
         } else {
-            for (auto i = 0; i < a1.size(); i++) {
-                if (a1[i] != a2[i]) return expr_quick_lt()(a1[i], a2[i]);
+            for (unsigned i = 0; i < as1.size(); i++) {
+                if (as1[i].get_expr() != as2[i].get_expr()) {
+                    return expr_quick_lt()(as1[i].get_expr(), as2[i].get_expr());
+                } else if (as1[i].get_power() != as2[i].get_power()) {
+                    return as1[i].get_power() < as2[i].get_power();
+                }
             }
         }
         return m2.get_coefficient() < m1.get_coefficient();
@@ -72,7 +91,7 @@ class polynomial {
     std::vector<monomial> const & get_monomials() const { return m_monomials; }
     void add(polynomial p);
     void mul(polynomial p);
-    void fuse();
+    void fuse_monomials();
 };
 
 std::ostream & operator<<(std::ostream & out, atom const & a);

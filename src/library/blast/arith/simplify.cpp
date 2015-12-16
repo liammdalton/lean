@@ -87,7 +87,8 @@ polynomial simplify(expr const & e, bool inv, bool neg) {
 /* Entry point */
 polynomial simplify(expr const & e) {
     polynomial p = simplify(e, false, false);
-    return fuse(p);
+    p.fuse_monomials();
+    return p;
 }
 
 }}}
