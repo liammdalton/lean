@@ -23,78 +23,68 @@ static bool is_arithmetic(name const & n) {
     return n == get_add_name() || n == get_mul_name() || n == get_neg_name() || n == get_inv_name();
 }
 
-static void simplify_add_core(expr const & e, polynomial & p, bool inv) {
+polynomial simplify(expr const & e, bool inv, bool neg);
+
+static void simplify_add_core(expr const & e, polynomial & p, bool inv, bool neg) {
     expr e1, e2;
     if (is_add(e, e1, e2)) {
-        simplify_add_core(e1, p, inv);
-        simplify_add_core(e2, p, inv);
+        simplify_add_core(e1, p, inv, neg);
+        simplify_add_core(e2, p, inv, neg);
     } else {
-        p.add(simplify(e), inv);
+        p.add(simplify(e, inv, neg));
     }
 }
 
-static polynomial simplify_add(expr const & e, bool inv) {
+static polynomial simplify_add(expr const & e, bool inv, bool neg) {
     lean_assert(is_add(e));
     if (inv) {
-        return polynomial(e, true);
+        return polynomial(e, inv, neg);
     } else {
         polynomial p;
-        simplify_add_core(e, p, inv);
+        simplify_add_core(e, p, inv, neg);
         return p;
     }
 }
 
-static void simplify_mul_core(expr const & e, polynomial & p, bool inv) {
+static void simplify_mul_core(expr const & e, polynomial & p, bool inv, bool neg) {
     expr e1, e2;
     if (is_mul(e, e1, e2)) {
-        simplify_mul_core(e1, p, inv);
-        simplify_mul_core(e2, p, inv);
+        simplify_mul_core(e1, p, inv, neg);
+        simplify_mul_core(e2, p, inv, neg);
     } else {
-        p.mul(simplify(e, inv));
+        p.mul(simplify(e, inv, neg));
     }
 }
 
-static polynomial simplify_mul(expr const & e) {
+static polynomial simplify_mul(expr const & e, bool inv, bool neg) {
     lean_assert(is_mul(e));
-    polynomial p(mpq(1));
-    simplify_mul_core(e, p);
+    polynomial p(mpq(1), inv, neg);
+    simplify_mul_core(e, p, inv, false);
     return p;
 }
 
-static polynomial simplify_neg(expr const & e) {
-    polynomial arg = simplify(app_arg(e));
-    arg.flip_neg();
-    return arg;
-}
-
-static polynomial simplify_inv(expr const & e) {
-    return simplify(app_arg(e), true);
-    arg.flip_inv();
-    return arg;
-}
-
-/* Entry point */
-polynomial simplify(expr const & e, bool inv) {
+polynomial simplify(expr const & e, bool inv, bool neg) {
     expr f = get_app_fn(e);
     if (!is_constant(f)) {
-        return polynomial(e, inv);
+        return polynomial(e, inv, neg);
     } else if (is_numeral(const_name(f))) {
-        return polynomial(mpq_of_expr(get_type_context(), e), inv);
+        return polynomial(mpq_of_expr(get_type_context(), e), inv, neg);
     } else if (!is_arithmetic(const_name(f))) {
-        return polynomial(e, inv);
+        return polynomial(e, inv, neg);
     } else if (const_name(f) == get_add_name()) {
-        return simplify_add(e);
+        return simplify_add(e, inv, neg);
     } else if (const_name(f) == get_mul_name()) {
-        return simplify_mul(e);
+        return simplify_mul(e, inv, neg);
     } else if (const_name(f) == get_neg_name()) {
-        return simplify_neg(e);
+        return simplify(app_arg(e), inv, !neg);
     } else if (const_name(f) == get_inv_name()) {
-        return simplify_inv(e);
+        return simplify(app_arg(e), !inv, neg);
     } else {
         throw exception("TODO(dhs): some case not handled");
     }
 }
 
-polynomial simplify(expr const & e) { return simplify(e, false); }
+/* Entry point */
+polynomial simplify(expr const & e) { return simplify(e, false, false); }
 
 }}}
