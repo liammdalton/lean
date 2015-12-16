@@ -40,6 +40,8 @@ class polynomial {
     std::vector<monomial>    m_monomials;
  public:
     polynomial() {}
+    polynomial(mpq const & offset, std::vector<monomial> const & monomials):
+        m_offset(offset), m_monomials(monomials) {}
     polynomial(mpq const & offset, bool inv, bool neg): m_offset(offset) {
         if (inv && !m_offset.is_zero()) m_offset.inv();
         if (neg) m_offset.neg();
