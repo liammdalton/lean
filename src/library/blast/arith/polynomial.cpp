@@ -40,37 +40,35 @@ void polynomial::mul(polynomial p) {
 }
 
 /* fuse */
-monomial monomial::cancel() const {
+void monomial::fuse_atoms() const {
+    std::sort(m_atoms.begin(), m_atoms.end(), atom_lt);
     std::vector<atom> new_atoms;
-    std::map<expr, int, expr_quick_lt> expr_to_count;
-    for (atom a : get_atoms()) {
-        expr_to_count[a.get_expr()] += (a.is_inv() ? -1 : 1);
-    }
-    for (auto p : expr_to_count) {
-        if (p.second > 0) {
-            for (auto i = 0; i < p.second; i++) {
-                new_atoms.emplace_back(p.first, false);
-            }
-        } else if (p.second < 0) {
-            for (auto i = 0; i < -p.second; i++) {
-                new_atoms.emplace_back(p.first, true);
-            }
+    int i = 0;
+    while (i < m_atoms.size()) {
+        atom a = m_atoms[i];
+        while (i < m_atoms.size() && m_atoms[i+1] == m_atoms[i]) {
+            i++;
+            a.add_power(m_atoms[i].get_power());
         }
+        new_atoms.push_back(a);
     }
-    return monomial(get_coefficient(), new_atoms);
+    m_atoms = new_atoms;
 }
 
-void polynomial::fuse() {
+polynomial polynomial::fuse_monomials() const {
+    for (monomial & m : m_monomials) m.fuse_atoms();
+    std::sort(m_monomials.begin(), m_monomials.end(), monomial_lt);
     std::vector<monomial> new_monomials;
-    std::map<monomial, count, monomial_quick_lt> monomial_to_coefficient;
-    for (monomial m : get_monomials()) {
-        monomial m_cancelled = m.cancel();
-        auto it = atoms_to_numerals.find(m_cancelled(variables[i]);
-        if (it != variable_to_numerals.end()) it->second = cons(numerals[i], it->second);
-        else variable_to_numerals.insert({variables[i], list<expr>(numerals[i])});
-
-
+    int i = 0;
+    while (i < m_monomials.size()) {
+        monomial m = m_monomials[i];
+        while (i < m_monomials.size() && m_monomials[i+1] == m_monomials[i]) {
+            i++;
+            m.add_coefficient(m_monomials[i].get_coefficient());
+        }
+        new_monomials.push_back(m);
     }
+    m_monomials = new_monomials;
 }
 
 /* Printing */
