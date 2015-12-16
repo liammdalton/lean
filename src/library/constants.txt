@@ -47,6 +47,7 @@ field
 funext
 has_add
 has_div
+has_inv
 has_le
 has_lt
 has_mul
@@ -172,9 +173,14 @@ or.resolve_left
 or.resolve_right
 ordered_ring
 ordered_semiring
+ordered_arith.lt_of_zero_lt
+ordered_arith.le_of_zero_le
+ordered_arith.eq_of_zero_le1
+ordered_arith.eq_of_zero_le2
 ordered_arith.pos_bit0
 ordered_arith.pos_bit1
 ordered_arith.zero_lt_one
+ordered_arith.div_pos_of_pos
 ordered_arith.zero_not_lt_zero
 ordered_arith.zero_not_lt_neg
 ordered_arith.zero_not_le_neg

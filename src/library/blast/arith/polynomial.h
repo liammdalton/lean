@@ -8,6 +8,7 @@ Author: Daniel Selsam
 #include <vector>
 #include "kernel/expr.h"
 #include "library/expr_lt.h"
+#include "util/rb_map.h"
 #include "util/numerics/mpq.h"
 
 namespace lean {
@@ -28,11 +29,25 @@ public:
 bool operator==(atom const & a1, atom const & a2);
 inline bool operator!=(atom const & a1, atom const & a2) { return !(a1 == a2); }
 
-struct atom_quick_lt {
+struct atom_fuse_lt {
     bool operator()(atom const & a1, atom const & a2) const {
         // TODO(dhs): confirm that we do not need to make this a total order
         // (only used for fusing right now)
         return expr_quick_lt()(a1.get_expr(), a2.get_expr());
+    }
+};
+
+struct atoms_quick_cmp {
+    int operator()(std::vector<atom> const & as1, std::vector<atom> const & as2) const {
+        int size_cmp = unsigned_cmp()(as1.size(), as2.size());
+        if (size_cmp) return size_cmp;
+        for (unsigned i = 0; i < as1.size(); i++) {
+            int expr_cmp = expr_quick_cmp()(as1[i].get_expr(), as2[i].get_expr());
+            if (expr_cmp) return expr_cmp;
+            int power_cmp = unsigned_cmp()(as1[i].get_power(), as2[i].get_power());
+            if (power_cmp) return power_cmp;
+        }
+        return 0;
     }
 };
 
@@ -50,22 +65,10 @@ public:
     void fuse_atoms();
 };
 
-struct monomial_quick_lt {
+struct monomial_fuse_lt {
+    /* Only looks at the atoms. Is used for fusing monomials in a polynomial. */
     bool operator()(monomial const & m1, monomial const & m2) {
-        std::vector<atom> const & as1 = m1.get_atoms();
-        std::vector<atom> const & as2 = m2.get_atoms();
-        if (as1.size() != as2.size()) {
-            return as1.size() < as2.size();
-        } else {
-            for (unsigned i = 0; i < as1.size(); i++) {
-                if (as1[i].get_expr() != as2[i].get_expr()) {
-                    return expr_quick_lt()(as1[i].get_expr(), as2[i].get_expr());
-                } else if (as1[i].get_power() != as2[i].get_power()) {
-                    return as1[i].get_power() < as2[i].get_power();
-                }
-            }
-        }
-        return m2.get_coefficient() < m1.get_coefficient();
+        return atoms_quick_cmp()(m1.get_atoms(), m2.get_atoms()) < 0;
     }
 };
 

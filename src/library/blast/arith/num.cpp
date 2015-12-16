@@ -26,6 +26,16 @@ expr mpz_to_expr(mpz const & n, expr const & A) {
     else return mpz_to_expr_core(n, A);
 }
 
+expr mpq_to_expr(mpq const & n, expr const & A) {
+    if (n.is_integer()) {
+        return mpz_to_expr(n.get_numerator(), A);
+    } else {
+        return get_app_builder().mk_mul(A,
+                                        mpz_to_expr(n.get_numerator(), A),
+                                        get_app_builder().mk_inv(A, mpz_to_expr(n.get_denominator(), A)));
+    }
+}
+
 /*
   theorem pos_bit0 {A : Type} [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit0 a := sorry
   theorem pos_bit1 {A : Type} [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit1 a := sorry
@@ -57,6 +67,16 @@ expr prove_positive(mpz const & n, expr const & A) {
     optional<expr> A_linear_ordered_comm_ring = tmp_tctx->mk_class_instance(get_app_builder().mk_linear_ordered_comm_ring(A));
     if (!A_linear_ordered_comm_ring) throw blast_exception("Can't synthesize linear_ordered_comm_ring", A);
     return prove_positive_core(n, A, *A_linear_ordered_comm_ring).second;
+}
+
+expr prove_positive(mpq const & n, expr const & A) {
+    if (n.is_integer()) {
+        return prove_positive(n.get_numerator(), A);
+    } else {
+        expr pf_a = prove_positive(n.get_numerator(), A);
+        expr pf_b = prove_positive(n.get_denominator(), A);
+        return get_app_builder().mk_app(get_ordered_arith_div_pos_of_pos_name(), {pf_a, pf_b});
+    }
 }
 
 /*

@@ -741,11 +741,17 @@ end norm_num
 
 namespace ordered_arith
 
+-- Shuffling an inequality
+theorem lt_of_zero_lt [s : linear_ordered_comm_ring A] (a b : A) : a < b → 0 < b + - a := sorry
+theorem le_of_zero_le [s : linear_ordered_comm_ring A] (a b : A) : a ≤ b → 0 ≤ b + - a := sorry
+theorem eq_of_zero_le1 [s : linear_ordered_comm_ring A] (a b : A) : a = b → 0 ≤ b + - a := sorry
+theorem eq_of_zero_le2 [s : linear_ordered_comm_ring A] (a b : A) : a = b → 0 ≤ a + - b := sorry
+
 -- Proving positive numbers are positive
-theorem pos_bit0 [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit0 a := 
+theorem pos_bit0 [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit0 a :=
 by rewrite ↑bit0; apply add_pos H H
 
-theorem pos_bit1 [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit1 a := 
+theorem pos_bit1 [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit1 a :=
 begin
   rewrite ↑bit1,
   apply add_pos_of_nonneg_of_pos,
@@ -756,9 +762,11 @@ end
 
 theorem zero_lt_one [s : linear_ordered_comm_ring A] : (0:A) < 1 := zero_lt_one
 
+theorem div_pos_of_pos [s : linear_ordered_comm_ring A] (a b : A) (Ha : 0 < a) (Hb : 0 < b) → 0 < a * b⁻¹ := sorry
+
 -- Proving negative numbers are not positive
 theorem zero_not_lt_zero [s : linear_ordered_comm_ring A] : (0:A) < 0 → false := by apply strict_order.lt_irrefl
-theorem zero_not_le_neg [s : linear_ordered_comm_ring A] (c : A) : 0 < c → 0 ≤ - c → false := 
+theorem zero_not_le_neg [s : linear_ordered_comm_ring A] (c : A) : 0 < c → 0 ≤ - c → false :=
 assume zero_lt_c zero_lt_neg_c,
 begin
   have c_le_zero : - - c ≤ - 0, from neg_le_neg zero_lt_neg_c,
@@ -767,7 +775,7 @@ begin
   exact zero_not_lt_zero (lt_of_lt_of_le zero_lt_c c_le_zero)
 end
 
-theorem zero_not_lt_neg [s : linear_ordered_comm_ring A] (c : A) : 0 < c → 0 < - c → false := 
+theorem zero_not_lt_neg [s : linear_ordered_comm_ring A] (c : A) : 0 < c → 0 < - c → false :=
 assume zero_lt_c zero_lt_neg_c,
 begin
   have c_lt_zero : - - c < - 0, from neg_lt_neg zero_lt_neg_c,
@@ -775,10 +783,10 @@ begin
   rewrite neg_zero at c_lt_zero,
   exact zero_not_lt_zero (strict_order.lt_trans _ _ _ zero_lt_c c_lt_zero)
 end
-  
+
 -- Resolution
 lemma resolve_lt_lt [s : linear_ordered_comm_ring A] {p₁ p₂ c₁ c₂ : A}
-  : 0 < p₁ → 0 < p₂ → 0 < c₁ → 0 < c₂ → 0 < c₁ * p₁ + c₂ * p₂ := 
+  : 0 < p₁ → 0 < p₂ → 0 < c₁ → 0 < c₂ → 0 < c₁ * p₁ + c₂ * p₂ :=
 assume p1_pos p2_pos c1_pos c2_pos,
 begin
   have cp1 : c₁ * 0 < c₁ * p₁, from mul_lt_mul_of_pos_left p1_pos c1_pos,
@@ -789,7 +797,7 @@ begin
 end
 
 lemma resolve_lt_le [s : linear_ordered_comm_ring A] {p₁ p₂ c₁ c₂ : A}
-  : 0 < p₁ → 0 ≤ p₂ → 0 < c₁ → 0 < c₂ → 0 < c₁ * p₁ + c₂ * p₂ := 
+  : 0 < p₁ → 0 ≤ p₂ → 0 < c₁ → 0 < c₂ → 0 < c₁ * p₁ + c₂ * p₂ :=
 assume p1_pos p2_nonneg c1_pos c2_pos,
 begin
   have cp1 : c₁ * 0 < c₁ * p₁, from mul_lt_mul_of_pos_left p1_pos c1_pos,
@@ -800,13 +808,13 @@ begin
 end
 
 lemma resolve_le_lt [s : linear_ordered_comm_ring A] {p₁ p₂ c₁ c₂ : A}
-  : 0 ≤ p₁ → 0 < p₂ → 0 < c₁ → 0 < c₂ → 0 < c₁ * p₁ + c₂ * p₂ := 
+  : 0 ≤ p₁ → 0 < p₂ → 0 < c₁ → 0 < c₂ → 0 < c₁ * p₁ + c₂ * p₂ :=
 assume (p1_nonneg : 0 ≤ p₁) (p2_pos : 0 < p₂) (c1_pos : 0 < c₁) (c2_pos : 0 < c₂),
 have H : 0 < c₂ * p₂ + c₁ * p₁, from resolve_lt_le p2_pos p1_nonneg c2_pos c1_pos,
 !add.comm ▸ H
-  
+
 lemma resolve_le_le [s : linear_ordered_comm_ring A] {p₁ p₂ c₁ c₂ : A}
-  : 0 ≤ p₁ → 0 ≤ p₂ → 0 < c₁ → 0 < c₂ → 0 ≤ c₁ * p₁ + c₂ * p₂ := 
+  : 0 ≤ p₁ → 0 ≤ p₂ → 0 < c₁ → 0 < c₂ → 0 ≤ c₁ * p₁ + c₂ * p₂ :=
 assume p1_nonneg p2_nonneg c1_pos c2_pos,
 begin
   have cp1 : c₁ * 0 ≤ c₁ * p₁, from mul_le_mul_of_nonneg_left p1_nonneg (le_of_lt c1_pos),

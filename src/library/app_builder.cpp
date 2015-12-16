@@ -605,6 +605,26 @@ struct app_builder::imp {
                    tout() << "failed to build instance of '" << n << "' for " << A << "\n";);
     }
 
+    expr mk_add(expr const & A, expr const & e1, expr const & e2) {
+        level lvl = get_level(A);
+        auto A_has_add = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_add_name(), {lvl}), A));
+        if (!A_has_add) {
+            trace_inst_failure(A, "has_add");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_add_name(), {lvl}), {A, *A_has_add, e1, e2});
+    }
+
+    expr mk_mul(expr const & A, expr const & e1, expr const & e2) {
+        level lvl = get_level(A);
+        auto A_has_mul = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_mul_name(), {lvl}), A));
+        if (!A_has_mul) {
+            trace_inst_failure(A, "has_mul");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_mul_name(), {lvl}), {A, *A_has_mul, e1, e2});
+    }
+
     expr mk_partial_add(expr const & A) {
         level lvl = get_level(A);
         auto A_has_add = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_add_name(), {lvl}), A));
@@ -698,6 +718,16 @@ struct app_builder::imp {
             throw app_builder_exception();
         }
         return ::lean::mk_app(mk_constant(get_neg_name(), {lvl}), {A, *A_has_neg, e});
+    }
+
+    expr mk_inv(expr const & A, expr const & e) {
+        level lvl = get_level(A);
+        auto A_has_inv = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_has_inv_name(), {lvl}), A));
+        if (!A_has_inv) {
+            trace_inst_failure(A, "has_inv");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_inv_name(), {lvl}), {A, *A_has_inv, e});
     }
 
     expr mk_le(expr const & A, expr const & lhs, expr const & rhs) {
@@ -872,6 +902,14 @@ expr app_builder::mk_not(expr const & H) {
     return m_ptr->mk_not(H);
 }
 
+expr app_builder::mk_add(expr const & A, expr const & e1, expr const & e2) {
+    return m_ptr->mk_add(A, e1, e2);
+}
+
+expr app_builder::mk_mul(expr const & A, expr const & e1, expr const & e2) {
+    return m_ptr->mk_mul(A, e1, e2);
+}
+
 expr app_builder::mk_partial_add(expr const & A) {
     return m_ptr->mk_partial_add(A);
 }
@@ -906,6 +944,10 @@ expr app_builder::mk_bit1(expr const & A, expr const & n) {
 
 expr app_builder::mk_neg(expr const & A, expr const & e) {
     return m_ptr->mk_neg(A, e);
+}
+
+expr app_builder::mk_inv(expr const & A, expr const & e) {
+    return m_ptr->mk_inv(A, e);
 }
 
 expr app_builder::mk_le(expr const & A, expr const & lhs, expr const & rhs) {

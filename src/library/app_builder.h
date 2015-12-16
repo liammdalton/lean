@@ -153,6 +153,8 @@ public:
 
     expr mk_not(expr const & H);
 
+    expr mk_add(expr const & A, expr const & e1, expr const & e2);
+    expr mk_mul(expr const & A, expr const & e1, expr const & e2);
     expr mk_partial_add(expr const & A);
     expr mk_partial_mul(expr const & A);
     expr mk_zero(expr const & A);
@@ -164,6 +166,7 @@ public:
     expr mk_bit1(expr const & A, expr const & n);
 
     expr mk_neg(expr const & A, expr const & e);
+    expr mk_inv(expr const & A, expr const & e);
     expr mk_le(expr const & A, expr const & lhs, expr const & rhs);
     expr mk_lt(expr const & A, expr const & lhs, expr const & rhs);
 

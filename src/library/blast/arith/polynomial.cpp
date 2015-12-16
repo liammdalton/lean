@@ -46,7 +46,7 @@ void polynomial::mul(polynomial p) {
 
 /* fuse */
 void monomial::fuse_atoms() {
-    std::sort(m_atoms.begin(), m_atoms.end(), atom_quick_lt());
+    std::sort(m_atoms.begin(), m_atoms.end(), atom_fuse_lt());
     std::vector<atom> new_atoms;
     unsigned i = 0;
     while (i < m_atoms.size()) {
@@ -63,7 +63,7 @@ void monomial::fuse_atoms() {
 
 void polynomial::fuse_monomials() {
     for (monomial & m : m_monomials) m.fuse_atoms();
-    std::sort(m_monomials.begin(), m_monomials.end(), monomial_quick_lt());
+    std::sort(m_monomials.begin(), m_monomials.end(), monomial_fuse_lt());
     std::vector<monomial> new_monomials;
     unsigned i = 0;
     while (i < m_monomials.size()) {

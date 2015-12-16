@@ -20,3 +20,5 @@ constants (x y z w : A)
 #arith_simplify (x + -y + -2) * - (z + 1)
 #arith_simplify -(x+y)⁻¹
 #arith_simplify - -(x⁻¹)⁻¹ + - y⁻¹
+#arith_simplify 1 * 2⁻¹ + 4 * x * 5⁻¹
+#arith_simplify (1 * 2⁻¹ + x) * (x * 5⁻¹)
