@@ -102,6 +102,12 @@ section division_ring
         ... = b * 1             : mul_one_div_cancel this
         ... = b                 : mul_one)
 
+  theorem division_ring.inv_inv (H : a ≠ 0) : (a⁻¹)⁻¹ = a :=
+    have H1 : a * a⁻¹ = 1, from mul_inv_cancel H,
+    have H2 : a = 1 / (inv a), from eq_one_div_of_mul_eq_one_left H1,
+    have H3 : a = inv (inv a), from (inv_eq_one_div (inv a))⁻¹ ▸ H2,
+    H3⁻¹
+
   theorem division_ring.one_div_mul_one_div (Ha : a ≠ 0) (Hb : b ≠ 0) :
       (1 / a) * (1 / b) = 1 / (b * a) :=
     have (b * a) * ((1 / a) * (1 / b)) = 1, by
@@ -473,36 +479,53 @@ end discrete_field
 attribute [simp] one_inv_eq at simplifier.inv
 
 -- TODO(dhs): prove the "true" versions of these once we refactor `has_inv`
-/-
+
 namespace numeral
 open simplifier.unit simplifier.neg simplifier.ac simplifier.distrib simplifier.inv
+attribute algebra.div [reducible]
 --attribute one_inv_eq [simp]
 --attribute inv_inv [simp]
 set_option trace.simplifier true
-set_option trace.blast true
+--set_option trace.blast true
+attribute division_ring.inv_inv [simp]
+attribute field.one_div_mul_one_div [simp]
 
+print [simp]
 section field
 variable [A_field : field A]
 include A_field
 
-lemma inv_simp_one (a : A) : a = 1 → a⁻¹ = 1 := by simp
-lemma inv_simp_inv (a b : A) : a = b⁻¹ → a⁻¹ = b := by simp
-lemma inv_simp (a b : A) : a = b → a⁻¹ = b⁻¹ := by simp
+
+check division.def
+--private lemma field.one_div_mul_one_div_alt [simp] (a b : A) (Ha : a ≠ 0) (Hb : b ≠ 0) : (a * b)⁻¹ = a⁻¹ * b⁻¹ :=
+--begin
+--  repeat rewrite inv_eq_one_div, --[-(division.def a⁻¹ b), -(],
+--  exact eq.symm (field.one_div_mul_one_div Ha Hb)
+--end
+
+set_option trace.blast.deadend true
+--lemma inv_simp_one (a : A) : a = 1 → a⁻¹ = 1 := by simp
+--lemma inv_simp_inv (a b : A) : a ≠ 0 → b ≠ 0 → a = b⁻¹ → a⁻¹ = b := by simp
+--lemma inv_simp (a b : A) : a = b → a⁻¹ = b⁻¹ := by simp
 lemma inv_simp_mulinv (a b c : A) : a = c * b⁻¹ → a⁻¹ = b * c⁻¹ := by simp
+--begin
+--intro H,
+--rewrite H,
 
-lemma mulinv_add (n d b c val : A) : n + b * d = val →  c * d = val → n * d⁻¹ + b = c := by simp
-lemma add_mulinv (n d b c val : A) : b * d + n = val →  c * d = val → b + n * d⁻¹ = c := by simp
-lemma inv_add (d b c val : A) : 1 + b * d = val →  c * d = val →  d⁻¹ + b = c := by simp
-lemma add_inv (d b c val : A) : b * d + 1 = val →  c * d = val →  b + d⁻¹ = c := by simp
+--end
 
-lemma mulinv_mul [s : field A] (n d c v : A) (H : (n * c) * d⁻¹ = v) : (n * d⁻¹) * c = v := by simp
-lemma mul_mulinv [s : field A] (c n d v : A) (H : (c * n) * d⁻¹ = v) : c * (n * d⁻¹) = v := by simp
+--lemma mulinv_add (n d b c val : A) : n + b * d = val →  c * d = val → n * d⁻¹ + b = c := by simp
+--lemma add_mulinv (n d b c val : A) : b * d + n = val →  c * d = val → b + n * d⁻¹ = c := by simp
+--lemma inv_add (d b c val : A) : 1 + b * d = val →  c * d = val →  d⁻¹ + b = c := by simp
+--lemma add_inv (d b c val : A) : b * d + 1 = val →  c * d = val →  b + d⁻¹ = c := by simp
 
-lemma inv_mul_inv [s : field A] (a b c : A) : a * b = c → a⁻¹ * b⁻¹ = c⁻¹ := by simp
-lemma mul_inv_eq_inv [s : field A] (a b c d v : A) (H1 : a * d = v) (H2 : c * b = v) : a * b⁻¹ = c * d⁻¹ := by simp
-lemma mul_inv_eq_noninv [s : field A] (n d v : A) (H : v * d = n) : n * d⁻¹ = v := by simp
-lemma inv_mul_comm [s : field A] (n d v : A) (H : n * d⁻¹ = v) : d⁻¹ * n = v := by simp
+--lemma mulinv_mul [s : field A] (n d c v : A) (H : (n * c) * d⁻¹ = v) : (n * d⁻¹) * c = v := by simp
+--lemma mul_mulinv [s : field A] (c n d v : A) (H : (c * n) * d⁻¹ = v) : c * (n * d⁻¹) = v := by simp
+
+--lemma inv_mul_inv [s : field A] (a b c : A) : a * b = c → a⁻¹ * b⁻¹ = c⁻¹ := by simp
+--lemma mul_inv_eq_inv [s : field A] (a b c d v : A) (H1 : a * d = v) (H2 : c * b = v) : a * b⁻¹ = c * d⁻¹ := by simp
+--lemma mul_inv_eq_noninv [s : field A] (n d v : A) (H : v * d = n) : n * d⁻¹ = v := by simp
+--lemma inv_mul_comm [s : field A] (n d v : A) (H : n * d⁻¹ = v) : d⁻¹ * n = v := by simp
 
 end field
 end numeral
--/
