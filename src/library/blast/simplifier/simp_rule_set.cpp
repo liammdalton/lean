@@ -14,6 +14,7 @@ Author: Leonardo de Moura
 #include "library/expr_pair.h"
 #include "library/attribute_manager.h"
 #include "library/relation_manager.h"
+#include "library/blast/blast.h"
 #include "library/blast/simplifier/ceqv.h"
 #include "library/blast/simplifier/simp_rule_set.h"
 
@@ -264,8 +265,10 @@ format simp_rule_sets::pp(formatter const & fmt) const {
 static name * g_prefix = nullptr;
 
 simp_rule_sets add_core(tmp_type_context & tctx, simp_rule_sets const & s,
-                        name const & id, levels const & univ_metas, expr const & e, expr const & h,
+                        name const & id, levels const & univ_metas, expr const & _e, expr const & _h,
                         unsigned priority) {
+    expr e = blast::normalize(_e);
+    expr h = blast::normalize(_h);
     list<expr_pair> ceqvs   = to_ceqvs(tctx, e, h);
     if (is_nil(ceqvs)) throw exception("[simp] rule invalid");
     environment const & env = tctx.env();
@@ -372,8 +375,8 @@ void add_congr_core(tmp_type_context & tctx, simp_rule_sets & s, name const & n,
         us.push_back(tctx.mk_uvar());
     }
     levels ls = to_list(us);
-    expr rule    = instantiate_type_univ_params(d, ls);
-    expr proof   = mk_constant(n, ls);
+    expr rule    = blast::normalize(instantiate_type_univ_params(d, ls));
+    expr proof   = blast::normalize(mk_constant(n, ls));
 
     buffer<expr> emetas;
     buffer<bool> instances, explicits;
@@ -476,12 +479,14 @@ struct rrs_state {
     name_set                 m_congr_names;
 
     void add_simp(environment const & env, io_state const & ios, name const & cname, unsigned prio) {
+        blast::scope_debug scope(env, get_dummy_ios());
         tmp_type_context tctx(env, ios.get_options());
         m_sets = add_core(tctx, m_sets, cname, prio);
         m_simp_names.insert(cname);
     }
 
     void add_congr(environment const & env, io_state const & ios, name const & n, unsigned prio) {
+        blast::scope_debug scope(env, get_dummy_ios());
         tmp_type_context tctx(env, ios.get_options());
         add_congr_core(tctx, m_sets, n, prio);
         m_congr_names.insert(n);
@@ -526,10 +531,12 @@ template class scoped_ext<rrs_config>;
 typedef scoped_ext<rrs_config> rrs_ext;
 
 environment add_simp_rule(environment const & env, name const & n, unsigned prio, name const & ns, bool persistent) {
+    blast::scope_debug scope(env, get_dummy_ios());
     return rrs_ext::add_entry(env, get_dummy_ios(), rrs_entry(true, n, prio), ns, persistent);
 }
 
 environment add_congr_rule(environment const & env, name const & n, unsigned prio, name const & ns, bool persistent) {
+    blast::scope_debug scope(env, get_dummy_ios());
     return rrs_ext::add_entry(env, get_dummy_ios(), rrs_entry(false, n, prio), ns, persistent);
 }
 

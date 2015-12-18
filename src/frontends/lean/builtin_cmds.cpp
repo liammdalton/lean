@@ -537,6 +537,7 @@ static void print_simp_rules(parser & p) {
     io_state_stream out = p.regular_stream();
     simp_rule_sets s;
     name ns;
+    blast::scope_debug scope(p.env(), p.ios());
     if (p.curr_is_identifier()) {
         ns = p.get_name_val();
         p.next();
@@ -552,6 +553,7 @@ static void print_simp_rules(parser & p) {
 
 static void print_congr_rules(parser & p) {
     io_state_stream out = p.regular_stream();
+    blast::scope_debug scope(p.env(), p.ios());
     simp_rule_sets s = get_simp_rule_sets(p.env());
     out << s.pp_congr(out.get_formatter());
 }
