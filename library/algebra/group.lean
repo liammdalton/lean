@@ -147,7 +147,11 @@ end add_comm_monoid
 /- group -/
 
 structure group [class] (A : Type) extends monoid A, has_inv A :=
-(mul_left_inv : ∀a, mul (inv a) a = one)
+(all_invertible : ∀ a, invertible a)
+(mul_left_inv : ∀a, mul (@inv a (all_invertible a)) a = one)
+
+definition group_all_invertible := tactic.apply group.all_invertible
+tactic_hint group_all_invertible
 
 -- Note: with more work, we could derive the axiom one_mul
 
@@ -192,32 +196,32 @@ section group
 
   theorem mul.right_inv (a : A) : a * a⁻¹ = 1 :=
   calc
-    a * a⁻¹ = (a⁻¹)⁻¹ * a⁻¹ : inv_inv
-        ... = 1             : mul.left_inv
+    a * a⁻¹ = (a⁻¹)⁻¹ * a⁻¹ : by rewrite inv_inv
+        ... = 1             : by rewrite mul.left_inv
 
   theorem mul_inv_cancel_left (a b : A) : a * (a⁻¹ * b) = b :=
   calc
     a * (a⁻¹ * b) = a * a⁻¹ * b : by rewrite mul.assoc
-      ... = 1 * b               : mul.right_inv
+      ... = 1 * b               : by rewrite mul.right_inv
       ... = b                   : one_mul
 
   theorem mul_inv_cancel_right (a b : A) : a * b * b⁻¹ = a :=
   calc
-    a * b * b⁻¹ = a * (b * b⁻¹) : mul.assoc
-      ... = a * 1 : mul.right_inv
+    a * b * b⁻¹ = a * (b * b⁻¹) : by rewrite mul.assoc
+      ... = a * 1 : by rewrite mul.right_inv
       ... = a : mul_one
 
   theorem mul_inv (a b : A) : (a * b)⁻¹ = b⁻¹ * a⁻¹ :=
   inv_eq_of_mul_eq_one
     (calc
-      a * b * (b⁻¹ * a⁻¹) = a * (b * (b⁻¹ * a⁻¹)) : mul.assoc
-        ... = a * a⁻¹                             : mul_inv_cancel_left
-        ... = 1                                   : mul.right_inv)
+      a * b * (b⁻¹ * a⁻¹) = a * (b * (b⁻¹ * a⁻¹)) : by rewrite mul.assoc
+        ... = a * a⁻¹                             : by rewrite mul_inv_cancel_left
+        ... = 1                                   : by rewrite mul.right_inv)
 
   theorem eq_of_mul_inv_eq_one {a b : A} (H : a * b⁻¹ = 1) : a = b :=
   calc
     a = a * b⁻¹ * b : by rewrite inv_mul_cancel_right
-      ... = 1 * b   : H
+      ... = 1 * b   : by rewrite H
       ... = b       : one_mul
 
   theorem eq_mul_inv_of_mul_eq {a b c : A} (H : a * c = b) : a = b * c⁻¹ :=
@@ -269,37 +273,38 @@ section group
   local infixr ` ∘c `:55 := conj_by
 
   lemma conj_compose (f g a : A) : f ∘c g ∘c a = f*g ∘c a :=
-      calc f ∘c g ∘c a = f * (g * a * g⁻¹) * f⁻¹ : rfl
-      ... = f * (g * a) * g⁻¹ * f⁻¹ : mul.assoc
-      ... = f * g * a * g⁻¹ * f⁻¹ : mul.assoc
-      ... = f * g * a * (g⁻¹ * f⁻¹) : mul.assoc
-      ... = f * g * a * (f * g)⁻¹ : mul_inv
+      calc f ∘c g ∘c a = f * (g * a * g⁻¹) * f⁻¹ : by rewrite ↑conj_by
+      ... = f * (g * a) * g⁻¹ * f⁻¹ : by rewrite -mul.assoc
+      ... = f * g * a * g⁻¹ * f⁻¹ : by rewrite -mul.assoc
+      ... = f * g * a * (g⁻¹ * f⁻¹) : by rewrite mul.assoc
+      ... = f * g * a * (f * g)⁻¹ : by rewrite mul_inv
   lemma conj_id (a : A) : 1 ∘c a = a :=
-      calc 1 * a * 1⁻¹ = a * 1⁻¹ : one_mul
-      ... = a * 1 : one_inv
-      ... = a : mul_one
+      calc 1 * a * 1⁻¹ = a * 1⁻¹ : by rewrite one_mul
+      ... = a * 1 : by rewrite one_inv
+      ... = a : by rewrite mul_one
   lemma conj_one (g : A) : g ∘c 1 = 1 :=
-      calc g * 1 * g⁻¹ = g * g⁻¹ : mul_one
-      ... = 1 : mul.right_inv
+      calc g * 1 * g⁻¹ = g * g⁻¹ : by rewrite mul_one
+      ... = 1 : by rewrite mul.right_inv
   lemma conj_inv_cancel (g : A) : ∀ a, g⁻¹ ∘c g ∘c a = a :=
       assume a, calc
-      g⁻¹ ∘c g ∘c a = g⁻¹*g ∘c a : conj_compose
-      ... = 1 ∘c a : mul.left_inv
-      ... = a : conj_id
+      g⁻¹ ∘c g ∘c a = g⁻¹*g ∘c a : by rewrite conj_compose
+      ... = 1 ∘c a : by rewrite mul.left_inv
+      ... = a : by rewrite conj_id
 
   lemma conj_inv (g : A) : ∀ a, (g ∘c a)⁻¹ = g ∘c a⁻¹ :=
     take a, calc
-    (g * a * g⁻¹)⁻¹ = g⁻¹⁻¹ * (g * a)⁻¹   : mul_inv
-                ... = g⁻¹⁻¹ * (a⁻¹ * g⁻¹) : mul_inv
-                ... = g⁻¹⁻¹ * a⁻¹ * g⁻¹   : mul.assoc
-                ... = g * a⁻¹ * g⁻¹       : inv_inv
+    (g * a * g⁻¹)⁻¹ = g⁻¹⁻¹ * (g * a)⁻¹   : by rewrite mul_inv
+                ... = g⁻¹⁻¹ * (a⁻¹ * g⁻¹) : by rewrite mul_inv
+                ... = g⁻¹⁻¹ * a⁻¹ * g⁻¹   : by rewrite mul.assoc
+                ... = g * a⁻¹ * g⁻¹       : by rewrite inv_inv
 
   lemma is_conj.refl (a : A) : a ~ a := exists.intro 1 (conj_id a)
 
   lemma is_conj.symm (a b : A) : a ~ b → b ~ a :=
       assume Pab, obtain x (Pconj : x ∘c b = a), from Pab,
       assert Pxinv : x⁻¹ ∘c x ∘c b = x⁻¹ ∘c a,   begin congruence, assumption end,
-      exists.intro x⁻¹ (eq.symm (conj_inv_cancel x b ▸ Pxinv))
+      -- TODO(dhs): tactic hint does not work here for some reason
+      exists.intro (@inv _ _ x (group.all_invertible x)) (eq.symm (conj_inv_cancel x b ▸ Pxinv))
 
   lemma is_conj.trans (a b c : A) : a ~ b → b ~ c → a ~ c :=
       assume Pab, assume Pbc,
@@ -330,8 +335,11 @@ structure add_group [class] (A : Type) extends add_monoid A, has_neg A :=
 
 definition add_group.to_group {A : Type} [add_group A] : group A :=
 ⦃ group, add_monoid.to_monoid,
+  invertible := λ a, true,
+  inv := λ a pf, neg a,
+  one := zero,
+  all_invertible := λ (a:A), trivial,
   mul_left_inv := add_group.add_left_inv ⦄
-
 
 section add_group
   variables [s : add_group A]
@@ -568,15 +576,8 @@ section add_comm_group
     by rewrite [neg_sub, sub_neg_eq_add, neg_add_eq_sub]
 end add_comm_group
 
-definition group_of_add_group (A : Type) [G : add_group A] : group A :=
-⦃group,
-  mul             := has_add.add,
-  mul_assoc       := add.assoc,
-  one             := !has_zero.zero,
-  one_mul         := zero_add,
-  mul_one         := add_zero,
-  inv             := has_neg.neg,
-  mul_left_inv    := add.left_inv⦄
+-- TODO(dhs): why the duplication?
+definition group_of_add_group (A : Type) [G : add_group A] : group A := @add_group.to_group A G
 
 attribute [simp]
   zero_add add_zero one_mul mul_one
@@ -586,7 +587,7 @@ attribute [simp]
   neg_neg neg_add add.right_inv add_neg_cancel_left neg_zero sub_eq_add_neg
   at simplifier.neg
 
-attribute [light 2] neg at simplifier.neg
+attribute [light 3] neg at simplifier.neg
 
 attribute [simp]
   add.assoc add.comm add.left_comm
@@ -597,7 +598,7 @@ attribute [simp]
   inv_inv mul.right_inv mul_inv_cancel_left
   at simplifier.inv
 
-attribute [light 2] inv at simplifier.inv
+attribute [light 3] inv at simplifier.inv
 
 namespace numeral
 open simplifier.ac simplifier.neg
