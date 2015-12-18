@@ -71,7 +71,7 @@ class congr_rule : public simp_rule_core {
     congr_rule(name const & id, levels const & umetas, list<expr> const & emetas,
                list<bool> const & instances, expr const & lhs, expr const & rhs, expr const & proof,
                list<expr> const & congr_hyps, unsigned priority);
-    friend void add_congr_core(tmp_type_context & tctx, simp_rule_sets & s, name const & n, unsigned priority);
+    friend simp_rule_sets add_congr_core(tmp_type_context & tctx, simp_rule_sets const & s, name const & n, unsigned priority);
 public:
     friend bool operator==(congr_rule const & r1, congr_rule const & r2);
     list<expr> const & get_congr_hyps() const { return m_congr_hyps; }

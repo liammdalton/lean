@@ -665,7 +665,7 @@ result simplifier::congr_funs(result const & r_f, buffer<expr> const & args) {
 }
 
 result simplifier::try_congrs(expr const & e) {
-    simp_rule_set const * sr = get_simp_rule_sets(env()).find(m_rel);
+    simp_rule_set const * sr = m_srss.find(m_rel);
     if (!sr) return result(e);
 
     list<congr_rule> const * crs = sr->find_congr(e);
@@ -748,6 +748,11 @@ bool simplifier::instantiate_emetas(blast_tmp_type_context & tmp_tctx, unsigned 
             i--;
             if (failed) return;
             expr m_type = tmp_tctx->instantiate_uvars_mvars(tmp_tctx->infer(m));
+            if (has_metavar(m_type)) {
+                lean_trace(name({"simplifier", "debug"}),
+                           tout() << "trying to instantiate an emeta with metavar in the type: "
+                           << ppb(m_type) << "\n";);
+            }
             lean_assert(!has_metavar(m_type));
 
             if (tmp_tctx->is_mvar_assigned(i)) return;
@@ -1051,6 +1056,7 @@ void initialize_simplifier() {
     register_trace_class(name({"simplifier", "congruence"}));
     register_trace_class(name({"simplifier", "failure"}));
     register_trace_class(name({"simplifier", "perm"}));
+    register_trace_class(name({"simplifier", "debug"}));
 
     g_simplify_prove_namespace     = new name{"simplifier", "prove"};
     g_simplify_neg_namespace       = new name{"simplifier", "neg"};

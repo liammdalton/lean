@@ -14,6 +14,7 @@ name const & get_add_group_name();
 name const & get_add_monoid_name();
 name const & get_add_zero_name();
 name const & get_and_name();
+name const & get_and_congr_name();
 name const & get_and_elim_left_name();
 name const & get_and_elim_right_name();
 name const & get_and_intro_name();

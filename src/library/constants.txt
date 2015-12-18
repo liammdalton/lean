@@ -7,6 +7,7 @@ add_group
 add_monoid
 add_zero
 and
+and_congr
 and.elim_left
 and.elim_right
 and.intro
