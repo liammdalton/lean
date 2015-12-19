@@ -56,6 +56,9 @@ section division_ring
     have C1 : 0 = (1:A), from symm (by rewrite [-(mul_one_div_cancel H), H2, mul_zero]),
     absurd C1 zero_ne_one
 
+  theorem inv_ne_zero (H : a ≠ 0) : a⁻¹ ≠ 0 :=
+    by rewrite [-one_mul, -division.def]; apply (one_div_ne_zero H)
+
   theorem one_inv_eq : 1⁻¹ = (1:A) :=
   by rewrite [-mul_one, inv_mul_cancel (ne.symm (@zero_ne_one A _))]
 
@@ -476,52 +479,81 @@ section discrete_field
 
 end discrete_field
 
-attribute [simp] one_inv_eq at simplifier.inv
-
--- TODO(dhs): prove the "true" versions of these once we refactor `has_inv`
-
 namespace numeral
-open simplifier.unit simplifier.neg simplifier.ac simplifier.distrib simplifier.inv
-attribute algebra.div [reducible]
---attribute one_inv_eq [simp]
---attribute inv_inv [simp]
-set_option trace.simplifier true
---set_option trace.blast true
-attribute division_ring.inv_inv [simp]
-attribute field.one_div_mul_one_div [simp]
 
 section field
 variable [A_field : field A]
 include A_field
 
---private lemma field.one_div_mul_one_div_alt [simp] (a b : A) (Ha : a ≠ 0) (Hb : b ≠ 0) : (a * b)⁻¹ = a⁻¹ * b⁻¹ :=
---begin
---  repeat rewrite inv_eq_one_div, --[-(division.def a⁻¹ b), -(],
---  exact eq.symm (field.one_div_mul_one_div Ha Hb)
---end
+lemma add_mulinv {n d b c val : A} (Hd : d ≠ 0) (H1 : d * b + n = val) (H2 : d * c = val) : b + n * d⁻¹ = c :=
+begin
+  rewrite -division.def at *,
+  apply eq_of_mul_eq_mul_of_nonzero_left Hd,
+  rewrite [H2, -H1, left_distrib, mul_div_cancel' Hd]
+end
 
---lemma inv_simp_one (a : A) : a = 1 → a⁻¹ = 1 := by simp
---lemma inv_simp_inv (a b : A) : a ≠ 0 → b ≠ 0 → a = b⁻¹ → a⁻¹ = b := by simp
---lemma inv_simp (a b : A) : a = b → a⁻¹ = b⁻¹ := by simp
---lemma inv_simp_mulinv (a b c : A) : a = c * b⁻¹ → a⁻¹ = b * c⁻¹ := by simp
---begin
---intro H,
---rewrite H,
+lemma add_inv {d b c val : A} (Hd : d ≠ 0) (H1 : d * b + 1 = val) (H2 : d * c = val) : b + d⁻¹ = c :=
+begin
+  rewrite -{d⁻¹}one_mul,
+  exact add_mulinv Hd H1 H2
+end
 
---end
+lemma mulinv_add {n d b c val : A} (Hd : d ≠ 0) (H1 : n + b * d = val) (H2 : c * d = val) : n * d⁻¹ + b = c :=
+begin
+  rewrite -division.def at *,
+  apply eq_of_mul_eq_mul_of_nonzero_right Hd,
+  rewrite [H2, -H1, right_distrib, div_mul_cancel _ Hd]
+end
 
---lemma mulinv_add (n d b c val : A) : n + b * d = val →  c * d = val → n * d⁻¹ + b = c := by simp
---lemma add_mulinv (n d b c val : A) : b * d + n = val →  c * d = val → b + n * d⁻¹ = c := by simp
---lemma inv_add (d b c val : A) : 1 + b * d = val →  c * d = val →  d⁻¹ + b = c := by simp
---lemma add_inv (d b c val : A) : b * d + 1 = val →  c * d = val →  b + d⁻¹ = c := by simp
+lemma inv_add {d b c val : A} (Hd : d ≠ 0) (H1 : 1 + b * d = val) (H2 : c * d = val) : d⁻¹ + b = c :=
+begin
+  rewrite -{d⁻¹}one_mul,
+  exact mulinv_add Hd H1 H2
+end
 
---lemma mulinv_mul [s : field A] (n d c v : A) (H : (n * c) * d⁻¹ = v) : (n * d⁻¹) * c = v := by simp
---lemma mul_mulinv [s : field A] (c n d v : A) (H : (c * n) * d⁻¹ = v) : c * (n * d⁻¹) = v := by simp
+lemma mulinv_mul {n d c v : A} (H : (n * c) * d⁻¹ = v) : (n * d⁻¹) * c = v :=
+by rewrite [-H, mul.assoc, mul.assoc, {d⁻¹ * c}mul.comm],
 
---lemma inv_mul_inv [s : field A] (a b c : A) : a * b = c → a⁻¹ * b⁻¹ = c⁻¹ := by simp
---lemma mul_inv_eq_inv [s : field A] (a b c d v : A) (H1 : a * d = v) (H2 : c * b = v) : a * b⁻¹ = c * d⁻¹ := by simp
---lemma mul_inv_eq_noninv [s : field A] (n d v : A) (H : v * d = n) : n * d⁻¹ = v := by simp
---lemma inv_mul_comm [s : field A] (n d v : A) (H : n * d⁻¹ = v) : d⁻¹ * n = v := by simp
+lemma mul_mulinv (c n d v : A) (Hd : d ≠ 0) (H : (c * n) * d⁻¹ = v) : c * (n * d⁻¹) = v :=
+by rewrite [-H, mul.assoc]
+
+lemma mul_inv_eq_inv (a b c d v : A) (Hb : b ≠ 0) (Hd : d ≠ 0) (H1 : a * d = v) (H2 : c * b = v) : a * b⁻¹ = c * d⁻¹ :=
+begin
+  rewrite -division.def at *,
+  apply eq_div_of_mul_eq,
+  exact Hd,
+  rewrite div_mul_eq_mul_div,
+  apply eq.symm,
+  apply eq_div_of_mul_eq,
+  exact Hb,
+  rewrite [H1, H2]
+end
+
+lemma mul_inv_eq_noninv (n d v : A) (Hd : d ≠ 0) (H : v * d = n) : n * d⁻¹ = v :=
+begin
+  rewrite -division.def at *,
+  apply eq_of_mul_eq_mul_of_nonzero_right Hd,
+  rewrite (div_mul_cancel _ Hd),
+  exact eq.symm H
+end
+
+lemma inv_mul_inv (a b c : A) (Ha : a ≠ 0) (Hb : b ≠ 0) (H : a * b = c) : a⁻¹ * b⁻¹ = c⁻¹ :=
+by rewrite [-H, mul_inv_eq Hb Ha, mul.comm]
+
+lemma inv_mul_comm (n d v : A) (H : n * d⁻¹ = v) : d⁻¹ * n = v :=
+by rewrite [-H, mul.comm]
+
+lemma inv_simp_one (a : A) (H : a = 1) : a⁻¹ = 1 :=
+by rewrite [H, one_inv_eq]
+
+lemma inv_simp_inv (a b : A) (Hb : b ≠ 0) (H : a = b⁻¹) : a⁻¹ = b :=
+by rewrite [H, division_ring.inv_inv Hb]
+
+lemma inv_simp (a b : A) (H : a = b) : a⁻¹ = b⁻¹ :=
+by rewrite H
+
+lemma inv_simp_mulinv (a b c : A) (Hb : b ≠ 0) (Hc : c ≠ 0) (H : a = c * b⁻¹) : a⁻¹ = b * c⁻¹ :=
+by rewrite [H, mul_inv_eq (inv_ne_zero Hb) Hc, division_ring.inv_inv Hb]
 
 end field
 end numeral
