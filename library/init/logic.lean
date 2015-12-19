@@ -337,7 +337,7 @@ iff.intro
   (λ (Hl : ¬¬¬a) (Ha : a), Hl (non_contradictory_intro Ha))
   absurd
 
-theorem imp_congr [congr] (H1 : a ↔ c) (H2 : b ↔ d) : (a → b) ↔ (c → d) :=
+theorem imp_congr [simp] (H1 : a ↔ c) (H2 : b ↔ d) : (a → b) ↔ (c → d) :=
 iff.intro
   (λHab Hc, iff.mp H2 (Hab (iff.mpr H1 Hc)))
   (λHcd Ha, iff.mpr H2 (Hcd (iff.mp H1 Ha)))

@@ -10,6 +10,7 @@ name const * g_add_comm_semigroup = nullptr;
 name const * g_add_group = nullptr;
 name const * g_add_monoid = nullptr;
 name const * g_and = nullptr;
+name const * g_and_congr = nullptr;
 name const * g_and_elim_left = nullptr;
 name const * g_and_elim_right = nullptr;
 name const * g_and_intro = nullptr;
@@ -270,6 +271,7 @@ void initialize_constants() {
     g_add_group = new name{"add_group"};
     g_add_monoid = new name{"add_monoid"};
     g_and = new name{"and"};
+    g_and_congr = new name{"and_congr"};
     g_and_elim_left = new name{"and", "elim_left"};
     g_and_elim_right = new name{"and", "elim_right"};
     g_and_intro = new name{"and", "intro"};
@@ -531,6 +533,7 @@ void finalize_constants() {
     delete g_add_group;
     delete g_add_monoid;
     delete g_and;
+    delete g_and_congr;
     delete g_and_elim_left;
     delete g_and_elim_right;
     delete g_and_intro;
@@ -791,6 +794,7 @@ name const & get_add_comm_semigroup_name() { return *g_add_comm_semigroup; }
 name const & get_add_group_name() { return *g_add_group; }
 name const & get_add_monoid_name() { return *g_add_monoid; }
 name const & get_and_name() { return *g_and; }
+name const & get_and_congr_name() { return *g_and_congr; }
 name const & get_and_elim_left_name() { return *g_and_elim_left; }
 name const & get_and_elim_right_name() { return *g_and_elim_right; }
 name const & get_and_intro_name() { return *g_and_intro; }

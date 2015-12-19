@@ -5,6 +5,7 @@ add_comm_semigroup
 add_group
 add_monoid
 and
+and_congr
 and.elim_left
 and.elim_right
 and.intro

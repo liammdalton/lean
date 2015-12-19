@@ -170,6 +170,22 @@ static optional<ext_congr_lemma> to_ext_congr_lemma(name const & R, expr const &
         return optional<ext_congr_lemma>();
     }
     blast_tmp_type_context ctx(r.get_num_umeta(), r.get_num_emeta());
+
+    switch (r.get_lhs().kind()) {
+    case expr_kind::Pi:
+    case expr_kind::Meta:
+    case expr_kind::Local:
+    case expr_kind::Var:
+    case expr_kind::Constant:
+    case expr_kind::App:
+    case expr_kind::Lambda:
+    case expr_kind::Sort:
+    case expr_kind::Macro:
+        break;
+    default:
+        throw exception("corrupted expression");
+    }
+
     if (!ctx->is_def_eq(fn, lhs_fn) || !ctx->is_def_eq(fn, rhs_fn)) {
         return optional<ext_congr_lemma>();
     }
@@ -280,11 +296,14 @@ static optional<ext_congr_lemma> to_ext_congr_lemma(name const & R, expr const &
 }
 
 static optional<ext_congr_lemma> mk_ext_congr_lemma_core(name const & R, expr const & fn, unsigned nargs) {
+//    ios().get_diagnostic_channel() << "[cc] retrieving " << R << "\n";
     simp_rule_set const * sr = get_simp_rule_sets(env()).find(R);
+//    ios().get_diagnostic_channel() << "[cc] finding " << R << "::" << head_index(fn) << "\n";
     if (sr) {
         list<congr_rule> const * crs = sr->find_congr(fn);
         if (crs) {
             for (congr_rule const & r : *crs) {
+//                ios().get_diagnostic_channel() << "[cc] " << r.get_id() << " : " << r.get_lhs() << " ==> " << r.get_rhs() << "\n";
                 if (auto lemma = to_ext_congr_lemma(R, fn, nargs, r))
                     return lemma;
             }

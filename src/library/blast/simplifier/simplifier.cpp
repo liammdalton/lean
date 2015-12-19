@@ -671,7 +671,7 @@ result simplifier::congr_funs(result const & r_f, buffer<expr> const & args) {
 }
 
 result simplifier::try_congrs(expr const & e) {
-    simp_rule_set const * sr = get_simp_rule_sets(env()).find(m_rel);
+    simp_rule_set const * sr = m_srss.find(m_rel);
     if (!sr) return result(e);
 
     list<congr_rule> const * crs = sr->find_congr(e);
