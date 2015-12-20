@@ -10,18 +10,12 @@ include s
 notation `A` := real
 attribute sub div real.div [reducible]
 
---set_option trace.simplifier true
---set_option trace.blast.num true
-
-/-
-
 example : (-1 :A) * 1 = -1 := by simp
 
 example : (-2 :A) * 1 = -2 := by simp
 example : (-2 :A) * -1 = 2 := by simp
 example : (-2 :A) * -2 = 4 := by simp
 example : (1 : A) * 0 = 0 := by simp
-
 
 example : ((1 : A) + 1) * 5 = 6 + 4 := by simp
 
@@ -94,13 +88,7 @@ example : (9 * 9 * 9) * (12 : A) / 27 = 81 * (2 + 2) := by simp
 example : (-2 : A) * 4 / 3 = -8 / 3 := by simp
 example : - (-4 / 3) = 1 / (3 / (4 : A)) := by simp
 
--/
-
-
-set_option trace.app_builder true
 -- auto gen tests
-
-
 example : ((25 * (1 / 1)) + (30 - 16)) = (39 : A) := by simp
 example : ((19 * (- 2 - 3)) / 6) = (-95/6 : A) := by simp
 example : - (3 * 28) = (-84 : A) := by simp
@@ -121,7 +109,6 @@ example : (((- (8 / 7) / 14) + 20) + 22) = (2054/49 : A) := by simp
 example : ((21 / 20) - 29) = (-559/20 : A) := by simp
 example : - - 20 = (20 : A) := by simp
 
-/-
 example : (24 - (- 9 / 4)) = (105/4 : A) := by simp
 example : (((7 / ((23 * 19) + (27 * 10))) - ((28 - - 15) * 24)) + (9 / - (10 * - 3))) = (-1042007/1010 : A) := by simp
 example : (26 - (- 29 + (12 / 25))) = (1363/25 : A) := by simp
@@ -179,4 +166,3 @@ example : (- 19 * - - (75 * - - 41)) = (-58425 : A) := by simp
 example : ((3 / ((- 28 * 45) * (19 + ((- (- 88 - (- (- 1 + 90) + 8)) + 87) * 48)))) + 1) = (1903019/1903020 : A) := by simp
 example : ((- - (28 + 48) / 75) + ((- 59 - 14) - 0)) = (-5399/75 : A) := by simp
 example : (- ((- (((66 - 86) - 36) / 94) - 3) / - - (77 / (56 - - - 79))) + 87) = (312254/3619 : A) := by simp
--/
