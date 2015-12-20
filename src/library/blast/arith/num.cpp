@@ -32,8 +32,12 @@ expr mpz_to_expr(mpz const & n, expr const & A) {
 }
 
 expr mpq_to_expr(mpq const & n, expr const & A) {
-    if (n.is_integer()) {
-        return mpz_to_expr(n.get_numerator(), A);
+    if (n == 0) {
+        return get_app_builder().mk_zero(A);
+    } else if (n < 0) {
+        return get_app_builder().mk_neg(A, mpq_to_expr(neg(n), A));
+    } else if (n.is_integer()) {
+        return mpz_to_expr_core(n.get_numerator(), A);
     } else if (n.get_numerator() == 1) {
         return get_app_builder().mk_inv(A, mpz_to_expr(n.get_denominator(), A));
     } else {
@@ -68,32 +72,27 @@ mpq expr_to_mpq(expr const & e) {
   theorem pos_bit1 {A : Type} [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit1 a := sorry
   theorem zero_lt_one {A : Type} [s : linear_ordered_comm_ring A] : 0 < 1 := sorry
 */
-pair<expr, expr> prove_positive_core(mpz const & n, expr const & A, expr const & A_linear_ordered_comm_ring) {
+pair<expr, expr> prove_positive_core(mpz const & n, expr const & A) {
     lean_assert(n > 0);
     if (n == 1) {
         expr one = get_app_builder().mk_one(A);
-        expr pf = get_app_builder().mk_app(get_ordered_arith_zero_lt_one_name(), {A, A_linear_ordered_comm_ring});
+        expr pf = get_app_builder().mk_zero_lt_one(A);
         return mk_pair(one, pf);
     } else if (n % mpz(2) == 1) {
-        pair<expr, expr> rec = prove_positive_core(n/2, A, A_linear_ordered_comm_ring);
+        pair<expr, expr> rec = prove_positive_core(n/2, A);
         expr new_num = get_app_builder().mk_bit1(A, rec.first);
-        expr new_pf = get_app_builder().mk_app(get_ordered_arith_pos_bit1_name(),
-                                               {A, A_linear_ordered_comm_ring, rec.first, rec.second});
+        expr new_pf = get_app_builder().mk_app(get_numeral_pos_bit1_name(), {rec.first, rec.second});
         return mk_pair(new_num, new_pf);
     } else {
-        pair<expr, expr> rec = prove_positive_core(n/2, A, A_linear_ordered_comm_ring);
+        pair<expr, expr> rec = prove_positive_core(n/2, A);
         expr new_num = get_app_builder().mk_bit0(A, rec.first);
-        expr new_pf = get_app_builder().mk_app(get_ordered_arith_pos_bit0_name(),
-                                               {A, A_linear_ordered_comm_ring, rec.first, rec.second});
+        expr new_pf = get_app_builder().mk_app(get_numeral_pos_bit0_name(), {rec.first, rec.second});
         return mk_pair(new_num, new_pf);
     }
 }
 
 expr prove_positive(mpz const & n, expr const & A) {
-    blast_tmp_type_context tmp_tctx;
-    optional<expr> A_linear_ordered_comm_ring = tmp_tctx->mk_class_instance(get_app_builder().mk_linear_ordered_comm_ring(A));
-    if (!A_linear_ordered_comm_ring) throw blast_exception("Can't synthesize linear_ordered_comm_ring", A);
-    return prove_positive_core(n, A, *A_linear_ordered_comm_ring).second;
+    return prove_positive_core(n, A).second;
 }
 
 expr prove_positive(mpq const & n, expr const & A) {
@@ -102,7 +101,7 @@ expr prove_positive(mpq const & n, expr const & A) {
     } else {
         expr pf_a = prove_positive(n.get_numerator(), A);
         expr pf_b = prove_positive(n.get_denominator(), A);
-        return get_app_builder().mk_app(get_ordered_arith_pos_of_pos_of_mulinv_pos_name(), {pf_a, pf_b});
+        return get_app_builder().mk_app(get_ordered_arith_mulinv_pos_of_pos_pos_name(), {pf_a, pf_b});
     }
 }
 
@@ -115,21 +114,46 @@ expr prove_positive(mpq const & n, expr const & A) {
 
 // TODO(dhs): clean this up, stop synthesizing and checking everywhere
 expr prove_zero_not_lt_zero(expr const & A) {
-    blast_tmp_type_context tmp_tctx;
-    optional<expr> A_linear_ordered_comm_ring = tmp_tctx->mk_class_instance(get_app_builder().mk_linear_ordered_comm_ring(A));
-    if (!A_linear_ordered_comm_ring) throw blast_exception("Can't synthesize linear_ordered_comm_ring", A);
-    return mk_app(mk_constant(get_ordered_arith_zero_not_lt_zero_name(), get_level(A)),
-                  {A, *A_linear_ordered_comm_ring});
+    return get_app_builder().mk_zero_not_lt_zero(A);
 }
 
 expr prove_zero_not_lt_neg(expr const & A, mpq const & nc) {
-    auto c_pos = prove_positive(neg(nc), A);
-    return get_app_builder().mk_app(get_ordered_arith_zero_not_lt_neg_name(), 4, {c_pos});
+    return get_app_builder().mk_app(get_ordered_arith_zero_not_lt_neg_name(), 4, {prove_positive(neg(nc), A)});
 }
 
 expr prove_zero_not_le_neg(expr const & A, mpq const & nc) {
-    auto c_pos = prove_positive(neg(nc), A);
-    return get_app_builder().mk_app(get_ordered_arith_zero_not_le_neg_name(), 4, {c_pos});
+    return get_app_builder().mk_app(get_ordered_arith_zero_not_le_neg_name(), 4, {prove_positive(neg(nc), A)});
+}
+
+/* Note: this must be called on a numeral, not any numeral expression */
+expr prove_num_positive(expr const & e, expr const & type) {
+    expr arg;
+    if (is_bit0(e, arg)) {
+        return get_app_builder().mk_app(get_numeral_pos_bit0_name(), prove_num_positive(arg, type));
+    } else if (is_bit1(e, arg)) {
+        return get_app_builder().mk_app(get_numeral_pos_bit1_name(), prove_num_positive(arg, type));
+    } else if (is_one(e)) {
+        return get_app_builder().mk_zero_lt_one(type);
+    } else {
+        lean_trace(*g_num_trace_name, tout() << "prove_num_positive called on zero or non_numeral: " << ppb(e) << "\n";);
+        throw exception("prove_num_positive called on zero or non_numeral");
+    }
+}
+
+/* Note: must be called on a normalized numeral */
+expr prove_ne_zero(expr const & e, expr const & type) {
+    expr neg_e, inv_e, num, den;
+    if (is_neg(e, neg_e)) {
+        return get_app_builder().mk_app(get_ordered_arith_nonzero_of_neg_name(), 4, {prove_ne_zero(neg_e, type)});
+    } else if (is_inv(e, inv_e)) {
+        return get_app_builder().mk_app(get_inv_ne_zero_name(), 4, {prove_ne_zero(inv_e, type)});
+    } else if (is_mulinv(e, num, den)) {
+        expr pf_num_ne_zero = prove_ne_zero(num, type);
+        expr pf_den_ne_zero = prove_ne_zero(den, type);
+        return get_app_builder().mk_app(get_numeral_mulinv_ne_zero_of_ne_zero_ne_zero_name(), 6, {pf_num_ne_zero, pf_den_ne_zero});
+    } else  {
+        return get_app_builder().mk_app(get_ordered_arith_nonzero_of_pos_name(), 4, {prove_num_positive(e, type)});
+    }
 }
 
 /* Testers */
@@ -143,17 +167,6 @@ bool is_mulinv(expr const & e, expr & n, expr & d) {
     if (is_mul(e, arg1, arg2) && is_inv(arg2, arg)) {
         n = arg1;
         d = arg;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool is_mulinv_alt(expr const & e, expr & n, expr & d_inv) {
-    expr arg1, arg2;
-    if (is_mul(e, arg1, arg2) && is_inv(arg2)) {
-        n = arg1;
-        d_inv = arg2;
         return true;
     } else {
         return false;
@@ -265,30 +278,36 @@ class simplify_numeral_expr_fn {
             pf = get_app_builder().mk_app(get_numeral_pos_add_neg_eq_pos_name(), pf_of_sum_simp);
         } else if (is_inv(e1_simp, inv_e1_simp)) {
             // d^-1 + b
-            // lemma inv_add (d b c val : A) : 1 + b * d = val →  c * d = val →  d⁻¹ + b = c := sorry
+            // lemma inv_add {d b c val : A} (Hd : d ≠ 0) (H1 : 1 + b * d = val) (H2 : c * d = val) : d⁻¹ + b = c
+            expr pf_ne_zero = prove_ne_zero(inv_e1_simp, m_type);
             expr_pair r_of_lhs_simp = simplify(get_app_builder().mk_add(m_type, get_app_builder().mk_one(m_type),
                                                                         get_app_builder().mk_mul(m_type, e2_simp, inv_e1_simp)));
             expr_pair r_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, e_target, inv_e1_simp));
             lean_assert(r_of_lhs_simp.first == r_of_rhs_simp.first);
-            pf = get_app_builder().mk_app(get_numeral_inv_add_name(), r_of_lhs_simp.second, r_of_rhs_simp.second);
+            pf = get_app_builder().mk_app(get_numeral_inv_add_name(), pf_ne_zero, r_of_lhs_simp.second, r_of_rhs_simp.second);
         } else if (is_inv(e2_simp, inv_e2_simp)) {
             // b + d^-1
-            // lemma add_inv (d b c val : A) : b * d + 1 = val →  c * d = val →  b + d⁻¹ = c := sorry
-            expr_pair r_of_lhs_simp = simplify(get_app_builder().mk_add(m_type, get_app_builder().mk_mul(m_type, e1_simp, inv_e2_simp),
+            // lemma add_inv {d b c val : A} (Hd : d ≠ 0) (H1 : d * b + 1 = val) (H2 : d * c = val) : b + d⁻¹ = c
+            expr pf_ne_zero = prove_ne_zero(inv_e2_simp, m_type);
+            expr_pair r_of_lhs_simp = simplify(get_app_builder().mk_add(m_type, get_app_builder().mk_mul(m_type, inv_e2_simp, e1_simp),
                                                                         get_app_builder().mk_one(m_type)));
-            expr_pair r_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, e_target, inv_e2_simp));
+            expr_pair r_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, inv_e2_simp, e_target));
             lean_assert(r_of_lhs_simp.first == r_of_rhs_simp.first);
-            pf = get_app_builder().mk_app(get_numeral_add_inv_name(), r_of_lhs_simp.second, r_of_rhs_simp.second);
+            pf = get_app_builder().mk_app(get_numeral_add_inv_name(), pf_ne_zero, r_of_lhs_simp.second, r_of_rhs_simp.second);
         } else if (is_mulinv(e1_simp, e1_simp_n, e1_simp_d)) {
             // (a * b^-1) + c
+            // lemma mulinv_add {n d b c val : A} (Hd : d ≠ 0) (H1 : n + b * d = val) (H2 : c * d = val) : n * d⁻¹ + b = c
+            expr pf_ne_zero = prove_ne_zero(e1_simp_d, m_type);
             expr pf_of_lhs_simp = simplify(get_app_builder().mk_add(m_type, e1_simp_n, get_app_builder().mk_mul(m_type, e2_simp, e1_simp_d))).second;
             expr pf_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, e_target, e1_simp_d)).second;
-            pf = get_app_builder().mk_app(get_numeral_mulinv_add_name(), pf_of_lhs_simp, pf_of_rhs_simp);
+            pf = get_app_builder().mk_app(get_numeral_mulinv_add_name(), pf_ne_zero, pf_of_lhs_simp, pf_of_rhs_simp);
         } else if (is_mulinv(e2_simp, e2_simp_n, e2_simp_d)) {
             // a + (b * c^-1)
-            expr pf_of_lhs_simp = simplify(get_app_builder().mk_add(m_type, get_app_builder().mk_mul(m_type, e1_simp, e2_simp_d), e2_simp_n)).second;
-            expr pf_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, e_target, e2_simp_d)).second;
-            pf = get_app_builder().mk_app(get_numeral_add_mulinv_name(), pf_of_lhs_simp, pf_of_rhs_simp);
+            // lemma add_mulinv {n d b c val : A} (Hd : d ≠ 0) (H1 : d * b + n = val) (H2 : d * c = val) : b + n * d⁻¹ = c
+            expr pf_ne_zero = prove_ne_zero(e2_simp_d, m_type);
+            expr pf_of_lhs_simp = simplify(get_app_builder().mk_add(m_type, get_app_builder().mk_mul(m_type, e2_simp_d, e1_simp), e2_simp_n)).second;
+            expr pf_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, e2_simp_d, e_target)).second;
+            pf = get_app_builder().mk_app(get_numeral_add_mulinv_name(), pf_ne_zero, pf_of_lhs_simp, pf_of_rhs_simp);
         } else {
             // a + b
             pf = simplify_add_core(e1_simp, e2_simp, e_target);
@@ -319,7 +338,7 @@ class simplify_numeral_expr_fn {
         expr const & e1_simp = r1.first;
         expr const & e2_simp = r2.first;
         expr neg_e1_simp, neg_e2_simp, neg_e_target;
-        expr e1_simp_n, e1_simp_d_inv, e2_simp_n, e2_simp_d_inv, e2_simp_d, e2_simp_inv, inv_e1_simp, inv_e2_simp;
+        expr e1_simp_n, e1_simp_d, e2_simp_n, e2_simp_d, e2_simp_inv, inv_e1_simp, inv_e2_simp;
         expr e_target_n, e_target_d;
         expr pf;
         if (is_zero(e1_simp)) {
@@ -348,39 +367,54 @@ class simplify_numeral_expr_fn {
             pf = get_app_builder().mk_app(get_numeral_pos_mul_neg_name(), pf_of_prod_simp);
         } else if (is_inv(e1_simp) && !is_inv(e2_simp)) {
             // a^-1 * b
+            // lemma inv_mul_comm (n d v : A) (H : n * d⁻¹ = v) : d⁻¹ * n = v
             expr pf_of_comm = simplify(get_app_builder().mk_mul(m_type, e2_simp, e1_simp)).second;
             pf = get_app_builder().mk_app(get_numeral_inv_mul_comm_name(), pf_of_comm);
         } else if (!is_inv(e1_simp) && is_inv(e2_simp, inv_e2_simp) && is_mulinv(e_target, e_target_n, e_target_d)) {
             // a * b^-1 = c * d^-1
-            // lemma mul_inv_eq_inv [s : field A] (a b c d v : A) (H1 : a * d = v) (H2 : c * b = v) : a * b⁻¹ = c * d⁻¹ := sorry
+            // lemma mul_inv_eq_inv (a b c d v : A) (Hb : b ≠ 0) (Hd : d ≠ 0) (H1 : a * d = v) (H2 : c * b = v) : a * b⁻¹ = c * d⁻¹
+            expr pf_ne_zero1 = prove_ne_zero(inv_e2_simp, m_type);
+            expr pf_ne_zero2 = prove_ne_zero(e_target_d, m_type);
             expr pf_of_lhs_simp = simplify(get_app_builder().mk_mul(m_type, e1_simp, e_target_d)).second;
             expr pf_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, e_target_n, inv_e2_simp)).second;
-            pf = get_app_builder().mk_app(get_numeral_mul_inv_eq_inv_name(), pf_of_lhs_simp, pf_of_rhs_simp);
+            pf = get_app_builder().mk_app(get_numeral_mul_inv_eq_inv_name(), {pf_ne_zero1, pf_ne_zero2, pf_of_lhs_simp, pf_of_rhs_simp});
         } else if (!is_inv(e1_simp) && is_inv(e2_simp, inv_e2_simp) /* && !is_mulinv(e_target) */) {
             // a * b^-1 = c (not mulinv)
+            // lemma mul_inv_eq_noninv (n d v : A) (Hd : d ≠ 0) (H : v * d = n) : n * d⁻¹ = v
+            expr pf_ne_zero = prove_ne_zero(inv_e2_simp, m_type);
             expr pf_of_prod = simplify(get_app_builder().mk_mul(m_type, e_target, inv_e2_simp)).second;
-            pf = get_app_builder().mk_app(get_numeral_mul_inv_eq_noninv_name(), pf_of_prod);
+            pf = get_app_builder().mk_app(get_numeral_mul_inv_eq_noninv_name(), pf_ne_zero, pf_of_prod);
         } else if (is_inv(e1_simp, inv_e1_simp) && is_inv(e2_simp, inv_e2_simp)) {
             // a^-1 * b^-1
+            // lemma inv_mul_inv (a b c : A) (Ha : a ≠ 0) (Hb : b ≠ 0) (H : a * b = c) : a⁻¹ * b⁻¹ = c⁻¹
+            expr pf_ne_zero1 = prove_ne_zero(inv_e1_simp, m_type);
+            expr pf_ne_zero2 = prove_ne_zero(inv_e2_simp, m_type);
             expr pf_of_inv = simplify(get_app_builder().mk_mul(m_type, inv_e1_simp, inv_e2_simp)).second;
-            pf = get_app_builder().mk_app(get_numeral_inv_mul_inv_name(), pf_of_inv);
-        } else if (is_mulinv_alt(e1_simp, e1_simp_n, e1_simp_d_inv)) {
-            /* (a * b^-1) * c */
-            expr pf_of_shuffle = simplify(get_app_builder().mk_mul(m_type, get_app_builder().mk_mul(m_type, e1_simp_n, e2_simp), e1_simp_d_inv)).second;
+            pf = get_app_builder().mk_app(get_numeral_inv_mul_inv_name(), pf_ne_zero1, pf_ne_zero2, pf_of_inv);
+        } else if (is_mulinv(e1_simp, e1_simp_n, e1_simp_d)) {
+            // (a * b^-1) * c
+            // lemma mulinv_mul {n d c v : A} (H : (n * c) * d⁻¹ = v) : (n * d⁻¹) * c = v
+            expr pf_of_shuffle = simplify(get_app_builder().mk_mul(m_type, get_app_builder().mk_mul(m_type, e1_simp_n, e2_simp), get_app_builder().mk_inv(m_type, e1_simp_d))).second;
             pf = get_app_builder().mk_app(get_numeral_mulinv_mul_name(), pf_of_shuffle);
-        } else if (is_mulinv_alt(e2_simp, e2_simp_n, e2_simp_d_inv)) {
-            /* a * (b * c^-1) */
-            expr pf_of_shuffle = simplify(get_app_builder().mk_mul(m_type, get_app_builder().mk_mul(m_type, e1_simp, e2_simp_n), e2_simp_d_inv)).second;
-            pf = get_app_builder().mk_app(get_numeral_mul_mulinv_name(), pf_of_shuffle);
+        } else if (is_mulinv(e2_simp, e2_simp_n, e2_simp_d)) {
+            // a * (b * c^-1)
+            // lemma mul_mulinv (c n d v : A) (Hd : d ≠ 0) (H : (c * n) * d⁻¹ = v) : c * (n * d⁻¹) = v
+            expr pf_ne_zero = prove_ne_zero(e2_simp_d, m_type);
+            expr pf_of_shuffle = simplify(get_app_builder().mk_mul(m_type, get_app_builder().mk_mul(m_type, e1_simp, e2_simp_n), get_app_builder().mk_inv(m_type, e2_simp_d))).second;
+            pf = get_app_builder().mk_app(get_numeral_mul_mulinv_name(), {pf_ne_zero, pf_of_shuffle});
         } else if (is_inv(e2_simp, e2_simp_inv) && is_mulinv(e_target, e_target_n, e_target_d)) {
+            throw exception("wasn't expecting this case");
             /* a * b^-1 = c * d^-1*/
-            expr pf_of_lhs_simp = simplify(get_app_builder().mk_mul(m_type, e1_simp, e_target_d)).second;
+/*            expr pf_of_lhs_simp = simplify(get_app_builder().mk_mul(m_type, e1_simp, e_target_d)).second;
             expr pf_of_rhs_simp = simplify(get_app_builder().mk_mul(m_type, e_target_n, e2_simp_inv)).second;
             pf = get_app_builder().mk_app(get_numeral_mulinv_eq_mulinv_name(), pf_of_lhs_simp, pf_of_rhs_simp);
+*/
         } else {
             /* a * b */
             pf = simplify_mul_core(e1_simp, e2_simp, e_target);
         }
+        lean_trace(*g_num_trace_simplify_name,
+                   tout() << "mul_congr\n" << infer_type(r1.second) << "\n" << infer_type(r2.second) << "\n" << infer_type(pf) << "\n";);
         return get_app_builder().mk_app(get_numeral_mul_congr_name(), r1.second, r2.second, pf);
     }
 
@@ -400,17 +434,26 @@ class simplify_numeral_expr_fn {
         expr inv_e_simp = r.first;
         expr inv_e_n, inv_e_d;
         expr e_target_n, e_target_d;
+        expr neg_inv_e_simp;
         if (is_one(inv_e_simp)) {
             // a^1 where a = 1
             lean_assert(is_one(e_target));
             return get_app_builder().mk_app(get_numeral_inv_simp_one_name(), r.second);
+        } else if (is_neg(inv_e_simp)) {
+            expr pf_ne_zero = prove_ne_zero(inv_e_simp, m_type);
+            return get_app_builder().mk_app(get_numeral_inv_neg_eq_neg_inv_name(), {pf_ne_zero, r.second});
         } else if (is_inv(inv_e_simp)) {
             // a^1 where a = b^1
-            return get_app_builder().mk_app(get_numeral_inv_simp_inv_name(), r.second);
+            // lemma inv_simp_inv (a b : A) (Hb : b ≠ 0) (H : a = b⁻¹) : a⁻¹ = b
+            expr pf_ne_zero = prove_ne_zero(e_target, m_type);
+            return get_app_builder().mk_app(get_numeral_inv_simp_inv_name(), {pf_ne_zero, r.second});
         } else if (is_mulinv(inv_e_simp, inv_e_n, inv_e_d)) {
-            /* a^1 where a = b * c^-1 */
-            lean_assert(is_mulinv(e_target));
-            return get_app_builder().mk_app(get_numeral_inv_simp_mulinv_name(), r.second);
+            // a^1 where a = b * c^-1
+            // lemma inv_simp_mulinv (a b c : A) (Hb : b ≠ 0) (Hc : c ≠ 0) (H : a = c * b⁻¹) : a⁻¹ = b * c⁻¹
+            lean_verify(is_mulinv(e_target, e_target_n, e_target_d));
+            expr pf_ne_zero1 = prove_ne_zero(e_target_n, m_type);
+            expr pf_ne_zero2 = prove_ne_zero(e_target_d, m_type);
+            return get_app_builder().mk_app(get_numeral_inv_simp_mulinv_name(), {pf_ne_zero1, pf_ne_zero2, r.second});
         } else {
             /* a^1 where a = b */
             return get_app_builder().mk_app(get_numeral_inv_simp_name(), r.second);
@@ -453,12 +496,10 @@ public:
 
 /* Entry points */
 simp::result simplify_numeral_expr(expr const & e) {
-    if (is_num(e)) {
-        return simp::result(e);
-    } else {
-        expr_pair r = simplify_numeral_expr_fn()(e);
-        return simp::result(r.first, r.second);
-    }
+    // TODO(dhs): avoid the equality check
+    expr_pair r = simplify_numeral_expr_fn()(e);
+    if (r.first == e) return simp::result(e);
+    else return simp::result(r.first, r.second);
 }
 
 /* Setup and teardown */

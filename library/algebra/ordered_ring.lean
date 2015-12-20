@@ -712,32 +712,22 @@ end
 
 /- TODO: Multiplication and one, starting with mult_right_le_one_le. -/
 
-namespace norm_num
+namespace numeral
 
-theorem pos_bit0_helper [s : linear_ordered_semiring A] (a : A) (H : a > 0) : bit0 a > 0 :=
+-- Proving positive numbers are positive
+theorem pos_bit0 [s : linear_ordered_semiring A] (a : A) (H : 0 < a) : 0 < bit0 a :=
   by rewrite ↑bit0; apply add_pos H H
 
-theorem nonneg_bit0_helper [s : linear_ordered_semiring A] (a : A) (H : a ≥ 0) : bit0 a ≥ 0 :=
-  by rewrite ↑bit0; apply add_nonneg H H
-
-theorem pos_bit1_helper [s : linear_ordered_semiring A] (a : A) (H : a ≥ 0) : bit1 a > 0 :=
+theorem pos_bit1 [s : linear_ordered_semiring A] (a : A) (H : 0 < a) : 0 < bit1 a :=
   begin
     rewrite ↑bit1,
     apply add_pos_of_nonneg_of_pos,
-    apply nonneg_bit0_helper _ H,
+    apply le_of_lt,
+    apply pos_bit0 _ H,
     apply zero_lt_one
   end
 
-theorem nonneg_bit1_helper [s : linear_ordered_semiring A] (a : A) (H : a ≥ 0) : bit1 a ≥ 0 :=
-  by apply le_of_lt; apply pos_bit1_helper _ H
-
-theorem nonzero_of_pos_helper [s : linear_ordered_semiring A] (a : A) (H : a > 0) : a ≠ 0 :=
-  ne_of_gt H
-
-theorem nonzero_of_neg_helper [s : linear_ordered_ring A] (a : A) (H : a ≠ 0) : -a ≠ 0 :=
-  begin intro Ha, apply H, apply eq_of_neg_eq_neg, rewrite neg_zero, exact Ha end
-
-end norm_num
+end numeral
 
 namespace ordered_arith
 
@@ -759,24 +749,19 @@ begin rewrite [Hab, -sub_eq_add_neg, sub_self], apply weak_order.le_refl end
 theorem eq_of_zero_le2 [s : linear_ordered_comm_ring A] (a b : A) : a = b → 0 ≤ a + - b :=
 assume Hab : a = b, eq_of_zero_le1 b a (eq.symm Hab)
 
--- Proving positive numbers are positive
-theorem pos_bit0 [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit0 a :=
-by rewrite ↑bit0; apply add_pos H H
+-- Positive/non-zero
 
-theorem pos_bit1 [s : linear_ordered_comm_ring A] (a : A) (H : 0 < a) : 0 < bit1 a :=
-begin
-  rewrite ↑bit1,
-  apply add_pos_of_nonneg_of_pos,
-  apply norm_num.nonneg_bit0_helper,
-  apply le_of_lt H,
-  apply zero_lt_one
-end
+theorem nonzero_of_pos [s : linear_ordered_semiring A] (a : A) (H : 0 < a) : a ≠ 0 :=
+  ne_of_gt H
 
-theorem zero_lt_one [s : linear_ordered_comm_ring A] : (0:A) < 1 := zero_lt_one
+theorem nonzero_of_neg [s : linear_ordered_ring A] (a : A) (H : a ≠ 0) : -a ≠ 0 :=
+  begin intro Ha, apply H, apply eq_of_neg_eq_neg, rewrite neg_zero, exact Ha end
 
 -- Proving negative numbers are not positive
-theorem zero_not_lt_zero [s : linear_ordered_comm_ring A] : (0:A) < 0 → false := by apply strict_order.lt_irrefl
-theorem zero_not_le_neg [s : linear_ordered_comm_ring A] (c : A) : 0 < c → 0 ≤ - c → false :=
+
+theorem zero_not_lt_zero [s : linear_ordered_semiring A] : (0:A) < 0 → false := by apply strict_order.lt_irrefl
+
+theorem zero_not_le_neg [s : linear_ordered_ring A] (c : A) : 0 < c → 0 ≤ - c → false :=
 assume zero_lt_c zero_lt_neg_c,
 begin
   have c_le_zero : - - c ≤ - 0, from neg_le_neg zero_lt_neg_c,
@@ -785,7 +770,7 @@ begin
   exact zero_not_lt_zero (lt_of_lt_of_le zero_lt_c c_le_zero)
 end
 
-theorem zero_not_lt_neg [s : linear_ordered_comm_ring A] (c : A) : 0 < c → 0 < - c → false :=
+theorem zero_not_lt_neg [s : linear_ordered_ring A] (c : A) : 0 < c → 0 < - c → false :=
 assume zero_lt_c zero_lt_neg_c,
 begin
   have c_lt_zero : - - c < - 0, from neg_lt_neg zero_lt_neg_c,

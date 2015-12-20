@@ -80,6 +80,7 @@ implies_of_if_neg
 implies_of_if_pos
 implies.resolve
 inv
+inv_ne_zero
 is_trunc.is_hprop
 is_trunc.is_hprop.elim
 is_trunc.is_hset
@@ -203,6 +204,10 @@ numeral.mulinv_mul
 numeral.mul_mulinv
 numeral.mulinv_eq_int
 numeral.mulinv_eq_mulinv
+numeral.inv_neg_eq_neg_inv
+numeral.pos_bit0
+numeral.pos_bit1
+numeral.mulinv_ne_zero_of_ne_zero_ne_zero
 of_iff_true
 one
 one_mul
@@ -220,17 +225,16 @@ or.resolve_left
 or.resolve_right
 ordered_ring
 ordered_semiring
+ordered_arith.nonzero_of_pos
+ordered_arith.nonzero_of_neg
+ordered_arith.zero_not_lt_zero
+ordered_arith.zero_not_le_neg
+ordered_arith.zero_not_lt_neg
 ordered_arith.lt_of_zero_lt
 ordered_arith.le_of_zero_le
 ordered_arith.eq_of_zero_le1
 ordered_arith.eq_of_zero_le2
-ordered_arith.pos_bit0
-ordered_arith.pos_bit1
-ordered_arith.zero_lt_one
-ordered_arith.pos_of_pos_of_mulinv_pos
-ordered_arith.zero_not_lt_zero
-ordered_arith.zero_not_lt_neg
-ordered_arith.zero_not_le_neg
+ordered_arith.mulinv_pos_of_pos_pos
 ordered_arith.resolve_lt_lt
 ordered_arith.resolve_lt_le
 ordered_arith.resolve_le_lt
@@ -331,3 +335,4 @@ zero_add
 zero_le_one
 zero_lt_one
 zero_mul
+zero_not_lt_zero

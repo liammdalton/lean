@@ -264,11 +264,14 @@ struct app_builder::imp {
         m_ctx->set_next_mvar_idx(e.m_num_emeta);
     }
 
-    void trace_unify_failure(name const & n, unsigned i, expr const & m, expr const & v) {
+    void trace_unify_failure(entry const & e, name const & n, unsigned i, expr const & m, expr const & v) {
         lean_trace("app_builder",
                    trace_fun(n);
                    tout () << ", failed to solve unification constraint for argument #" << (i+1)
-                   << " (" << m_ctx->infer(m) << " =?= " << m_ctx->infer(v) << ")\n";);
+                   << " (" << m_ctx->infer(m) << " =?= " << m_ctx->infer(v) << ")\n";
+                   for (auto meta : e.m_expl_args) {
+                       tout() << meta << " : " << m_ctx->infer(meta) << "\n";
+                   };);
     }
 
     expr mk_app(name const & c, unsigned nargs, expr const * args) {
@@ -286,7 +289,7 @@ struct app_builder::imp {
             }
             --i;
             if (!m_ctx->relaxed_assign(m, args[i])) {
-                trace_unify_failure(c, i, m, args[i]);
+                trace_unify_failure(*e, c, i, m, args[i]);
                 throw app_builder_exception();
             }
         }
@@ -327,7 +330,7 @@ struct app_builder::imp {
                 --j;
                 expr const & m = head(it);
                 if (!m_ctx->relaxed_assign(m, args[j])) {
-                    trace_unify_failure(c, j, m, args[j]);
+                    trace_unify_failure(*e, c, j, m, args[j]);
                     throw app_builder_exception();
                 }
                 it = tail(it);
@@ -765,6 +768,26 @@ struct app_builder::imp {
         return ::lean::mk_app(mk_constant(get_numeral_one_add_one_name(), {lvl}), {A, *A_add_comm_semigroup, *A_has_one});
     }
 
+    expr mk_zero_lt_one(expr const & A) {
+        level lvl = get_level(A);
+        auto A_linear_ordered_semiring = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_linear_ordered_semiring_name(), {lvl}), A));
+        if (!A_linear_ordered_semiring) {
+            trace_inst_failure(A, "linear_ordered_semiring");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_zero_lt_one_name(), {lvl}), {A, *A_linear_ordered_semiring});
+    }
+
+    expr mk_zero_not_lt_zero(expr const & A) {
+        level lvl = get_level(A);
+        auto A_linear_ordered_semiring = m_ctx->mk_class_instance(::lean::mk_app(mk_constant(get_linear_ordered_semiring_name(), {lvl}), A));
+        if (!A_linear_ordered_semiring) {
+            trace_inst_failure(A, "linear_ordered_semiring");
+            throw app_builder_exception();
+        }
+        return ::lean::mk_app(mk_constant(get_ordered_arith_zero_not_lt_zero_name(), {lvl}), {A, *A_linear_ordered_semiring});
+    }
+
     expr mk_ordered_semiring(expr const & A) {
         level lvl = get_level(A);
         return ::lean::mk_app(mk_constant(get_ordered_semiring_name(), {lvl}), A);
@@ -975,6 +998,14 @@ expr app_builder::mk_lt(expr const & A, expr const & lhs, expr const & rhs) {
 
 expr app_builder::mk_one_add_one(expr const & A) {
     return m_ptr->mk_one_add_one(A);
+}
+
+expr app_builder::mk_zero_lt_one(expr const & A) {
+    return m_ptr->mk_zero_lt_one(A);
+}
+
+expr app_builder::mk_zero_not_lt_zero(expr const & A) {
+    return m_ptr->mk_zero_not_lt_zero(A);
 }
 
 expr app_builder::mk_ordered_semiring(expr const & A) {

@@ -21,6 +21,9 @@ mpq expr_to_mpq(expr const &);
 expr prove_positive(mpz const & n, expr const & A);
 expr prove_positive(mpq const & n, expr const & A);
 
+expr prove_num_positive(expr const & e, expr const & type);
+expr prove_ne_zero(expr const & e, expr const & type);
+
 /* Prove a contradiction */
 expr prove_zero_not_lt_zero(expr const & A);
 expr prove_zero_not_lt_neg(expr const & A, mpq const & nc);
@@ -29,7 +32,6 @@ expr prove_zero_not_le_neg(expr const & A, mpq const & nc);
 /* Testers */
 bool is_mulinv(expr const & e);
 bool is_mulinv(expr const & e, expr & n, expr & d);
-bool is_mulinv_alt(expr const & e, expr & n, expr & d_inv);
 
 bool is_numeral_expr(expr const & e);
 

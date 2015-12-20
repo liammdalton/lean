@@ -512,7 +512,7 @@ begin
 end
 
 lemma mulinv_mul {n d c v : A} (H : (n * c) * d⁻¹ = v) : (n * d⁻¹) * c = v :=
-by rewrite [-H, mul.assoc, mul.assoc, {d⁻¹ * c}mul.comm],
+by rewrite [-H, mul.assoc, mul.assoc, {d⁻¹ * c}mul.comm]
 
 lemma mul_mulinv (c n d v : A) (Hd : d ≠ 0) (H : (c * n) * d⁻¹ = v) : c * (n * d⁻¹) = v :=
 by rewrite [-H, mul.assoc]
@@ -554,6 +554,28 @@ by rewrite H
 
 lemma inv_simp_mulinv (a b c : A) (Hb : b ≠ 0) (Hc : c ≠ 0) (H : a = c * b⁻¹) : a⁻¹ = b * c⁻¹ :=
 by rewrite [H, mul_inv_eq (inv_ne_zero Hb) Hc, division_ring.inv_inv Hb]
+
+lemma inv_neg_eq_neg_inv (a b : A) (Hb : -b ≠ 0) (H : a = -b) : a⁻¹ = -(b⁻¹) :=
+begin
+  rewrite H at *,
+  rewrite -{(- b)⁻¹}one_mul,
+  rewrite -{b⁻¹}one_mul,
+  rewrite [-division.def, -division.def],
+  apply div_neg_eq_neg_div,
+  intro Hb2,
+  rewrite Hb2 at Hb,
+  rewrite neg_zero at Hb,
+  exact (Hb rfl)
+end
+
+theorem mulinv_ne_zero_of_ne_zero_ne_zero (a b : A) : a ≠ 0 →  b ≠ 0 → a * b⁻¹ ≠ 0 :=
+assume a_nz b_nz,
+begin
+  apply division_ring.mul_ne_zero,
+  assumption,
+  apply inv_ne_zero,
+  assumption
+end
 
 end field
 end numeral

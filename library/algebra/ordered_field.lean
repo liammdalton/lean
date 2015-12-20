@@ -517,7 +517,7 @@ end discrete_linear_ordered_field
 
 namespace ordered_arith
 
-theorem pos_of_pos_mulinv_pos {A : Type} [s : linear_ordered_field A] (a b : A) : 0 < a →  0 < b → 0 < a * b⁻¹ :=
+theorem mulinv_pos_of_pos_pos {A : Type} [s : linear_ordered_field A] (a b : A) : 0 < a →  0 < b → 0 < a * b⁻¹ :=
 assume a_pos b_pos,
 assert b_inv_pos : 0 < 1 / b, from one_div_pos_of_pos b_pos,
 begin rewrite -inv_eq_one_div at b_inv_pos, exact mul_pos a_pos b_inv_pos end

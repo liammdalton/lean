@@ -171,6 +171,8 @@ public:
     expr mk_lt(expr const & A, expr const & lhs, expr const & rhs);
 
     expr mk_one_add_one(expr const & A);
+    expr mk_zero_lt_one(expr const & A);
+    expr mk_zero_not_lt_zero(expr const & A);
 
     expr mk_ordered_semiring(expr const & A);
     expr mk_ordered_ring(expr const & A);

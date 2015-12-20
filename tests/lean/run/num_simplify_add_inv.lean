@@ -5,7 +5,9 @@ constants (A : Type.{l}) (s : linear_ordered_field A)
 attribute s [instance]
 
 -- TODO(dhs): depends on the numeral-inverse lemmas
-/-
+set_option trace.app_builder true
+--set_option trace.blast.num true
+
 #num_simplify 1 + (1:A)⁻¹
 #num_simplify 1 + (2:A)⁻¹
 #num_simplify (2:A)⁻¹ + 1
@@ -34,4 +36,3 @@ attribute s [instance]
 #num_simplify (3⁻¹ * 4) + (2:A)
 #num_simplify (4⁻¹ * 3⁻¹) + (2:A)
 #num_simplify (3:A) + 3⁻¹
--/

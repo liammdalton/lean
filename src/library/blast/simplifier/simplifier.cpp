@@ -390,8 +390,8 @@ result simplifier::simplify(expr const & e, bool is_root) {
 
     if (!m_simp_pred(e)) return result(e);
 
-    if (m_numerals && using_eq()) {
-        if (is_numeral_expr(e)) return simplify_numeral_expr(e);
+    if (m_numerals && using_eq() && is_numeral_expr(e)) {
+        return simplify_numeral_expr(e);
     }
 
     result r(e);

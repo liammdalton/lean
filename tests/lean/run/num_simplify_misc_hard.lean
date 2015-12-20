@@ -7,7 +7,7 @@ attribute s [instance]
 set_option trace.app_builder true
 --set_option trace.blast.num true
 
--- TODO(dhs): depends on the numeral-inverse lemmas
+-- TODO(dhs): these are pretty expensive I need to profile to see what is going wrong.
 /-
 #num_simplify (1:A) + (2 * 7)⁻¹ * (3 + 4⁻¹ + 7)⁻¹ * 2⁻¹ * (3 * 7⁻¹) + 5
 #num_simplify (1:A) + (2 * 7)⁻¹ * (3 + (3 * 4⁻¹) + 7)⁻¹ * 2⁻¹ * (3 * 7⁻¹) + 5
