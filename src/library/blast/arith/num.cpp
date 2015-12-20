@@ -3,6 +3,7 @@ Copyright (c) 2015 Daniel Selsam. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Author: Daniel Selsam
 */
+#include <iostream>
 #include "library/blast/arith/num.h"
 #include "library/blast/blast_exception.h"
 #include "library/blast/trace.h"
@@ -186,6 +187,7 @@ bool is_numeral_expr(expr const & e) {
 /* Simplifier */
 class simplify_numeral_expr_fn {
     expr m_type;
+    unsigned m_count{0};
 
     expr compute_target(expr const & e) {
         mpq mpq_target = expr_to_mpq(e);
@@ -198,7 +200,7 @@ class simplify_numeral_expr_fn {
         throw blast_exception("tried to simplify non-numeral expr", e);
     }
 
-    expr simplify_add_core(expr const & e1, expr const & e2, expr const & ) {
+    expr simplify_add_core(expr const & e1, expr const & e2) {
         expr arg1, arg2, arg;
         if (is_one(e1) && is_one(e2)) {
             // 1 + 1 = 2
@@ -213,29 +215,35 @@ class simplify_numeral_expr_fn {
             return get_app_builder().mk_app(get_numeral_bit0_add_one_name(), {arg1, r.first, r.second});
         } else if (is_one(e1) && is_bit1(e2, arg2)) {
             // 1 + bit1 a = bit0 (a + 1)
-            expr_pair r = simplify(get_app_builder().mk_add(m_type, get_app_builder().mk_one(m_type), arg2));
-            return get_app_builder().mk_app(get_numeral_one_add_bit1_name(), {arg2, r.first, r.second});
+            // lemma one_add_bit1 (a b : A) : 1 + a = b → 1 + bit1 a = bit0 b
+            expr pf_simp = simplify_add_core(get_app_builder().mk_one(m_type), arg2);
+            return get_app_builder().mk_app(get_numeral_one_add_bit1_name(), {pf_simp});
         } else if (is_bit1(e1, arg1) && is_one(e2)) {
             // bit1 a + 1 = bit1 a
-            expr_pair r = simplify(get_app_builder().mk_add(m_type, arg1, get_app_builder().mk_one(m_type)));
-            return get_app_builder().mk_app(get_numeral_bit1_add_one_name(), {arg1, r.first, r.second});
+            // lemma bit1_add_one (a b : A) : a + 1 = b → (bit1 a) + 1 = bit0 b
+            expr pf_simp = simplify_add_core(arg1, get_app_builder().mk_one(m_type));
+            return get_app_builder().mk_app(get_numeral_bit1_add_one_name(), {pf_simp});
         } else if (is_bit0(e1, arg1) && is_bit0(e2, arg2)) {
             // bit0 a + bit0 b = bit0 (a + b)
-            expr_pair r = simplify(get_app_builder().mk_add(m_type, arg1, arg2));
-            return get_app_builder().mk_app(get_numeral_bit0_add_bit0_name(), {arg1, arg2, r.first, r.second});
+            // lemma bit0_add_bit0 [add_comm_semigroup A] (a b c : A) : a + b = c → bit0 a + bit0 b = bit0 c
+            expr pf_simp = simplify_add_core(arg1, arg2);
+            return get_app_builder().mk_app(get_numeral_bit0_add_bit0_name(), {pf_simp});
         } else if (is_bit0(e1, arg1) && is_bit1(e2, arg2)) {
             // bit0 a + bit1 b = bit1 (a + b)
-            expr_pair r = simplify(get_app_builder().mk_add(m_type, arg1, arg2));
-            return get_app_builder().mk_app(get_numeral_bit0_add_bit1_name(), {arg1, arg2, r.first, r.second});
+            // lemma bit0_add_one (a b : A) : a = b → bit0 a + 1 = bit1 b
+            expr pf_simp = simplify_add_core(arg1, arg2);
+            return get_app_builder().mk_app(get_numeral_bit0_add_bit1_name(), {pf_simp});
         } else if (is_bit1(e1, arg1) && is_bit0(e2, arg2)) {
             // bit1 a + bit0 b = bit1 (a + b)
-            expr_pair r = simplify(get_app_builder().mk_add(m_type, arg1, arg2));
-            return get_app_builder().mk_app(get_numeral_bit1_add_bit0_name(), {arg1, arg2, r.first, r.second});
+            // lemma bit1_add_bit0 (a b c : A) : a + b = c → bit1 a + bit0 b = bit1 c
+            expr pf_simp = simplify_add_core(arg1, arg2);
+            return get_app_builder().mk_app(get_numeral_bit1_add_bit0_name(), {pf_simp});
         } else if (is_bit1(e1, arg1) && is_bit1(e2, arg2)) {
             // bit1 a + bit1 b = bit1 (a + b) + 1
-            expr_pair r_sum = simplify(get_app_builder().mk_add(m_type, arg1, arg2));
-            expr_pair r_p1 = simplify(get_app_builder().mk_add(m_type, r_sum.first, get_app_builder().mk_one(m_type)));
-            return get_app_builder().mk_app(get_numeral_bit1_add_bit1_name(), {arg1, arg2, r_sum.first, r_p1.first, r_sum.second, r_p1.second});
+            // lemma bit1_add_bit1 (a b c d : A) : a + b = c → c + 1 = d → bit1 a + bit1 b = bit0 d
+            expr pf_simp1 = simplify_add_core(arg1, arg2);
+            expr pf_simp2 = simplify_add_core(r_sum.first, get_app_builder().mk_one(m_type);
+            return get_app_builder().mk_app(get_numeral_bit1_add_bit1_name(), {pf_simp1});
         } else {
             lean_trace(*g_num_trace_name, tout() << "invalid arguments to add: " << e1 << ", " << e2 << "\n";);
             throw blast_exception("invalid arguments to add", e1);
@@ -258,23 +266,29 @@ class simplify_numeral_expr_fn {
             pf = get_app_builder().mk_app(get_add_zero_name(), e1_simp);
         } else if (is_neg(e1_simp, neg_e1_simp) && is_neg(e2_simp, neg_e2_simp)) {
             // -a + -b
-            expr pf_of_sum_simp = simplify(get_app_builder().mk_add(m_type, neg_e1_simp, neg_e2_simp)).second;
+            // lemma neg_add_neg (a b c : A) : a + b = c → -a + -b = -c
+            expr simp_target; lean_verify(is_neg(e_target, simp_target));
+            expr pf_of_sum_simp = simplify_add(neg_e1_simp, neg_e2_simp, simp_target).second;
             pf = get_app_builder().mk_app(get_numeral_neg_add_neg_name(), pf_of_sum_simp);
         } else if (is_neg(e1_simp, neg_e1_simp) && is_neg(e_target, neg_e_target)) {
             // -a + b = -c
-            expr pf_of_sum_simp = simplify(get_app_builder().mk_add(m_type, e2_simp, neg_e_target)).second;
+            // lemma neg_add_pos_eq_neg (a b c : A) : b + c = a → -a + b = -c
+            expr pf_of_sum_simp = simplify_add(e2_simp, neg_e_target, e1_simp).second;
             pf = get_app_builder().mk_app(get_numeral_neg_add_pos_eq_neg_name(), pf_of_sum_simp);
         } else if (is_neg(e1_simp, neg_e1_simp)) {
             // -a + b = c
-            expr pf_of_sum_simp = simplify(get_app_builder().mk_add(m_type, neg_e1_simp, e_target)).second;
+            // lemma neg_add_pos_eq_pos (a b c : A) : a + c = b → -a + b = c
+            expr pf_of_sum_simp = simplify_add(neg_e1_simp, e_target, e2_simp).second;
             pf = get_app_builder().mk_app(get_numeral_neg_add_pos_eq_pos_name(), pf_of_sum_simp);
         } else if (is_neg(e2_simp, neg_e2_simp) && is_neg(e_target, neg_e_target)) {
             // a + -b = -c
-            expr pf_of_sum_simp = simplify(get_app_builder().mk_add(m_type, e1_simp, neg_e_target)).second;
+            // lemma pos_add_neg_eq_neg (a b c : A) : a + c = b → a + -b = -c
+            expr pf_of_sum_simp = simplify_add(e1_simp, neg_e_target, e2_simp).second;
             pf = get_app_builder().mk_app(get_numeral_pos_add_neg_eq_neg_name(), pf_of_sum_simp);
         } else if (is_neg(e2_simp, neg_e2_simp)) {
             // a + -b = c
-            expr pf_of_sum_simp = simplify(get_app_builder().mk_add(m_type, neg_e2_simp, e_target)).second;
+            // lemma pos_add_neg_eq_pos (a b c : A) : b + c = a → a + -b = c
+            expr pf_of_sum_simp = simplify_add(neg_e2_simp, e_target, e1_simp).second;
             pf = get_app_builder().mk_app(get_numeral_pos_add_neg_eq_pos_name(), pf_of_sum_simp);
         } else if (is_inv(e1_simp, inv_e1_simp)) {
             // d^-1 + b
@@ -413,8 +427,6 @@ class simplify_numeral_expr_fn {
             /* a * b */
             pf = simplify_mul_core(e1_simp, e2_simp, e_target);
         }
-        lean_trace(*g_num_trace_simplify_name,
-                   tout() << "mul_congr\n" << infer_type(r1.second) << "\n" << infer_type(r2.second) << "\n" << infer_type(pf) << "\n";);
         return get_app_builder().mk_app(get_numeral_mul_congr_name(), r1.second, r2.second, pf);
     }
 
@@ -464,6 +476,7 @@ class simplify_numeral_expr_fn {
     }
 
     expr_pair simplify(expr const & e) {
+        m_count++;
         if (is_num(e)) return mk_pair(e, get_app_builder().mk_eq_refl(e));
         expr e_target = compute_target(e);
         lean_trace(*g_num_trace_simplify_name, tout() << "simplify: " << e << " ==> " << e_target << "\n";);
@@ -484,6 +497,7 @@ class simplify_numeral_expr_fn {
         return mk_pair(e_target, pf);
     }
 public:
+    unsigned get_count() const { return m_count; }
     expr_pair operator()(expr const & e) {
         buffer<expr> args;
         get_app_args(e, args);
@@ -500,7 +514,9 @@ public:
 /* Entry points */
 simp::result simplify_numeral_expr(expr const & e) {
     // TODO(dhs): avoid the equality check
-    expr_pair r = simplify_numeral_expr_fn()(e);
+    auto c = simplify_numeral_expr_fn();
+    expr_pair r = c(e);
+    std::cout << c.get_count() << std::endl;
     if (r.first == e) return simp::result(e);
     else return simp::result(r.first, r.second);
 }
