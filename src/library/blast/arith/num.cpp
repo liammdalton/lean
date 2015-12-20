@@ -439,9 +439,12 @@ class simplify_numeral_expr_fn {
             // a^1 where a = 1
             lean_assert(is_one(e_target));
             return get_app_builder().mk_app(get_numeral_inv_simp_one_name(), r.second);
-        } else if (is_neg(inv_e_simp)) {
+        } else if (is_neg(inv_e_simp, neg_inv_e_simp)) {
+            // (- a)^1
+            // lemma inv_neg_eq_neg_inv (a b c : A) (Hb : -b ≠ 0) (H1 : a = -b) (H2 : b⁻¹ = c) : a⁻¹ = -c
             expr pf_ne_zero = prove_ne_zero(inv_e_simp, m_type);
-            return get_app_builder().mk_app(get_numeral_inv_neg_eq_neg_inv_name(), {pf_ne_zero, r.second});
+            expr pf_inv_simp_simp = simplify(get_app_builder().mk_inv(m_type, neg_inv_e_simp)).second;
+            return get_app_builder().mk_app(get_numeral_inv_neg_eq_neg_inv_name(), {pf_ne_zero, r.second, pf_inv_simp_simp});
         } else if (is_inv(inv_e_simp)) {
             // a^1 where a = b^1
             // lemma inv_simp_inv (a b : A) (Hb : b ≠ 0) (H : a = b⁻¹) : a⁻¹ = b

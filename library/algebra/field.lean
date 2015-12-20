@@ -555,9 +555,10 @@ by rewrite H
 lemma inv_simp_mulinv (a b c : A) (Hb : b ≠ 0) (Hc : c ≠ 0) (H : a = c * b⁻¹) : a⁻¹ = b * c⁻¹ :=
 by rewrite [H, mul_inv_eq (inv_ne_zero Hb) Hc, division_ring.inv_inv Hb]
 
-lemma inv_neg_eq_neg_inv (a b : A) (Hb : -b ≠ 0) (H : a = -b) : a⁻¹ = -(b⁻¹) :=
+lemma inv_neg_eq_neg_inv (a b c : A) (Hb : -b ≠ 0) (H1 : a = -b) (H2 : b⁻¹ = c) : a⁻¹ = -c :=
 begin
-  rewrite H at *,
+  rewrite H1 at *,
+  rewrite -H2,
   rewrite -{(- b)⁻¹}one_mul,
   rewrite -{b⁻¹}one_mul,
   rewrite [-division.def, -division.def],
