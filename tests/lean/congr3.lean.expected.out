@@ -1,0 +1,4 @@
+[fixed, fixed, cast]
+λ (a : A) (pa : P a) (a_1 : Q a pa), eq.refl (g a pa a_1)
+:
+∀ (a : A) (pa : P a) (a_1 : Q a pa), g a pa a_1 = g a pa a_1
