@@ -91,31 +91,12 @@ intros c1 c2 c3 Hc12, induction Hc12, intro Hc23, induction Hc23,
 esimp
 end
 
-
-
-
-
-
-
-
-
-
-
-Invariant: `e : f a1 ... aN` and `e' : f a1' ... aN'` are in the
-same equivalence class (denoted [He : e ~ e']) provided
-
-1. [H1 : a1 ~ a1', ..., HN : aN ~ aN'], and
-2. `He` is [eq.rec_on HN (... (eq.rec_on H1 e)) = e'].
-
-Note that (1) & (2) together imply that the types are in the
-same equivalence class as well, given the generic congruence lemma.
-
-
-Then whenever we merge two equivalence classes with a new proof of the form
-[eq.rec_on HN (... (eq.rec_on H1 e)) = e'],
-we can produce theorems of this form for every pair of elements
-in the merged class, using the following family of synthesized lemmas:
+/-
+Remark: the same approach can be made to work with casts as well.
+The only complication is that where in the approach sketched above,
+we can decide whether to accept an assertion based on the _type_
+of the proof, if we used casts, we would need to make this decision
+based on its _value_ -- that is, the restriction would be that
+the proofs themselves were constructed from the original equality
+proofs using the right combination of `congr` and `congr_arg`.
 -/
-
-
--- Remark: we simply would not accept any asserted equality that is not of the form (upto a prefix of `refl`s).
