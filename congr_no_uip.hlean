@@ -1,18 +1,34 @@
 /-
-I will ignore flexible functions and currying for now.
+Note: I will ignore flexible functions and currying for now.
+-----------------
 
-Invariant: `e : f a1 ... aN` and `e' : f a1' ... aN'` are in the
-same equivalence class (denoted [He : e ~ e']) provided
+Suppose:
 
-1. [H1 : a1 ~ a1', ..., HN : aN ~ aN'], and
-2. `He` is [eq.rec_on HN (... (eq.rec_on H1 e)) = e'].
+1. we only accept asserted equalities of the following form:
 
-Note that equality can be taken as a special case where the Hi are refl.
+For [e : f a1 ... aN] and [e' : f a1' ... aN'],
+[eq.rec_on HN (eq.rec_on ... (eq.rec_on H1 e)...) = e']
 
-Then whenever we merge two equivalence classes with a new proof of the form
-[eq.rec_on HN (... (eq.rec_on H1 e)) = e'],
-we can produce theorems of this form for every pair of elements
-in the merged class, using the following family of synthesized lemmas:
+where [H1 : a1 = a1', ..., HN : eq.rec_on H{n-1} (... (eq.rec_on H1 aN)...) = aN'
+
+2. whenever such an equality is asserted, we merge the equivalence classes of [e] and [e']
+(and the classes of every argument as necessary)
+
+3. whenever we have [f a1 ... aN] and [f a1' ... aN'] and all pairs are in the same
+equivalence class, we assert the generic non-UIP congruence lemma for
+[f a1 ... aN] and [f a1' ... aN'].
+
+Claim:
+
+Whenever we merge [e] and [e'], we can produce a proof that
+[eq.rec_on HN (eq.rec_on ... (eq.rec_on H1 e)...) = e'] for _some_ H1, ..., HN
+for every pair in the new equivalence class.
+
+Proof:
+
+It suffices to show that we can construct the appropriate [symmetry]
+and [transitivity] lemmas for the family. It would require an inductive argument to
+prove, but the recipe is straightforward:
 -/
 
 -- 1. Type-specific symmetry results
@@ -73,5 +89,32 @@ intros b1 b2 b3 Hb12, induction Hb12, intro Hb23, induction Hb23,
 intros c1 c2 c3 Hc12, induction Hc12, intro Hc23, induction Hc23,
 esimp
 end
+
+
+
+
+
+
+
+
+
+
+
+Invariant: `e : f a1 ... aN` and `e' : f a1' ... aN'` are in the
+same equivalence class (denoted [He : e ~ e']) provided
+
+1. [H1 : a1 ~ a1', ..., HN : aN ~ aN'], and
+2. `He` is [eq.rec_on HN (... (eq.rec_on H1 e)) = e'].
+
+Note that (1) & (2) together imply that the types are in the
+same equivalence class as well, given the generic congruence lemma.
+
+
+Then whenever we merge two equivalence classes with a new proof of the form
+[eq.rec_on HN (... (eq.rec_on H1 e)) = e'],
+we can produce theorems of this form for every pair of elements
+in the merged class, using the following family of synthesized lemmas:
+-/
+
 
 -- Remark: we simply would not accept any asserted equality that is not of the form (upto a prefix of `refl`s).
