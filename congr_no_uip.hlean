@@ -16,7 +16,7 @@ in the merged class, using the following family of synthesized lemmas:
 -/
 
 -- 1. Type-specific symmetry results
--- example 1: congr_symm(f : Π (A : Type) (B : A → Type), <C>)
+-- example 1: congr_symm(Π (A : Type), (B : A → Type))
 definition congr_symm₁ {A : Type} {B : A → Type} :
             ∀ {a₁ a₂ : A} {Ha12 : a₁ = a₂}
               {b₁ : B a₁} {b₂ : B a₂},
@@ -27,7 +27,7 @@ intros b1 b2 Hb12, induction Hb12,
 esimp
 end
 
--- example2: congr_symm(f : Π (A : Type) (B : A → Type) (C : Π a, B a → Type), <D>)
+-- example2: congr_symm(Π (A : Type) (B : A → Type), (C : Π a, B a → Type))
 set_option pp.implicit true
 definition congr_symm₂ {A : Type} {B : A → Type} {C : Π a, B a → Type} :
             ∀ {a₁ a₂ : A} {Ha12 : a₁ = a₂}
@@ -43,7 +43,7 @@ esimp
 end
 
 -- 2. Type-specific transitivity results
--- congr_trans(f : Π (A : Type) (B : A → Type), <C>)
+-- congr_trans(Π (A : Type) (B : A → Type))
 definition congr_trans₂ {A : Type} {B : A → Type} :
             ∀ {a₁ a₂ a₃ : A} {Ha12 : a₁ = a₂} {Ha23 : a₂ = a₃}
               {b₁ : B a₁} {b₂ : B a₂} {b₃ : B a₃}
@@ -56,7 +56,7 @@ intros b1 b2 b3, intros Hb12, induction Hb12, intros Hb23, induction Hb23,
 esimp
 end
 
--- Example: congr_trans(f : Π (A : Type) (B : A → Type) (C : Π a, B a → Type), <D>)
+-- Example: congr_trans(Π (A : Type) (B : A → Type) (C : Π a, B a → Type))
 lemma congr_trans₃ {A : Type} {B : A → Type} {C : Π a, B a → Type} :
             ∀ (a₁ a₂ a₃ : A) (Ha12 : a₁ = a₂) (Ha23 : a₂ = a₃)
               (b₁ : B a₁) (b₂ : B a₂) (b₃ : B a₃)
@@ -74,4 +74,4 @@ intros c1 c2 c3 Hc12, induction Hc12, intro Hc23, induction Hc23,
 esimp
 end
 
-/- Remark: we simply would not accept any asserted equality that is not of the form (upto a prefix of `refl`s). -/
+-- Remark: we simply would not accept any asserted equality that is not of the form (upto a prefix of `refl`s).
