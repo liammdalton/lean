@@ -45,7 +45,6 @@ esimp
 end
 
 -- example2: congr_symm(Π (A : Type) (B : A → Type), (C : Π a, B a → Type))
-set_option pp.implicit true
 definition congr_symm₂ {A : Type} {B : A → Type} {C : Π a, B a → Type} :
             ∀ {a₁ a₂ : A} {Ha12 : a₁ = a₂}
               {b₁ : B a₁} {b₂ : B a₂} {Hb12 : eq.rec_on Ha12 b₁ = b₂}
