@@ -10,6 +10,7 @@ For [e : f a1 ... aN] and [e' : f a1' ... aN'],
 [eq.rec_on HN (eq.rec_on ... (eq.rec_on H1 e)...) = e']
 
 where [H1 : a1 = a1', ..., HN : eq.rec_on H{n-1} (... (eq.rec_on H1 aN)...) = aN'
+(refl-prefixes ok)
 
 2. whenever such an equality is asserted, we merge the equivalence classes of [e] and [e']
 (and the classes of every argument as necessary)
