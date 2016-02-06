@@ -59,6 +59,9 @@ protected definition zero (m n : nat) : matrix A m n :=
 protected definition add (M : matrix A m n) (N : matrix A m n) : matrix A m n :=
 λ i j, M[i, j] + N[i, j]
 
+protected definition neg (M : matrix A m n) : matrix A m n :=
+λ i j, -M[i, j]
+
 protected definition sub (M : matrix A m n) (N : matrix A m n) : matrix A m n :=
 λ i j, M[i, j] - N[i, j]
 
@@ -76,6 +79,12 @@ has_one.mk (identity n)
 
 definition matrix_has_add [reducible] [instance] (m n : nat) : has_add (matrix A m n) :=
 has_add.mk matrix.add
+
+definition matrix_has_neg [reducible] [instance] (m n : nat) : has_neg (matrix A m n) :=
+has_neg.mk matrix.neg
+
+definition matrix_has_sub [reducible] [instance] (m n : nat) : has_sub (matrix A m n) :=
+has_sub.mk matrix.sub
 
 definition matrix_has_mul [reducible] [instance] (n : nat) : has_mul (matrix A n n) :=
 has_mul.mk matrix.mul
