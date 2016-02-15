@@ -6,7 +6,7 @@ Author: Jeremy Avigad, Leonardo de Moura
 import logic.connectives logic.identities algebra.binary
 open eq.ops binary function
 
-definition set (X : Type) := X → Prop
+definition set [quasireducible] (X : Type) := X → Prop
 
 namespace set
 
@@ -21,7 +21,7 @@ notation a ∉ b := ¬ mem a b
 theorem ext {a b : set X} (H : ∀x, x ∈ a ↔ x ∈ b) : a = b :=
 funext (take x, propext (H x))
 
-definition subset (a b : set X) := ∀⦃x⦄, x ∈ a → x ∈ b
+definition subset [quasireducible] (a b : set X) := ∀⦃x⦄, x ∈ a → x ∈ b
 infix ⊆ := subset
 
 definition superset (s t : set X) : Prop := t ⊆ s

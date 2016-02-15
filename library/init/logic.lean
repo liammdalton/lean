@@ -18,7 +18,7 @@ assume hp, h₂ (h₁ hp)
 
 definition trivial := true.intro
 
-definition not (a : Prop) := a → false
+definition not [quasireducible] (a : Prop) := a → false
 prefix `¬` := not
 
 definition absurd {a : Prop} {b : Type} (H1 : a) (H2 : ¬a) : b :=
@@ -285,7 +285,7 @@ theorem or.swap : a ∨ b → b ∨ a := or.rec or.inr or.inl
 
 /- iff -/
 
-definition iff (a b : Prop) := (a → b) ∧ (b → a)
+definition iff [quasireducible] (a b : Prop) := (a → b) ∧ (b → a)
 
 notation a <-> b := iff a b
 notation a ↔ b := iff a b
@@ -674,7 +674,7 @@ section
   else inl (assume Hp, absurd Hp hp)
 
   definition decidable_iff [instance] [decidable p] [decidable q] : decidable (p ↔ q) :=
-  decidable_and
+  @decidable_and (p → q) (q → p) (@decidable_implies p q _ _) (@decidable_implies q p _ _)
 
 end
 
@@ -690,8 +690,8 @@ namespace bool
 end bool
 
 open bool
-definition is_dec_eq {A : Type} (p : A → A → bool) : Prop   := ∀ ⦃x y : A⦄, p x y = tt → x = y
-definition is_dec_refl {A : Type} (p : A → A → bool) : Prop := ∀x, p x x = tt
+definition is_dec_eq [quasireducible] {A : Type} (p : A → A → bool) : Prop   := ∀ ⦃x y : A⦄, p x y = tt → x = y
+definition is_dec_refl [quasireducible] {A : Type} (p : A → A → bool) : Prop := ∀x, p x x = tt
 
 open decidable
 protected definition bool.has_decidable_eq [instance] : ∀a b : bool, decidable (a = b)
@@ -774,6 +774,7 @@ intro : (∀ a b : A, a = b) → subsingleton A
 protected definition subsingleton.elim {A : Type} [H : subsingleton A] : ∀(a b : A), a = b :=
 subsingleton.rec (λp, p) H
 
+attribute tactic.opt_identifier_list [quasireducible]
 protected definition subsingleton.helim {A B : Type} [H : subsingleton A] (h : A = B) (a : A) (b : B) : a == b :=
 by induction h; apply heq_of_eq; apply subsingleton.elim
 

@@ -86,7 +86,7 @@ take c,
   obtain a (Ha : f a = b), from Hf b,
   exists.intro a (eq.trans (congr_arg g Ha) Hb)
 
-definition bijective (f : A → B) := injective f ∧ surjective f
+definition bijective [quasireducible] (f : A → B) := injective f ∧ surjective f
 
 theorem bijective_compose {g : B → C} {f : A → B} (Hg : bijective g) (Hf : bijective f) :
   bijective (g ∘ f) :=
@@ -95,12 +95,12 @@ obtain Hfinj Hfsurj, from Hf,
 and.intro (injective_compose Hginj Hfinj) (surjective_compose Hgsurj Hfsurj)
 
 -- g is a left inverse to f
-definition left_inverse (g : B → A) (f : A → B) : Prop := ∀x, g (f x) = x
+definition left_inverse [quasireducible] (g : B → A) (f : A → B) : Prop := ∀x, g (f x) = x
 
 definition id_of_left_inverse {g : B → A} {f : A → B} : left_inverse g f → g ∘ f = id :=
 assume h, funext h
 
-definition has_left_inverse (f : A → B) : Prop := ∃ finv : B → A, left_inverse finv f
+definition has_left_inverse [quasireducible] (f : A → B) : Prop := ∃ finv : B → A, left_inverse finv f
 
 -- g is a right inverse to f
 definition right_inverse (g : B → A) (f : A → B) : Prop := left_inverse f g
@@ -108,7 +108,7 @@ definition right_inverse (g : B → A) (f : A → B) : Prop := left_inverse f g
 definition id_of_right_inverse {g : B → A} {f : A → B} : right_inverse g f → f ∘ g = id :=
 assume h, funext h
 
-definition has_right_inverse (f : A → B) : Prop := ∃ finv : B → A, right_inverse finv f
+definition has_right_inverse [quasireducible] (f : A → B) : Prop := ∃ finv : B → A, right_inverse finv f
 
 theorem injective_of_left_inverse {g : B → A} {f : A → B} : left_inverse g f → injective f :=
 assume h, take a b, assume faeqfb,

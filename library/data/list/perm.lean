@@ -237,6 +237,7 @@ open decidable
 variable [Ha : decidable_eq A]
 include Ha
 
+attribute length [quasireducible]
 definition decidable_perm_aux : ∀ (n : nat) (l₁ l₂ : list A), length l₁ = n → length l₂ = n → decidable (l₁ ~ l₂)
 | 0     l₁      l₂ H₁ H₂ :=
   assert l₁n : l₁ = [], from eq_nil_of_length_eq_zero H₁,

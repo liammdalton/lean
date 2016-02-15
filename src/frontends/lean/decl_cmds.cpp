@@ -1106,27 +1106,7 @@ class definition_cmd_fn {
                 m_ls = append(m_ls, new_ls);
                 m_type = postprocess(m_env, m_type);
                 expr type_as_is = m_p.save_pos(mk_as_is(m_type), type_pos);
-                if (!m_p.collecting_info() && !m_is_noncomputable && m_kind == Theorem && m_p.num_threads() > 1) {
-                    // Add as axiom, and create a task to prove the theorem.
-                    // Remark: we don't postpone the "proof" of Examples.
-                    m_p.add_delayed_theorem(m_env, m_real_name, m_ls, type_as_is, m_value);
-                    m_env = module::add(m_env, check(mk_axiom(m_real_name, m_ls, m_type)));
-                } else {
-                    std::tie(m_type, m_value, new_ls) = elaborate_definition(type_as_is, m_value);
-                    m_type  = postprocess(m_env, m_type);
-                    m_value = postprocess(m_env, m_value);
-                    new_ls = append(m_ls, new_ls);
-                    auto cd = check(mk_theorem(m_env, m_real_name, new_ls, m_type, m_value));
-                    if (m_kind == Theorem) {
-                        // Remark: we don't keep examples
-                        if (m_p.keep_new_thms()) {
-                            m_p.add_delayed_theorem(cd);
-                        }
-                        cd = check(mk_axiom(m_real_name, new_ls, m_type));
-                        m_env = module::add(m_env, cd);
-                        m_p.cache_definition(m_real_name, pre_type, pre_value, new_ls, m_type, m_value);
-                    }
-                }
+                m_env = module::add(m_env, check(mk_axiom(m_real_name, m_ls, m_type)));
             } else {
                 std::tie(m_type, m_value, new_ls) = elaborate_definition(m_type, m_value);
                 new_ls       = append(m_ls, new_ls);

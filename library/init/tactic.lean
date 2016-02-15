@@ -64,7 +64,7 @@ definition opt_expr_list := expr_list
 -- auxiliary types used to mark that the expression is suppose to be an identifier, optional, or a list.
 definition identifier := expr
 definition identifier_list := expr_list
-definition opt_identifier_list := expr_list
+definition opt_identifier_list [quasireducible] := expr_list
 -- Remark: the parser has special support for tactics containing `location` parameters.
 -- It will parse the optional `at ...` modifier.
 definition location := expr

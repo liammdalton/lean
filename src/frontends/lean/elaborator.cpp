@@ -185,7 +185,7 @@ elaborator::elaborator(elaborator_context & ctx, bool nice_mvar_names):
     m_use_tactic_hints  = true;
     m_no_info           = false;
     m_in_equation_lhs   = false;
-    m_tc                = mk_type_checker(ctx.m_env);
+    m_tc                = mk_type_checker(ctx.m_env, reducible_behavior::UnfoldQuasireducible);
     m_coercion_from_tc  = mk_coercion_from_type_checker(ctx.m_env);
     m_coercion_to_tc    = mk_coercion_to_type_checker(ctx.m_env);
     m_nice_mvar_names   = nice_mvar_names;

@@ -28,12 +28,12 @@ definition fintype_of_equiv {A B : Type} [h : fintype A] : A ≃ B → fintype B
 end
 
 definition fintype_unit [instance] : fintype unit :=
-fintype.mk [star] dec_trivial (λ u, match u with star := dec_trivial end)
+fintype.mk [star] dec_trivial (λ u, begin cases u, exact dec_trivial end)
 
 definition fintype_bool [instance] : fintype bool :=
 fintype.mk [ff, tt]
   dec_trivial
-  (λ b, match b with | tt := dec_trivial | ff := dec_trivial end)
+  (λ b, begin cases b, apply mem_cons, apply mem_cons_of_mem, apply mem_cons end)
 
 definition fintype_product [instance] {A B : Type} : Π [h₁ : fintype A] [h₂ : fintype B], fintype (A × B)
 | (fintype.mk e₁ u₁ c₁) (fintype.mk e₂ u₂ c₂) :=
@@ -202,6 +202,7 @@ private theorem mem_ltype_elems {A : Type} {s : list A} {a : ⟪s⟫}
      have aux : a ∈ ltype_elems (sub_of_cons_sub h), from mem_ltype_elems (sub_of_cons_sub h) vainl,
      mem_cons_of_mem _ aux)
 
+attribute sublist [quasireducible]
 definition fintype_list_as_type [instance] {A : Type} [h : decidable_eq A] {s : list A} : fintype ⟪s⟫ :=
 let  nds   : list A := erase_dup s in
 have sub₁  : nds ⊆ s,   from erase_dup_sub s,
