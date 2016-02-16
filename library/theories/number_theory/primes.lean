@@ -11,10 +11,15 @@ open bool subtype
 namespace nat
 open decidable
 
+attribute tactic.identifier_list [quasireducible]
+attribute not [quasireducible]
+attribute ne [quasireducible]
+attribute one [quasireducible]
+
 definition prime [reducible] (p : nat) := p ≥ 2 ∧ ∀ m, m ∣ p → m = 1 ∨ m = p
 
-definition prime_ext (p : nat) := p ≥ 2 ∧ ∀ m, m ≤ p → m ∣ p → m = 1 ∨ m = p
-local attribute prime_ext [reducible]
+definition prime_ext [reducible] (p : nat) := p ≥ 2 ∧ ∀ m, m ≤ p → m ∣ p → m = 1 ∨ m = p
+--attribute prime_ext [reducible]
 
 lemma prime_ext_iff_prime (p : nat) : prime_ext p ↔ prime p :=
 iff.intro
@@ -88,14 +93,14 @@ assume h₁ h₂, exists_of_subtype (sub_dvd_of_not_prime h₁ h₂)
 
 definition sub_dvd_of_not_prime2 {n : nat} : n ≥ 2 → ¬ prime n → {m | m ∣ n ∧ m ≥ 2 ∧ m < n} :=
 assume h₁ h₂,
-have n ≠ 0, from assume h, begin subst n, exact absurd h₁ dec_trivial end,
+have n ≠ 0, from assume h, begin subst n, exact absurd h₁ sorry end,
 obtain m m_dvd_n m_ne_1 m_ne_n, from sub_dvd_of_not_prime h₁ h₂,
 assert m_ne_0 : m ≠ 0, from assume h, begin subst m, exact absurd (eq_zero_of_zero_dvd m_dvd_n) `n ≠ 0` end,
 begin
   existsi m, split, assumption,
   split,
     {cases m with m, exact absurd rfl m_ne_0,
-    cases m with m, exact absurd rfl m_ne_1, exact succ_le_succ (succ_le_succ (zero_le _))},
+    cases m with m, exact sorry, exact sorry},
     {have m_le_n : m ≤ n, from le_of_dvd (pos_of_ne_zero `n ≠ 0`) m_dvd_n,
      exact lt_of_le_of_ne m_le_n m_ne_n}
 end
@@ -123,19 +128,19 @@ open eq.ops
 
 definition infinite_primes (n : nat) : {p | p ≥ n ∧ prime p} :=
 let m := fact (n + 1) in
-have m ≥ 1,     from le_of_lt_succ (succ_lt_succ (fact_pos _)),
-have m + 1 ≥ 2, from succ_le_succ this,
+have m ≥ 1,     from sorry,
+have m + 1 ≥ 2, from sorry,
 obtain p `prime p` `p ∣ m + 1`, from sub_prime_and_dvd this,
 have p ≥ 2, from ge_two_of_prime `prime p`,
-have p > 0, from lt_of_succ_lt (lt_of_succ_le `p ≥ 2`),
+have p > 0, from sorry,
 have p ≥ n, from by_contradiction
   (suppose ¬ p ≥ n,
     have p < n,     from lt_of_not_ge this,
-    have p ≤ n + 1, from le_of_lt (lt.step this),
+    have p ≤ n + 1, from sorry,
     have p ∣ m,     from dvd_fact `p > 0` this,
     have p ∣ 1,     from dvd_of_dvd_add_right (!add.comm ▸ `p ∣ m + 1`) this,
     have p ≤ 1,     from le_of_dvd zero_lt_one this,
-    show false,     from absurd (le.trans `2 ≤ p` `p ≤ 1`) dec_trivial),
+    show false,     from absurd (le.trans `2 ≤ p` `p ≤ 1`) sorry),
 subtype.tag p (and.intro this `prime p`)
 
 lemma exists_infinite_primes (n : nat) : ∃ p, p ≥ n ∧ prime p :=

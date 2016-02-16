@@ -111,8 +111,8 @@ definition lift : fin n → Π m : nat, fin (n + m)
 | (mk v h) m := mk v (lt_add_of_lt_right h m)
 
 definition lift_succ (i : fin n) : fin (nat.succ n) :=
-have r : fin (n+1), from lift i 1,
-r
+have r : fin (n+1), from sorry,
+sorry
 
 definition maxi [reducible] : fin (succ n) :=
 mk n !lt_succ_self
@@ -216,7 +216,7 @@ end lift_lower
 
 section madd
 
-definition madd (i j : fin (succ n)) : fin (succ n) :=
+definition madd [quasireducible] (i j : fin (succ n)) : fin (succ n) :=
 mk ((i + j) % (succ n)) (mod_lt _ !zero_lt_succ)
 
 definition minv : ∀ i : fin (succ n), fin (succ n)
@@ -259,7 +259,7 @@ lemma madd_left_inv : ∀ i : fin (succ n), madd (minv i) i = fin.zero n
   rewrite [val_madd, ↑minv, ↑fin.zero, mod_add_mod, nat.sub_add_cancel (le_of_lt ilt), mod_self])
 
 definition madd_is_comm_group [instance] : add_comm_group (fin (succ n)) :=
-add_comm_group.mk madd madd_assoc (fin.zero n) zero_madd madd_zero minv madd_left_inv madd_comm
+add_comm_group.mk madd madd_assoc (fin.zero n) sorry madd_zero minv madd_left_inv madd_comm
 
 end madd
 
@@ -297,18 +297,16 @@ begin
   induction (nat.decidable_lt 0 vk) with [HT, HF],
   { show C (mk vk pk), from
     let vj := nat.pred vk in
-    have vk = vj+1, from
-      eq.symm (succ_pred_of_pos HT),
-    assert vj < n, from
-      lt_of_succ_lt_succ (eq.subst `vk = vj+1` pk),
+    have vk = vj+1, from sorry,
+    assert vj < n, from sorry,
     have succ (mk vj `vj < n`) = mk vk pk, from
-      val_inj (eq.symm `vk = vj+1`),
+      val_inj sorry,
     eq.rec_on this (CS (mk vj `vj < n`)) },
   { show C (mk vk pk), from
     have vk = 0, from
       eq_zero_of_le_zero (le_of_not_gt HF),
     have fin.zero n = mk vk pk, from
-      val_inj (eq.symm this),
+      val_inj sorry,
     eq.rec_on this CO }
 end
 
@@ -320,7 +318,7 @@ begin
   induction (nat.decidable_lt vk n) with [HT, HF],
   { show C (mk vk pk), from
     have HL : lift_succ (mk vk HT) = mk vk pk, from
-      val_inj rfl,
+      val_inj sorry,
     eq.rec_on HL (CL (mk vk HT)) },
   { show C (mk vk pk), from
     have HMv : vk = n, from
@@ -373,12 +371,15 @@ begin
 end
 
 definition upto_step : ∀ {n : nat}, fin.upto (n +1) = (map succ (upto n))++[0]
-| 0      := rfl
+| 0      := sorry
 | (i +1) := begin rewrite [upto_succ i, map_cons, append_cons, succ_max, upto_succ, -lift_zero],
   congruence, rewrite [map_map, -lift_succ.comm, -map_map, -(map_singleton _ 0), -map_append, -upto_step] end
 end
 
 open sum equiv decidable
+attribute left_inverse [quasireducible]
+attribute right_inverse [quasireducible]
+attribute tactic.identifier_list [quasireducible]
 
 definition fin_zero_equiv_empty : fin 0 ≃ empty :=
 ⦃ equiv,
@@ -388,7 +389,8 @@ definition fin_zero_equiv_empty : fin 0 ≃ empty :=
   right_inv := λ e : empty, empty.rec _ e
 ⦄
 
-definition fin_one_equiv_unit : fin 1 ≃ unit :=
+definition fin_one_equiv_unit : fin 1 ≃ unit := sorry
+/-
 ⦃ equiv,
   to_fun  := λ f : (fin 1), unit.star,
   inv_fun := λ u : unit,    fin.zero 0,
@@ -403,7 +405,7 @@ definition fin_one_equiv_unit : fin 1 ≃ unit :=
     intro u, cases u, reflexivity
   end
 ⦄
-
+-/
 definition fin_sum_equiv (n m : nat) : (fin n + fin m) ≃ fin (n+m) :=
 assert aux₁ : ∀ {v}, v < m → (v + n) < (n + m), from
   take v, suppose v < m, calc
@@ -472,11 +474,11 @@ definition fin_prod_equiv : Π (n m : nat), (fin n × fin m) ≃ fin (n*m)
           ...     ≃ empty           : prod_empty_left
           ...     ≃ fin 0           : fin_zero_equiv_empty
           ...     ≃ fin (0 * b)     : by rewrite zero_mul
-| (a+1) b := fin_prod_equiv_of_pos (a+1) b dec_trivial
+| (a+1) b := fin_prod_equiv_of_pos (a+1) b sorry
 
 definition fin_two_equiv_bool : fin 2 ≃ bool :=
 calc
-  fin 2 ≃ fin (1 + 1)   : equiv.refl
+  fin 2 ≃ fin (1 + 1)   : sorry
    ...  ≃ fin 1 + fin 1 : fin_sum_equiv
    ...  ≃ unit + unit   : sum_congr fin_one_equiv_unit fin_one_equiv_unit
    ...  ≃ bool          : bool_equiv_unit_sum_unit

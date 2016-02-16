@@ -19,12 +19,11 @@ namespace vector
 
   variables {A B C : Type}
 
-  protected definition is_inhabited [instance] [h : inhabited A] : ∀ (n : nat), inhabited (vector A n)
-  | 0     := inhabited.mk []
-  | (n+1) := inhabited.mk (inhabited.value h :: inhabited.value (is_inhabited n))
+  set_option pp.all true
 
-  theorem vector0_eq_nil : ∀ (v : vector A 0), v = []
-  | [] := rfl
+  protected definition is_inhabited [instance] [h : inhabited A] : ∀ (n : nat), inhabited (vector A n) := sorry
+
+--  theorem vector0_eq_nil : ∀ (v : vector A 0), v == nil := sorry
 
   definition head : Π {n : nat}, vector A (succ n) → A
   | n (a::v) := a
@@ -52,7 +51,7 @@ namespace vector
   rfl
 
   definition const : Π (n : nat), A → vector A n
-  | 0        a := []
+  | 0        a := sorry
   | (succ n) a := a :: const n a
 
   theorem head_const (n : nat) (a : A) : head (const (succ n) a) = a :=
@@ -62,10 +61,7 @@ namespace vector
   | 0     a := rfl
   | (n+1) a := last_const n a
 
-  definition nth : Π {n : nat}, vector A n → fin n → A
-  | ⌞0⌟   []       i               := elim0 i
-  | ⌞n+1⌟ (a :: v) (mk 0 _)        := a
-  | ⌞n+1⌟ (a :: v) (mk (succ i) h) := nth v (mk_pred i h)
+  definition nth : Π {n : nat}, vector A n → fin n → A := sorry
 
   lemma nth_zero {n : nat} (a : A) (v : vector A n) (h : 0 < succ n) : nth (a::v) (mk 0 h) = a :=
   rfl
@@ -74,9 +70,7 @@ namespace vector
                  : nth (a::v) (mk (succ i) h) = nth v (mk_pred i h) :=
   rfl
 
-  definition tabulate : Π {n : nat}, (fin n → A) → vector A n
-  | 0      f :=  []
-  | (n+1)  f :=  f (fin.zero n) :: tabulate (λ i : fin n, f (succ i))
+  definition tabulate : Π {n : nat}, (fin n → A) → vector A n := sorry
 
   theorem nth_tabulate : ∀ {n : nat} (f : fin n → A) (i : fin n), nth (tabulate f) i = f i
   | 0     f i               := elim0 i
@@ -127,15 +121,13 @@ namespace vector
                     map2 f (h₁ :: t₁) (h₂ :: t₂) = f h₁ h₂ :: map2 f t₁ t₂ :=
   rfl
 
-  definition append : Π {n m : nat}, vector A n → vector A m → vector A (n ⊕ m)
-  | 0        m []     w := w
-  | (succ n) m (a::v) w := a :: (append v w)
+  definition append : Π {n m : nat}, vector A n → vector A m → vector A (n ⊕ m) := sorry
 
-  theorem append_nil_left {n : nat} (v : vector A n) : append [] v = v :=
+  theorem append_nil_left {n : nat} (v : vector A n) : append [] v == v :=
   rfl
 
   theorem append_cons {n m : nat} (h : A) (t : vector A n) (v : vector A m) :
-    append (h::t) v = h :: (append t v) :=
+    append (h::t) v == h :: (append t v) :=
   rfl
 
   theorem map_append (f : A → B) : ∀ {n m : nat} (v : vector A n) (w : vector A m), map f (append v w) = append (map f v) (map f w)
@@ -203,9 +195,7 @@ namespace vector
 
   /- Reverse -/
 
-  definition reverse : Π {n : nat}, vector A n → vector A n
-  | 0     []        := []
-  | (n+1) (x :: xs) := concat (reverse xs) x
+  definition reverse : Π {n : nat}, vector A n → vector A n := sorry
 
   theorem reverse_concat : Π {n : nat} (xs : vector A n) (a : A), reverse (concat xs a) = a :: reverse xs
   | 0     []         a := rfl
@@ -225,13 +215,9 @@ namespace vector
 
   /- list <-> vector -/
 
-  definition of_list : Π (l : list A), vector A (list.length l)
-  | list.nil        := []
-  | (list.cons a l) := a :: (of_list l)
+  definition of_list : Π (l : list A), vector A (list.length l) := sorry
 
-  definition to_list : Π {n : nat}, vector A n → list A
-  | 0     []        := list.nil
-  | (n+1) (a :: vs) := list.cons a (to_list vs)
+  definition to_list : Π {n : nat}, vector A n → list A := sorry
 
   theorem to_list_of_list : ∀ (l : list A), to_list (of_list l) = l
   | list.nil         := rfl
@@ -321,17 +307,7 @@ namespace vector
 
   /- decidable equality -/
   open decidable
-  definition decidable_eq [H : decidable_eq A] : ∀ {n : nat} (v₁ v₂ : vector A n), decidable (v₁ = v₂)
-  | ⌞0⌟    []      []      := by left; reflexivity
-  | ⌞n+1⌟  (a::v₁) (b::v₂) :=
-    match H a b with
-    | inl Hab  :=
-      match decidable_eq v₁ v₂ with
-      | inl He := by left; congruence; repeat assumption
-      | inr Hn := by right; intro h; injection h; contradiction
-      end
-    | inr Hnab := by right; intro h; injection h; contradiction
-  end
+  definition decidable_eq [H : decidable_eq A] : ∀ {n : nat} (v₁ v₂ : vector A n), decidable (v₁ = v₂) := sorry
 
   section
   open equiv function

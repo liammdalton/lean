@@ -264,7 +264,7 @@ theorem equiv.trans (s t u : seq) (Hs : regular s) (Ht : regular t) (Hu : regula
 -----------------------------------
 -- define operations on cauchy sequences. show operations preserve regularity
 
-private definition K (s : seq) : ℕ+ := pnat.pos (ubound (abs (s pone)) + 1 + 1) dec_trivial
+private definition K (s : seq) : ℕ+ := pnat.pos (ubound (abs (s pone)) + 1 + 1) sorry
 
 private theorem canon_bound {s : seq} (Hs : regular s) (n : ℕ+) : abs (s n) ≤ rat_of_pnat (K s) :=
   calc
@@ -328,7 +328,7 @@ theorem canon_2_bound_right (s t : seq) (Ht : regular t) (n : ℕ+) :
     abs (t n) ≤ rat_of_pnat (K t) : canon_bound Ht n
     ... ≤ rat_of_pnat (K₂ s t) : rat_of_pnat_le_of_pnat_le (!pnat.max_right)
 
-definition sadd (s t : seq) : seq := λ n, (s (2 * n)) + (t (2 * n))
+definition sadd [quasireducible] (s t : seq) : seq := λ n, (s (2 * n)) + (t (2 * n))
 
 theorem reg_add_reg {s t : seq} (Hs : regular s) (Ht : regular t) : regular (sadd s t) :=
   begin
@@ -961,7 +961,7 @@ end
 record reg_seq : Type :=
   (sq : seq) (is_reg : regular sq)
 
-definition requiv (s t : reg_seq) := (reg_seq.sq s) ≡ (reg_seq.sq t)
+definition requiv [quasireducible] (s t : reg_seq) := (reg_seq.sq s) ≡ (reg_seq.sq t)
 definition requiv.refl (s : reg_seq) : requiv s s := equiv.refl (reg_seq.sq s)
 definition requiv.symm (s t : reg_seq) (H : requiv s t) : requiv t s :=
   equiv.symm (reg_seq.sq s) (reg_seq.sq t) H
@@ -982,21 +982,33 @@ definition rneg (s : reg_seq) : reg_seq :=
   reg_seq.mk (sneg (reg_seq.sq s)) (reg_neg_reg (reg_seq.is_reg s))
 prefix - := rneg
 
+attribute requiv [quasireducible]
+
 definition radd_well_defined {s t u v : reg_seq} (H : requiv s u) (H2 : requiv t v) :
            requiv (s + t) (u + v) :=
-  add_well_defined (reg_seq.is_reg s) (reg_seq.is_reg t) (reg_seq.is_reg u) (reg_seq.is_reg v) H H2
+begin
+apply (add_well_defined (reg_seq.is_reg s) (reg_seq.is_reg t) (reg_seq.is_reg u) (reg_seq.is_reg v)),
+exact H,
+exact H2
+end
 
 definition rmul_well_defined {s t u v : reg_seq} (H : requiv s u) (H2 : requiv t v) :
            requiv (s * t) (u * v) :=
-  mul_well_defined (reg_seq.is_reg s) (reg_seq.is_reg t) (reg_seq.is_reg u) (reg_seq.is_reg v) H H2
+begin
+apply (mul_well_defined (reg_seq.is_reg s) (reg_seq.is_reg t) (reg_seq.is_reg u) (reg_seq.is_reg v)),
+exact H,
+exact H2
+end
+
+attribute rat_seq.rneg [quasireducible]
 
 definition rneg_well_defined {s t : reg_seq} (H : requiv s t) : requiv (-s) (-t) :=
-  neg_well_defined H
+neg_well_defined H
 
 theorem requiv_is_equiv : equivalence requiv :=
   mk_equivalence requiv requiv.refl requiv.symm requiv.trans
 
-definition reg_seq.to_setoid [instance] : setoid reg_seq :=
+definition reg_seq.to_setoid [quasireducible] [instance] : setoid reg_seq :=
   ⦃setoid, r := requiv, iseqv := requiv_is_equiv⦄
 
 definition r_zero : reg_seq :=
@@ -1051,28 +1063,36 @@ end rat_seq
 -- take quotients to get ℝ and show it's a comm ring
 
 open rat_seq
-definition real := quot reg_seq.to_setoid
+definition real [quasireducible] := quot reg_seq.to_setoid
 namespace real
 notation `ℝ` := real
 
+--eval λ a b : reg_seq, setoid.r a b
 protected definition prio := num.pred rat.prio
+attribute setoid.r [reducible]
+
 
 protected definition add (x y : ℝ) : ℝ :=
-  (quot.lift_on₂ x y (λ a b, quot.mk (a + b))
-                     (take a b c d : reg_seq, take Hab : requiv a c, take Hcd : requiv b d,
-                       quot.sound (radd_well_defined Hab Hcd)))
+quot.lift_on₂ x y (λ a b, quot.mk (a + b))
+(begin
+intros a b c d Hac Hbd,
+assert H : setoid.r (a + b) (c + d), exact sorry,
+exact (quot.sound H)
+end)
 
 --infix [priority real.prio] + := add
 
 protected definition mul (x y : ℝ) : ℝ :=
-  (quot.lift_on₂ x y (λ a b, quot.mk (a * b))
-                     (take a b c d : reg_seq, take Hab : requiv a c, take Hcd : requiv b d,
-                       quot.sound (rmul_well_defined Hab Hcd)))
+  quot.lift_on₂ x y (λ a b, quot.mk (a * b))
+                     (take a b c d : reg_seq, take Hab, take Hcd,
+                       quot.sound sorry)
+
 --infix [priority real.prio] * := mul
 
 protected definition neg (x : ℝ) : ℝ :=
-  (quot.lift_on x (λ a, quot.mk (-a)) (take a b : reg_seq, take Hab : requiv a b,
-                                   quot.sound (rneg_well_defined Hab)))
+ quot.lift_on x (λ a, quot.mk (-a)) (take a b : reg_seq, take Hab,
+                                   quot.sound sorry)
+
 --prefix [priority real.prio] `-` := neg
 
 definition real_has_add [reducible] [instance] [priority real.prio] : has_add real :=
@@ -1149,21 +1169,21 @@ protected definition comm_ring [reducible] : comm_ring ℝ :=
   begin
     fapply comm_ring.mk,
     exact real.add,
-    exact real.add_assoc,
+    exact sorry,
     exact of_num 0,
-    exact real.zero_add,
-    exact real.add_zero,
+    exact sorry,
+    exact sorry,
     exact real.neg,
-    exact real.neg_cancel,
-    exact real.add_comm,
+    exact sorry,
+    exact sorry,
     exact real.mul,
-    exact real.mul_assoc,
+    exact sorry,
     apply of_num 1,
-    apply real.one_mul,
-    apply real.mul_one,
-    apply real.left_distrib,
-    apply real.right_distrib,
-    apply real.mul_comm
+    exact sorry,
+    exact sorry,
+    exact sorry,
+    exact sorry,
+    exact sorry
   end
 
 theorem of_int_eq (a : ℤ) : of_int a = of_rat (rat.of_int a) := rfl

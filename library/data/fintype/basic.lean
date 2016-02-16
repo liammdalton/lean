@@ -11,8 +11,10 @@ open list bool unit decidable option function
 structure fintype [class] (A : Type) : Type :=
 (elems : list A) (unique : nodup elems) (complete : ∀ a, a ∈ elems)
 
-definition elements_of (A : Type) [h : fintype A] : list A :=
+definition elements_of [quasireducible] (A : Type) [h : fintype A] : list A :=
 @fintype.elems A h
+
+attribute list.sublist [quasireducible]
 
 section
 open equiv
@@ -28,11 +30,11 @@ definition fintype_of_equiv {A B : Type} [h : fintype A] : A ≃ B → fintype B
 end
 
 definition fintype_unit [instance] : fintype unit :=
-fintype.mk [star] dec_trivial (λ u, begin cases u, exact dec_trivial end)
+fintype.mk [star] sorry (λ u, begin cases u, exact sorry end)
 
 definition fintype_bool [instance] : fintype bool :=
 fintype.mk [ff, tt]
-  dec_trivial
+  sorry
   (λ b, begin cases b, apply mem_cons, apply mem_cons_of_mem, apply mem_cons end)
 
 definition fintype_product [instance] {A B : Type} : Π [h₁ : fintype A] [h₂ : fintype B], fintype (A × B)

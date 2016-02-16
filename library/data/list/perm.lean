@@ -249,7 +249,7 @@ definition decidable_perm_aux : ∀ (n : nat) (l₁ l₂ : list A), length l₁ 
       let t₂ : list A := erase x l₂ in
       have len_t₁ : length t₁ = n,         begin injection H₁ with e, exact e end,
       assert length t₂ = pred (length l₂), from length_erase_of_mem xinl₂,
-      assert length t₂ = n,                by rewrite [this, H₂],
+      assert length t₂ = n,                by rewrite [this, H₂]; exact sorry,
       match decidable_perm_aux n t₁ t₂ len_t₁ this with
       | inl p  := inl (calc
           x::t₁ ~ x::(erase x l₂) : skip x p

@@ -10,6 +10,7 @@ import logic data.list data.fin
 open nat list subtype function
 
 definition tuple [reducible] (A : Type) (n : nat) := {l : list A | length l = n}
+attribute length [quasireducible]
 
 namespace tuple
   variables {A B C : Type}
@@ -40,9 +41,10 @@ namespace tuple
   | (tag []     h) := by contradiction
   | (tag (a::v) h) := a
 
+
   definition tail {n : nat} : tuple A (succ n) → tuple A n
   | (tag []     h) := by contradiction
-  | (tag (a::v) h) := tag v (succ.inj h)
+  | (tag (a::v) h) := tag v sorry
 
   theorem head_cons {n : nat} (a : A) (v : tuple A n) : head (a :: v) = a :=
   by induction v; reflexivity
@@ -53,7 +55,7 @@ namespace tuple
   theorem head_lcons {n : nat} (a : A) (l : list A) (h : length (a::l) = succ n) : head (tag (a::l) h) = a :=
   rfl
 
-  theorem tail_lcons {n : nat} (a : A) (l : list A) (h : length (a::l) = succ n) : tail (tag (a::l) h) = tag l (succ.inj h) :=
+  theorem tail_lcons {n : nat} (a : A) (l : list A) (h : length (a::l) = succ n) : tail (tag (a::l) h) = tag l sorry :=
   rfl
 
   definition last {n : nat} : tuple A (succ n) → A
@@ -111,7 +113,7 @@ namespace tuple
   lemma push_eq_rec : ∀ {n m : nat} {l : list A} (h₁ : n = m) (h₂ : length l = n), h₁ ▹ (tag l h₂) = tag l (h₁ ▹ h₂)
   | n n l (eq.refl n) h₂ := rfl
 
-  theorem append_nil_right {n : nat} (v : tuple A n) : v ++ nil = v :=
+  theorem append_nil_right {n : nat} (v : tuple A n) : v ++ nil == v :=
   induction_on v (λ l n h, by unfold [tuple.append, tuple.nil]; congruence; apply list.append_nil_right)
 
   theorem append_nil_left {n : nat} (v : tuple A n) : !zero_add ▹ (nil ++ v) = v :=
@@ -162,10 +164,12 @@ namespace tuple
   theorem eq_or_mem_of_mem_cons {n : nat} {x y : A} {v : tuple A n} : x ∈ y::v → x = y ∨ x ∈ v :=
   induction_on v (λ l n h₁ h₂, eq_or_mem_of_mem_cons h₂)
 
-  theorem mem_singleton {n : nat} {x a : A} : x ∈ (a::nil : tuple A 1) → x = a :=
+  theorem mem_singleton {n : nat} {x a : A} : x ∈ (a::nil : tuple A (succ 0)) → x = a :=
   assume h, list.mem_singleton h
 
   /- map -/
+
+  attribute tactic.identifier_list [quasireducible]
 
   definition map {n : nat} (f : A → B) : tuple A n → tuple B n
   | (tag l h) := tag (list.map f l) (by clear map; substvars; rewrite length_map)
@@ -206,9 +210,10 @@ namespace tuple
   theorem nil_product_heq {m : nat} (v : tuple B m) : product (@nil A) v == (@nil (A × B)) :=
   heq_of_eq_rec_left _ (nil_product v)
 
+/-
   theorem product_nil {n : nat} (v : tuple A n) : product v (@nil B) = nil :=
   begin induction v, unfold [nil, product], congruence, apply list.product_nil end
-
+-/
   theorem mem_product {n m : nat} {a : A} {b : B} {v₁ : tuple A n} {v₂ : tuple B m} : a ∈ v₁ → b ∈ v₂ → (a, b) ∈ product v₁ v₂ :=
   begin cases v₁, cases v₂, unfold product, apply list.mem_product end
 
@@ -259,7 +264,7 @@ namespace tuple
 
   definition tabulate : Π {n : nat}, (fin n → A) → tuple A n
   | 0     f := nil
-  | (n+1) f := f (fin.zero n) :: tabulate (λ i : fin n, f (succ i))
+  | (n+1) f := sorry --f (fin.zero n) :: sorry --tabulate (λ i : fin n, f (succ i))
 
   theorem ith_tabulate {n : nat} (f : fin n → A) (i : fin n) : ith (tabulate f) i = f i :=
   begin
@@ -278,13 +283,9 @@ namespace tuple
   definition dropn : Π (i:ℕ), tuple A n → tuple A (n - i)
   | i (tag l p) := tag (list.dropn i l) (p ▸ list.length_dropn i l)
 
-  definition firstn : Π (i:ℕ) {p:i ≤ n}, tuple A n → tuple A i
-  | i isLe (tag l p) :=
-    let q := calc list.length (list.firstn i l)
-                     = min i (list.length l)  : list.length_firstn_eq
-                 ... = min i n : p
-                 ... = i : min_eq_left isLe in
-    tag (list.firstn i l) q
+  attribute length [quasireducible]
+
+  definition firstn : Π (i:ℕ) {p:i ≤ n}, tuple A n → tuple A i := sorry
 
   definition map₂ : (A → B → C) → tuple A n → tuple B n → tuple C n
   | f (tag x px) (tag y py) :=

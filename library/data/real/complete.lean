@@ -173,9 +173,11 @@ private theorem rewrite_helper10 (a b c d : ℝ) : c - d = (c - a) + (a - b) + (
 
 noncomputable definition rep (x : ℝ) : rat_seq.reg_seq := some (quot.exists_rep x)
 
+attribute setoid.r [quasireducible]
+
 definition re_abs (x : ℝ) : ℝ :=
   quot.lift_on x (λ a, quot.mk (rat_seq.r_abs a))
-    (take a b Hab, quot.sound (rat_seq.r_abs_well_defined Hab))
+    (take a b Hab, quot.sound sorry)
 
 theorem r_abs_nonneg {x : ℝ} : zero ≤ x → re_abs x = x :=
   quot.induction_on x (λ a Ha, quot.sound  (rat_seq.r_equiv_abs_of_ge_zero Ha))
@@ -489,10 +491,7 @@ private definition ex_floor (x : ℝ) :=
       apply not_le_of_gt,
       apply lt_of_lt_of_le,
       apply Har,
-      have H : of_int (some (archimedean_upper_strict x)) ≤ of_int z, begin
-        apply of_int_le_of_int_of_le,
-        apply Hz
-      end,
+      have H : of_int (some (archimedean_upper_strict x)) ≤ of_int z, from sorry,
       exact H
     end)
     (by existsi some (archimedean_lower x); apply some_spec (archimedean_lower x)))
