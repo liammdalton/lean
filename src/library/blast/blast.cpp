@@ -15,6 +15,7 @@ Author: Leonardo de Moura
 #include "kernel/type_checker.h"
 #include "library/replace_visitor.h"
 #include "library/util.h"
+#include "library/defeq_simp_lemmas.h"
 #include "library/defeq_simplifier.h"
 #include "library/trace.h"
 #include "library/reducible.h"
@@ -664,9 +665,9 @@ public:
 
     ~blastenv() {
         finalize_imp_extension_entries();
-        for (auto ctx : m_tmp_ctx_pool)
-            delete ctx;
     }
+
+    list<expr> get_initial_context() { return m_initial_context; }
 
     void init_classical_flag() {
         if (is_standard(env())) {
@@ -744,38 +745,32 @@ public:
     }
 
     class tmp_tctx_pool : public tmp_type_context_pool {
+        blastenv & m_blastenv;
         std::vector<tmp_type_context *> m_pool;
-
-        virtual tmp_type_context * mk_tmp_type_context() override {
-            tmp_type_context * r;
-            if (m_pool.empty()) {
-                r = new tmp_tctx(m_env, m_ios.get_options());
-                // Design decision: in the blast tactic, we only consider the instances that were
-                // available in initial goal provided to the blast tactic.
-                // So, we only need to setup the local instances when we create a new (temporary) type context.
-                // This is important since whenever we set the local instances the cache in at type context is
-                // invalidated.
-                r->set_local_instances(m_initial_context);
-            } else {
-                r = m_pool.back();
-                m_pool.pop_back();
-            }
-            return r;
-        }
+    public:
+        virtual tmp_type_context * mk_tmp_type_context() override;
 
         virtual void recycle_tmp_type_context(tmp_type_context * tmp_tctx) override {
             lean_assert(tmp_tctx);
             tmp_tctx->clear();
             m_pool.push_back(tmp_tctx);
         }
+
+        tmp_tctx_pool(blastenv & benv): m_blastenv(benv) {}
+
+        virtual ~tmp_tctx_pool() override {
+            for (auto ctx : m_pool)
+                delete ctx;
+        }
+
     };
 
-    tmp_tctx_pool m_tmp_tctx_pool;
+    tmp_tctx_pool m_tmp_tctx_pool{*this};
     tmp_type_context * mk_tmp_type_context() {
         return m_tmp_tctx_pool.mk_tmp_type_context();
     }
     void recycle_tmp_type_context(tmp_type_context * tmp_tctx) {
-        return m_tmp_tctx_pool.recycle_tmp_type_context(tmp_tctx);
+        m_tmp_tctx_pool.recycle_tmp_type_context(tmp_tctx);
     }
 
     optional<congr_lemma> mk_congr_lemma_for_simp(expr const & fn, unsigned num_args) {
@@ -982,7 +977,7 @@ public:
         auto it = m_norm_cache.find(e);
         if (it != m_norm_cache.end())
             return it->second;
-        expr r = normalize_instances(defeq_simplify(m_env, e));
+        expr r = normalize_instances(defeq_simplify(m_tmp_tctx_pool, m_ios.get_options(), get_defeq_simp_lemmas(m_env), e));
         m_norm_cache.insert(mk_pair(e, r));
         return r;
     }
@@ -1459,19 +1454,19 @@ public:
     }
 };
 
-tmp_type_context * blastenv::mk_tmp_type_context() {
+tmp_type_context * blastenv::tmp_type_context_pool::mk_tmp_type_context() override {
     tmp_type_context * r;
-    if (m_tmp_ctx_pool.empty()) {
+    if (m_pool.empty()) {
         r = new tmp_tctx(m_env, m_ios.get_options());
         // Design decision: in the blast tactic, we only consider the instances that were
         // available in initial goal provided to the blast tactic.
         // So, we only need to setup the local instances when we create a new (temporary) type context.
         // This is important since whenever we set the local instances the cache in at type context is
         // invalidated.
-        r->set_local_instances(m_initial_context);
+        r->set_local_instances(m_blastenv.get_initial_context());
     } else {
-        r = m_tmp_ctx_pool.back();
-        m_tmp_ctx_pool.pop_back();
+        r = m_pool.back();
+        m_pool.pop_back();
     }
     return r;
 }
