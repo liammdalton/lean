@@ -10,9 +10,11 @@ Author: Leonardo de Moura
 #include "kernel/for_each_fn.h"
 #include "kernel/find_fn.h"
 #include "kernel/replace_fn.h"
+#include "kernel/instantiate.h"
 #include "kernel/type_checker.h"
 #include "library/replace_visitor.h"
 #include "library/util.h"
+#include "library/defeq_simplifier.h"
 #include "library/trace.h"
 #include "library/reducible.h"
 #include "library/class.h"
@@ -21,6 +23,7 @@ Author: Leonardo de Moura
 #include "library/relation_manager.h"
 #include "library/congr_lemma_manager.h"
 #include "library/abstract_expr_manager.h"
+#include "library/proof_irrel_expr_manager.h"
 #include "library/light_lt_manager.h"
 #include "library/projection.h"
 #include "library/scoped_ext.h"
@@ -67,6 +70,9 @@ struct imp_extension_entry {
         m_ext_state(ext_state), m_ext_id(ext_id), m_ext_of_ext_state(ext_of_ext_state) {}
 };
 
+unsigned proof_irrel_hash(expr const & e);
+bool proof_irrel_is_equal(expr const & e1, expr const & e2);
+
 class blastenv {
     friend class scope_assignment;
     friend class scope_unfold_macro_pred;
@@ -103,6 +109,7 @@ class blastenv {
     fun_info_manager           m_fun_info_manager;
     congr_lemma_manager        m_congr_lemma_manager;
     abstract_expr_manager      m_abstract_expr_manager;
+    proof_irrel_expr_manager   m_proof_irrel_expr_manager;
     light_lt_manager           m_light_lt_manager;
     imp_extension_entries      m_imp_extension_entries;
     relation_info_getter       m_rel_getter;
@@ -498,8 +505,34 @@ class blastenv {
     }
 
     tctx                       m_tctx;
+
+    /* Normalizing instances */
     normalizer                 m_normalizer;
-    expr_map<expr>             m_norm_cache; // normalization cache
+
+    struct inst_key {
+        expr              m_e;
+        unsigned          m_hash;
+
+        inst_key(expr const & e):
+            m_e(e), m_hash(blast::proof_irrel_hash(e)) { }
+    };
+
+    struct inst_key_hash_fn {
+        unsigned operator()(inst_key const & k) const { return k.m_hash; }
+    };
+
+    struct inst_key_eq_fn {
+        bool operator()(inst_key const & k1, inst_key const & k2) const {
+            return blast::proof_irrel_is_equal(k1.m_e, k2.m_e);
+        }
+    };
+
+    typedef std::unordered_map<inst_key, expr, inst_key_hash_fn, inst_key_eq_fn> inst_cache;
+    inst_cache      m_inst_nf_to_cf;
+    expr_map<expr>  m_inst_to_nf;
+
+    expr_map<expr>  m_norm_cache; // normalization cache
+
 
     void save_initial_context() {
         hypothesis_idx_buffer hidxs;
@@ -617,6 +650,7 @@ public:
         m_fun_info_manager(*m_tmp_ctx),
         m_congr_lemma_manager(m_app_builder, m_fun_info_manager),
         m_abstract_expr_manager(m_congr_lemma_manager),
+        m_proof_irrel_expr_manager(m_fun_info_manager),
         m_light_lt_manager(env),
         m_rel_getter(mk_relation_info_getter(env)),
         m_refl_getter(mk_refl_info_getter(env)),
@@ -774,6 +808,10 @@ public:
         return m_abstract_expr_manager.hash(e);
     }
 
+    unsigned proof_irrel_hash(expr const & e) {
+        return m_proof_irrel_expr_manager.hash(e);
+    }
+
     void init_imp_extension_entries() {
         for (auto & p : get_imp_extension_manager().get_entries()) {
             branch_extension & b_ext = curr_state().get_extension(p.second);
@@ -830,6 +868,10 @@ public:
         return m_abstract_expr_manager.is_equal(e1, e2);
     }
 
+    bool proof_irrel_is_equal(expr const & e1, expr const & e2) {
+        return m_proof_irrel_expr_manager.is_equal(e1, e2);
+    }
+
     bool is_light_lt(expr const & e1, expr const & e2) {
         return m_light_lt_manager.is_lt(e1, e2);
     }
@@ -851,11 +893,81 @@ public:
         return m_tctx;
     }
 
+    expr normalize_instance(expr const & inst) {
+        auto it1 = m_inst_to_nf.find(inst);
+        expr inst_nf;
+        if (it1 != m_inst_to_nf.end()) {
+            inst_nf = it1->second;
+        } else {
+            inst_nf = m_normalizer(inst);
+            m_inst_to_nf.insert(mk_pair(inst, inst_nf));
+        }
+
+        auto it2 = m_inst_nf_to_cf.find(inst_nf);
+        expr inst_cf;
+        if (it2 != m_inst_nf_to_cf.end()) {
+            inst_cf = it2->second;
+        } else {
+            inst_cf = inst;
+            m_inst_nf_to_cf.insert(mk_pair(inst_nf, inst_cf));
+        }
+        return inst_cf;
+    }
+
+    class normalize_instances_fn {
+        tctx                     & m_tctx;
+        fun_info_manager         & m_fun_info_manager;
+        std::vector<expr>     m_locals;
+        expr normalize_instances(expr const & e) {
+            expr b, d;
+            switch (e.kind()) {
+            case expr_kind::Constant:
+            case expr_kind::Local:
+            case expr_kind::Meta:
+            case expr_kind::Sort:
+            case expr_kind::Var:
+            case expr_kind::Macro:
+                return e;
+            case expr_kind::Lambda:
+            case expr_kind::Pi:
+                d = normalize_instances(binding_domain(e));
+                m_locals.push_back(instantiate_rev(m_tctx.mk_tmp_local(d), m_locals.size(), m_locals.data()));
+                b = normalize_instances(e);
+                m_locals.pop_back();
+                return update_binding(e, d, b);
+            case expr_kind::App:
+                buffer<expr> args;
+                expr const & f     = get_app_args(e, args);
+                unsigned prefix_sz = m_fun_info_manager.get_specialization_prefix_size(instantiate_rev(f, m_locals.size(), m_locals.data()), args.size());
+                expr new_f = e;
+                unsigned rest_sz   = args.size() - prefix_sz;
+                for (unsigned i = 0; i < rest_sz; i++)
+                    new_f = app_fn(new_f);
+                new_f = instantiate_rev(new_f, m_locals.size(), m_locals.data());
+
+                fun_info info = m_blastenv.fun_info_manager.get(new_f, rest_sz);
+                lean_assert(length(info.get_params_info()) == rest_sz);
+                unsigned i = prefix_sz;
+                for_each(info.get_params_info(), [&](param_info const & p_info) {
+                        if (p_info.is_inst_implicit()) {
+                            args[i] = normalize_instance(args[i]);
+                        }
+                        i++;
+                    });
+                return mk_app(f, args);
+            }
+            lean_unreachable();
+        }
+    public:
+        normalize_instances_fn(tctx & ctx, fun_info_manager & finfo): m_tctx(ctx), m_fun_info_manager(finfo) {}
+        expr operator()(expr const & e) { return normalize_instances(e); }
+    };
+
     expr normalize(expr const & e) {
         auto it = m_norm_cache.find(e);
         if (it != m_norm_cache.end())
             return it->second;
-        expr r = m_normalizer(e);
+        expr r = normalize_instances(*this)(defeq_simplify(m_env, e));
         m_norm_cache.insert(mk_pair(e, r));
         return r;
     }
@@ -1175,6 +1287,11 @@ unsigned abstract_hash(expr const & e) {
     return g_blastenv->abstract_hash(e);
 }
 
+unsigned proof_irrel_hash(expr const & e) {
+    lean_assert(g_blastenv);
+    return g_blastenv->proof_irrel_hash(e);
+}
+
 unsigned register_imp_extension(std::function<imp_extension_state*()> & ext_state_maker) {
     return get_imp_extension_manager().register_imp_extension(ext_state_maker);
 }
@@ -1187,6 +1304,11 @@ imp_extension_state & get_imp_extension_state(unsigned state_id) {
 bool abstract_is_equal(expr const & e1, expr const & e2) {
     lean_assert(g_blastenv);
     return g_blastenv->abstract_is_equal(e1, e2);
+}
+
+bool proof_irrel_is_equal(expr const & e1, expr const & e2) {
+    lean_assert(g_blastenv);
+    return g_blastenv->proof_irrel_is_equal(e1, e2);
 }
 
 bool is_light_lt(expr const & e1, expr const & e2) {

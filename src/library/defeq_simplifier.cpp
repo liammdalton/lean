@@ -334,5 +334,8 @@ expr defeq_simplify(environment const & env, options const & o, defeq_simp_lemma
     return defeq_simplify_fn(env, o, simp_lemmas)(e);
 }
 
+expr defeq_simplify(environment const & env, expr const & e) {
+    return defeq_simplify(env, options(), get_defeq_simp_lemmas(env), e);
+}
 
 }
