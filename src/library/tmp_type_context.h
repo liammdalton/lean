@@ -95,6 +95,8 @@ class tmp_type_context_pool {
 public:
     virtual tmp_type_context * mk_tmp_type_context() =0;
     virtual void recycle_tmp_type_context(tmp_type_context * tmp_tctx) =0;
+
+    virtual ~tmp_type_context_pool() {}
 };
 
 class default_tmp_type_context_pool : public tmp_type_context_pool {
@@ -104,7 +106,7 @@ public:
     default_tmp_type_context_pool(environment const & env, options const & o):
         m_env(env), m_options(o) {}
 
-    virtual tmp_type_context * mk_tmp_type_context() override { return new tmp_type_context(env, o); }
+    virtual tmp_type_context * mk_tmp_type_context() override { return new tmp_type_context(m_env, m_options); }
     virtual void recycle_tmp_type_context(tmp_type_context * tmp_tctx) override { delete tmp_tctx; }
 };
 
