@@ -11,6 +11,7 @@ Author: Leonardo de Moura
 #include "kernel/find_fn.h"
 #include "kernel/replace_fn.h"
 #include "kernel/instantiate.h"
+#include "kernel/abstract.h"
 #include "kernel/type_checker.h"
 #include "library/replace_visitor.h"
 #include "library/util.h"
@@ -914,60 +915,49 @@ public:
         return inst_cf;
     }
 
-    class normalize_instances_fn {
-        tctx                     & m_tctx;
-        fun_info_manager         & m_fun_info_manager;
-        std::vector<expr>     m_locals;
-        expr normalize_instances(expr const & e) {
-            expr b, d;
-            switch (e.kind()) {
-            case expr_kind::Constant:
-            case expr_kind::Local:
-            case expr_kind::Meta:
-            case expr_kind::Sort:
-            case expr_kind::Var:
-            case expr_kind::Macro:
-                return e;
-            case expr_kind::Lambda:
-            case expr_kind::Pi:
-                d = normalize_instances(binding_domain(e));
-                m_locals.push_back(instantiate_rev(m_tctx.mk_tmp_local(d), m_locals.size(), m_locals.data()));
-                b = normalize_instances(e);
-                m_locals.pop_back();
-                return update_binding(e, d, b);
-            case expr_kind::App:
-                buffer<expr> args;
-                expr const & f     = get_app_args(e, args);
-                unsigned prefix_sz = m_fun_info_manager.get_specialization_prefix_size(instantiate_rev(f, m_locals.size(), m_locals.data()), args.size());
-                expr new_f = e;
-                unsigned rest_sz   = args.size() - prefix_sz;
-                for (unsigned i = 0; i < rest_sz; i++)
-                    new_f = app_fn(new_f);
-                new_f = instantiate_rev(new_f, m_locals.size(), m_locals.data());
-
-                fun_info info = m_blastenv.fun_info_manager.get(new_f, rest_sz);
-                lean_assert(length(info.get_params_info()) == rest_sz);
-                unsigned i = prefix_sz;
-                for_each(info.get_params_info(), [&](param_info const & p_info) {
-                        if (p_info.is_inst_implicit()) {
-                            args[i] = normalize_instance(args[i]);
-                        }
-                        i++;
-                    });
-                return mk_app(f, args);
-            }
-            lean_unreachable();
+    expr normalize_instances(expr const & e) {
+        expr b, l, d;
+        switch (e.kind()) {
+        case expr_kind::Constant:
+        case expr_kind::Local:
+        case expr_kind::Meta:
+        case expr_kind::Sort:
+        case expr_kind::Var:
+        case expr_kind::Macro:
+            return e;
+        case expr_kind::Lambda:
+        case expr_kind::Pi:
+            d = normalize_instances(binding_domain(e));
+            l = mk_fresh_local(d, binding_info(e));
+            b = abstract(normalize_instances(instantiate(binding_body(e), l)), l);
+            return update_binding(e, d, b);
+        case expr_kind::App:
+            buffer<expr> args;
+            expr const & f     = get_app_args(e, args);
+            unsigned prefix_sz = get_specialization_prefix_size(f, args.size());
+            expr new_f = e;
+            unsigned rest_sz   = args.size() - prefix_sz;
+            for (unsigned i = 0; i < rest_sz; i++)
+                new_f = app_fn(new_f);
+            fun_info info = get_fun_info(new_f, rest_sz);
+            lean_assert(length(info.get_params_info()) == rest_sz);
+            unsigned i = prefix_sz;
+            for_each(info.get_params_info(), [&](param_info const & p_info) {
+                    if (p_info.is_inst_implicit()) {
+                        args[i] = normalize_instance(args[i]);
+                    }
+                    i++;
+                });
+            return mk_app(f, args);
         }
-    public:
-        normalize_instances_fn(tctx & ctx, fun_info_manager & finfo): m_tctx(ctx), m_fun_info_manager(finfo) {}
-        expr operator()(expr const & e) { return normalize_instances(e); }
-    };
+        lean_unreachable();
+    }
 
     expr normalize(expr const & e) {
         auto it = m_norm_cache.find(e);
         if (it != m_norm_cache.end())
             return it->second;
-        expr r = normalize_instances(*this)(defeq_simplify(m_env, e));
+        expr r = normalize_instances(defeq_simplify(m_env, e));
         m_norm_cache.insert(mk_pair(e, r));
         return r;
     }
