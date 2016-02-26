@@ -77,7 +77,6 @@ bool proof_irrel_is_equal(expr const & e1, expr const & e2);
 class blastenv {
     friend class scope_assignment;
     friend class scope_unfold_macro_pred;
-    typedef std::vector<tmp_type_context *> tmp_type_context_pool;
     typedef std::unique_ptr<tmp_type_context> tmp_type_context_ptr;
     typedef std::vector<imp_extension_entry> imp_extension_entries;
 
@@ -104,7 +103,6 @@ class blastenv {
     name_map<projection_info>  m_projection_info;
     is_relation_pred           m_is_relation_pred;
     state                      m_curr_state;   // current state
-    tmp_type_context_pool      m_tmp_ctx_pool;
     tmp_type_context_ptr       m_tmp_ctx; // for app_builder and congr_lemma_manager
     app_builder                m_app_builder;
     fun_info_manager           m_fun_info_manager;
@@ -745,12 +743,39 @@ public:
         return m_tmp_ctx->mk_subsingleton_instance(type);
     }
 
-    tmp_type_context * mk_tmp_type_context();
+    class tmp_tctx_pool : public tmp_type_context_pool {
+        std::vector<tmp_type_context *> m_pool;
 
-    void recycle_tmp_type_context(tmp_type_context * ctx) {
-        lean_assert(ctx);
-        ctx->clear();
-        m_tmp_ctx_pool.push_back(ctx);
+        virtual tmp_type_context * mk_tmp_type_context() override {
+            tmp_type_context * r;
+            if (m_pool.empty()) {
+                r = new tmp_tctx(m_env, m_ios.get_options());
+                // Design decision: in the blast tactic, we only consider the instances that were
+                // available in initial goal provided to the blast tactic.
+                // So, we only need to setup the local instances when we create a new (temporary) type context.
+                // This is important since whenever we set the local instances the cache in at type context is
+                // invalidated.
+                r->set_local_instances(m_initial_context);
+            } else {
+                r = m_pool.back();
+                m_pool.pop_back();
+            }
+            return r;
+        }
+
+        virtual void recycle_tmp_type_context(tmp_type_context * tmp_tctx) override {
+            lean_assert(tmp_tctx);
+            tmp_tctx->clear();
+            m_pool.push_back(tmp_tctx);
+        }
+    };
+
+    tmp_tctx_pool m_tmp_tctx_pool;
+    tmp_type_context * mk_tmp_type_context() {
+        return m_tmp_tctx_pool.mk_tmp_type_context();
+    }
+    void recycle_tmp_type_context(tmp_type_context * tmp_tctx) {
+        return m_tmp_tctx_pool.recycle_tmp_type_context(tmp_tctx);
     }
 
     optional<congr_lemma> mk_congr_lemma_for_simp(expr const & fn, unsigned num_args) {
