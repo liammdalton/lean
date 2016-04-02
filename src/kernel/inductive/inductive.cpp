@@ -488,7 +488,7 @@ struct add_inductive_fn {
             }
             i++;
         }
-        if (!is_valid_it_app(t, d_idx))
+        if (!is_valid_it_app(whnf(t), d_idx))
             throw kernel_exception(m_env, sstream() << "invalid return type for '" << n << "'");
     }
 
@@ -563,7 +563,7 @@ struct add_inductive_fn {
             i++;
         }
         buffer<expr> result_args;
-        get_app_args(t, result_args);
+        get_app_args(whnf(t), result_args);
         // Check condition 2: every argument in to_check must occur in result_args
         for (expr const & arg : to_check) {
             if (std::find(result_args.begin(), result_args.end(), arg) == result_args.end())
@@ -676,7 +676,7 @@ struct add_inductive_fn {
                     i++;
                 }
                 buffer<expr> it_indices;
-                unsigned it_idx = get_I_indices(t, it_indices);
+                unsigned it_idx = get_I_indices(whnf(t), it_indices);
                 expr C_app      = mk_app(m_elim_info[it_idx].m_C, it_indices);
                 if (m_dep_elim) {
                     expr intro_app  = mk_app(mk_app(mk_app(mk_constant(intro_rule_name(ir), m_levels), m_param_consts), b), u);
