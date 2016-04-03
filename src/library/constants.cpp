@@ -51,6 +51,8 @@ name const * g_eq_of_heq = nullptr;
 name const * g_eq_rec_heq = nullptr;
 name const * g_exists_elim = nullptr;
 name const * g_expr = nullptr;
+name const * g_expr_placeholder = nullptr;
+name const * g_expr_var = nullptr;
 name const * g_false = nullptr;
 name const * g_false_of_true_iff_false = nullptr;
 name const * g_false_rec = nullptr;
@@ -328,6 +330,8 @@ void initialize_constants() {
     g_eq_rec_heq = new name{"eq_rec_heq"};
     g_exists_elim = new name{"exists", "elim"};
     g_expr = new name{"expr"};
+    g_expr_placeholder = new name{"expr", "placeholder"};
+    g_expr_var = new name{"expr", "var"};
     g_false = new name{"false"};
     g_false_of_true_iff_false = new name{"false_of_true_iff_false"};
     g_false_rec = new name{"false", "rec"};
@@ -606,6 +610,8 @@ void finalize_constants() {
     delete g_eq_rec_heq;
     delete g_exists_elim;
     delete g_expr;
+    delete g_expr_placeholder;
+    delete g_expr_var;
     delete g_false;
     delete g_false_of_true_iff_false;
     delete g_false_rec;
@@ -883,6 +889,8 @@ name const & get_eq_of_heq_name() { return *g_eq_of_heq; }
 name const & get_eq_rec_heq_name() { return *g_eq_rec_heq; }
 name const & get_exists_elim_name() { return *g_exists_elim; }
 name const & get_expr_name() { return *g_expr; }
+name const & get_expr_placeholder_name() { return *g_expr_placeholder; }
+name const & get_expr_var_name() { return *g_expr_var; }
 name const & get_false_name() { return *g_false; }
 name const & get_false_of_true_iff_false_name() { return *g_false_of_true_iff_false; }
 name const & get_false_rec_name() { return *g_false_rec; }

@@ -53,6 +53,8 @@ name const & get_eq_of_heq_name();
 name const & get_eq_rec_heq_name();
 name const & get_exists_elim_name();
 name const & get_expr_name();
+name const & get_expr_placeholder_name();
+name const & get_expr_var_name();
 name const & get_false_name();
 name const & get_false_of_true_iff_false_name();
 name const & get_false_rec_name();

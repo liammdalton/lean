@@ -44,8 +44,7 @@ public:
     }
     virtual optional<expr> expand(expr const & m, extension_context &) const {
         check_macro(m);
-        return none_expr();
-//        return some_expr(macro_arg(m, ));
+        return some_expr(mk_constant(get_expr_placeholder_name()));
     }
     virtual void write(serializer & s) const {
         s.write_string(get_quoted_expr_opcode());
