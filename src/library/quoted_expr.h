@@ -1,15 +1,15 @@
 /*
-Copyright (c) 2016 Microsoft Corporation. All rights reserved.
+Copyright (c) 2014 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-Author: Daniel Selsam, Jack Gallagher
+Author: Leonardo de Moura
 */
 #pragma once
 
 namespace lean {
 class expr;
 /** \brief Create an expression definitionally equal to \c e, but it must have type \c t. */
-expr mk_quoted_expr(expr const & t, expr const & e);
+expr mk_quoted_expr(expr const & e);
 /** \brief Return true iff \c e was created using #mk_quoted_expr */
 bool is_quoted_expr(expr const & e);
 /** \brief Return the type of a quoted expression

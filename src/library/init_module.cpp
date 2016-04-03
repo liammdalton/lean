@@ -10,6 +10,7 @@ Author: Leonardo de Moura
 #include "library/kernel_serializer.h"
 #include "library/let.h"
 #include "library/typed_expr.h"
+#include "library/quoted_expr.h"
 #include "library/choice.h"
 #include "library/class.h"
 #include "library/string.h"
@@ -65,6 +66,7 @@ void initialize_library_module() {
     initialize_kernel_serializer();
     initialize_let();
     initialize_typed_expr();
+    initialize_quoted_expr();
     initialize_choice();
     initialize_string();
     initialize_resolve_macro();
@@ -136,6 +138,7 @@ void finalize_library_module() {
     finalize_resolve_macro();
     finalize_string();
     finalize_choice();
+    finalize_quoted_expr();
     finalize_typed_expr();
     finalize_let();
     finalize_kernel_serializer();

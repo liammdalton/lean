@@ -50,6 +50,7 @@ name const * g_eq_trans = nullptr;
 name const * g_eq_of_heq = nullptr;
 name const * g_eq_rec_heq = nullptr;
 name const * g_exists_elim = nullptr;
+name const * g_expr = nullptr;
 name const * g_false = nullptr;
 name const * g_false_of_true_iff_false = nullptr;
 name const * g_false_rec = nullptr;
@@ -90,6 +91,7 @@ name const * g_is_trunc_is_set = nullptr;
 name const * g_ite = nullptr;
 name const * g_left_distrib = nullptr;
 name const * g_le_refl = nullptr;
+name const * g_level = nullptr;
 name const * g_lift = nullptr;
 name const * g_lift_down = nullptr;
 name const * g_lift_up = nullptr;
@@ -102,6 +104,7 @@ name const * g_mul = nullptr;
 name const * g_mul_one = nullptr;
 name const * g_mul_zero = nullptr;
 name const * g_mul_zero_class = nullptr;
+name const * g_name = nullptr;
 name const * g_nat = nullptr;
 name const * g_nat_of_num = nullptr;
 name const * g_nat_succ = nullptr;
@@ -187,6 +190,7 @@ name const * g_prod_mk = nullptr;
 name const * g_prod_pr1 = nullptr;
 name const * g_prod_pr2 = nullptr;
 name const * g_propext = nullptr;
+name const * g_quote = nullptr;
 name const * g_rat_divide = nullptr;
 name const * g_rat_of_num = nullptr;
 name const * g_rfl = nullptr;
@@ -323,6 +327,7 @@ void initialize_constants() {
     g_eq_of_heq = new name{"eq_of_heq"};
     g_eq_rec_heq = new name{"eq_rec_heq"};
     g_exists_elim = new name{"exists", "elim"};
+    g_expr = new name{"expr"};
     g_false = new name{"false"};
     g_false_of_true_iff_false = new name{"false_of_true_iff_false"};
     g_false_rec = new name{"false", "rec"};
@@ -363,6 +368,7 @@ void initialize_constants() {
     g_ite = new name{"ite"};
     g_left_distrib = new name{"left_distrib"};
     g_le_refl = new name{"le", "refl"};
+    g_level = new name{"level"};
     g_lift = new name{"lift"};
     g_lift_down = new name{"lift", "down"};
     g_lift_up = new name{"lift", "up"};
@@ -375,6 +381,7 @@ void initialize_constants() {
     g_mul_one = new name{"mul_one"};
     g_mul_zero = new name{"mul_zero"};
     g_mul_zero_class = new name{"mul_zero_class"};
+    g_name = new name{"name"};
     g_nat = new name{"nat"};
     g_nat_of_num = new name{"nat", "of_num"};
     g_nat_succ = new name{"nat", "succ"};
@@ -460,6 +467,7 @@ void initialize_constants() {
     g_prod_pr1 = new name{"prod", "pr1"};
     g_prod_pr2 = new name{"prod", "pr2"};
     g_propext = new name{"propext"};
+    g_quote = new name{"quote"};
     g_rat_divide = new name{"rat", "divide"};
     g_rat_of_num = new name{"rat", "of_num"};
     g_rfl = new name{"rfl"};
@@ -597,6 +605,7 @@ void finalize_constants() {
     delete g_eq_of_heq;
     delete g_eq_rec_heq;
     delete g_exists_elim;
+    delete g_expr;
     delete g_false;
     delete g_false_of_true_iff_false;
     delete g_false_rec;
@@ -637,6 +646,7 @@ void finalize_constants() {
     delete g_ite;
     delete g_left_distrib;
     delete g_le_refl;
+    delete g_level;
     delete g_lift;
     delete g_lift_down;
     delete g_lift_up;
@@ -649,6 +659,7 @@ void finalize_constants() {
     delete g_mul_one;
     delete g_mul_zero;
     delete g_mul_zero_class;
+    delete g_name;
     delete g_nat;
     delete g_nat_of_num;
     delete g_nat_succ;
@@ -734,6 +745,7 @@ void finalize_constants() {
     delete g_prod_pr1;
     delete g_prod_pr2;
     delete g_propext;
+    delete g_quote;
     delete g_rat_divide;
     delete g_rat_of_num;
     delete g_rfl;
@@ -870,6 +882,7 @@ name const & get_eq_trans_name() { return *g_eq_trans; }
 name const & get_eq_of_heq_name() { return *g_eq_of_heq; }
 name const & get_eq_rec_heq_name() { return *g_eq_rec_heq; }
 name const & get_exists_elim_name() { return *g_exists_elim; }
+name const & get_expr_name() { return *g_expr; }
 name const & get_false_name() { return *g_false; }
 name const & get_false_of_true_iff_false_name() { return *g_false_of_true_iff_false; }
 name const & get_false_rec_name() { return *g_false_rec; }
@@ -910,6 +923,7 @@ name const & get_is_trunc_is_set_name() { return *g_is_trunc_is_set; }
 name const & get_ite_name() { return *g_ite; }
 name const & get_left_distrib_name() { return *g_left_distrib; }
 name const & get_le_refl_name() { return *g_le_refl; }
+name const & get_level_name() { return *g_level; }
 name const & get_lift_name() { return *g_lift; }
 name const & get_lift_down_name() { return *g_lift_down; }
 name const & get_lift_up_name() { return *g_lift_up; }
@@ -922,6 +936,7 @@ name const & get_mul_name() { return *g_mul; }
 name const & get_mul_one_name() { return *g_mul_one; }
 name const & get_mul_zero_name() { return *g_mul_zero; }
 name const & get_mul_zero_class_name() { return *g_mul_zero_class; }
+name const & get_name_name() { return *g_name; }
 name const & get_nat_name() { return *g_nat; }
 name const & get_nat_of_num_name() { return *g_nat_of_num; }
 name const & get_nat_succ_name() { return *g_nat_succ; }
@@ -1007,6 +1022,7 @@ name const & get_prod_mk_name() { return *g_prod_mk; }
 name const & get_prod_pr1_name() { return *g_prod_pr1; }
 name const & get_prod_pr2_name() { return *g_prod_pr2; }
 name const & get_propext_name() { return *g_propext; }
+name const & get_quote_name() { return *g_quote; }
 name const & get_rat_divide_name() { return *g_rat_divide; }
 name const & get_rat_of_num_name() { return *g_rat_of_num; }
 name const & get_rfl_name() { return *g_rfl; }

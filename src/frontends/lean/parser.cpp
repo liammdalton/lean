@@ -26,6 +26,7 @@ Author: Leonardo de Moura
 #include "library/private.h"
 #include "library/locals.h"
 #include "library/protected.h"
+#include "library/quoted_expr.h"
 #include "library/choice.h"
 #include "library/placeholder.h"
 #include "library/deep_copy.h"
@@ -1458,6 +1459,12 @@ expr parser::parse_led_notation(expr left) {
 }
 
 expr parser::id_to_expr(name const & id, pos_info const & p) {
+    if (id == get_quote_name()) {
+        expr e = parse_expr();
+        // TODO(dhs): more parser bookkeeping?
+        return save_pos(mk_quoted_expr(e), p);
+    }
+
     buffer<level> lvl_buffer;
     levels ls;
     if (curr_is_token(get_llevel_curly_tk())) {
