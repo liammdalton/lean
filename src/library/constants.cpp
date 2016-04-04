@@ -53,6 +53,11 @@ name const * g_exists_elim = nullptr;
 name const * g_expr = nullptr;
 name const * g_expr_placeholder = nullptr;
 name const * g_expr_var = nullptr;
+name const * g_expr_const = nullptr;
+name const * g_expr_app = nullptr;
+name const * g_expr_lam = nullptr;
+name const * g_expr_pi = nullptr;
+name const * g_expr_sort = nullptr;
 name const * g_false = nullptr;
 name const * g_false_of_true_iff_false = nullptr;
 name const * g_false_rec = nullptr;
@@ -107,6 +112,8 @@ name const * g_mul_one = nullptr;
 name const * g_mul_zero = nullptr;
 name const * g_mul_zero_class = nullptr;
 name const * g_name = nullptr;
+name const * g_name_nil = nullptr;
+name const * g_name_cons = nullptr;
 name const * g_nat = nullptr;
 name const * g_nat_of_num = nullptr;
 name const * g_nat_succ = nullptr;
@@ -332,6 +339,11 @@ void initialize_constants() {
     g_expr = new name{"expr"};
     g_expr_placeholder = new name{"expr", "placeholder"};
     g_expr_var = new name{"expr", "var"};
+    g_expr_const = new name{"expr", "const"};
+    g_expr_app = new name{"expr", "app"};
+    g_expr_lam = new name{"expr", "lam"};
+    g_expr_pi = new name{"expr", "pi"};
+    g_expr_sort = new name{"expr", "sort"};
     g_false = new name{"false"};
     g_false_of_true_iff_false = new name{"false_of_true_iff_false"};
     g_false_rec = new name{"false", "rec"};
@@ -386,6 +398,8 @@ void initialize_constants() {
     g_mul_zero = new name{"mul_zero"};
     g_mul_zero_class = new name{"mul_zero_class"};
     g_name = new name{"name"};
+    g_name_nil = new name{"name", "nil"};
+    g_name_cons = new name{"name", "cons"};
     g_nat = new name{"nat"};
     g_nat_of_num = new name{"nat", "of_num"};
     g_nat_succ = new name{"nat", "succ"};
@@ -612,6 +626,11 @@ void finalize_constants() {
     delete g_expr;
     delete g_expr_placeholder;
     delete g_expr_var;
+    delete g_expr_const;
+    delete g_expr_app;
+    delete g_expr_lam;
+    delete g_expr_pi;
+    delete g_expr_sort;
     delete g_false;
     delete g_false_of_true_iff_false;
     delete g_false_rec;
@@ -666,6 +685,8 @@ void finalize_constants() {
     delete g_mul_zero;
     delete g_mul_zero_class;
     delete g_name;
+    delete g_name_nil;
+    delete g_name_cons;
     delete g_nat;
     delete g_nat_of_num;
     delete g_nat_succ;
@@ -891,6 +912,11 @@ name const & get_exists_elim_name() { return *g_exists_elim; }
 name const & get_expr_name() { return *g_expr; }
 name const & get_expr_placeholder_name() { return *g_expr_placeholder; }
 name const & get_expr_var_name() { return *g_expr_var; }
+name const & get_expr_const_name() { return *g_expr_const; }
+name const & get_expr_app_name() { return *g_expr_app; }
+name const & get_expr_lam_name() { return *g_expr_lam; }
+name const & get_expr_pi_name() { return *g_expr_pi; }
+name const & get_expr_sort_name() { return *g_expr_sort; }
 name const & get_false_name() { return *g_false; }
 name const & get_false_of_true_iff_false_name() { return *g_false_of_true_iff_false; }
 name const & get_false_rec_name() { return *g_false_rec; }
@@ -945,6 +971,8 @@ name const & get_mul_one_name() { return *g_mul_one; }
 name const & get_mul_zero_name() { return *g_mul_zero; }
 name const & get_mul_zero_class_name() { return *g_mul_zero_class; }
 name const & get_name_name() { return *g_name; }
+name const & get_name_nil_name() { return *g_name_nil; }
+name const & get_name_cons_name() { return *g_name_cons; }
 name const & get_nat_name() { return *g_nat; }
 name const & get_nat_of_num_name() { return *g_nat_of_num; }
 name const & get_nat_succ_name() { return *g_nat_succ; }

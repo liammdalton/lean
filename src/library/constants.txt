@@ -48,6 +48,11 @@ exists.elim
 expr
 expr.placeholder
 expr.var
+expr.const
+expr.app
+expr.lam
+expr.pi
+expr.sort
 false
 false_of_true_iff_false
 false.rec
@@ -102,6 +107,8 @@ mul_one
 mul_zero
 mul_zero_class
 name
+name.nil
+name.cons
 nat
 nat.of_num
 nat.succ

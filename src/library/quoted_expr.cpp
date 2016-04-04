@@ -35,6 +35,36 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
         if (!is_macro(m) || macro_num_args(m) != 1)
             throw exception("invalid quoted-expr, incorrect number of arguments");
     }
+
+    expr quote_name(name const & n) {
+
+
+    }
+
+    expr quote_level(level const & l) {
+        assert(false);
+        return mk_var(0);
+    }
+
+    expr quote_expr(expr const & e) {
+        switch (e.kind()) {
+        case expr_kind::Local: lean_unreachable();  // LCOV_EXCL_LINE
+        case expr_kind::Meta:  lean_unreachable();  // LCOV_EXCL_LINE
+        case expr_kind::Var: assert(false); break;
+        case expr_kind::Sort: assert(false); break;
+        case expr_kind::Constant:
+            expr r_id = quote_name(const_name(e));
+            return mk_app(mk_constant(get_expr_const_name()), r_id);
+        case expr_kind::Macro: assert(false); break;
+        case expr_kind::Lambda: assert(false); break;
+        case expr_kind::Pi: assert(false); break;
+        case expr_kind::App: assert(false); break;
+        case expr_kind::Let: assert(false); break;
+        }
+    }
+
+
+
 public:
     virtual name get_name() const { return get_quoted_expr_name(); }
     virtual pair<expr, constraint_seq> check_type(expr const & m, extension_context & ctx, bool infer_only) const {
@@ -44,7 +74,7 @@ public:
     }
     virtual optional<expr> expand(expr const & m, extension_context &) const {
         check_macro(m);
-        return some_expr(mk_constant(get_expr_placeholder_name()));
+        return quote_expr(get_quoted_expr_expr(m));
     }
     virtual void write(serializer & s) const {
         s.write_string(get_quoted_expr_opcode());
@@ -60,8 +90,8 @@ expr mk_quoted_expr(expr const & v) {
     return mk_macro(*g_quoted_expr, 1, args);
 }
 
-expr get_quoted_expr_type(expr const & e) { lean_assert(is_quoted_expr(e)); return macro_arg(e, 0); }
-expr get_quoted_expr_expr(expr const & e) { lean_assert(is_quoted_expr(e)); return macro_arg(e, 1); }
+expr get_quoted_expr_expr(expr const & e) { lean_assert(is_quoted_expr(e)); return macro_arg(e, 0); }
+
 
 void initialize_quoted_expr() {
     g_quoted_expr_name = new name("quoted_expr");
