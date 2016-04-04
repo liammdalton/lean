@@ -47,12 +47,12 @@ eq_rec_heq
 exists.elim
 expr
 expr.placeholder
-expr.var
 expr.const
-expr.app
-expr.lam
-expr.pi
+expr.bvar
 expr.sort
+expr.pi
+expr.lam
+expr.app
 false
 false_of_true_iff_false
 false.rec
