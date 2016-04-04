@@ -1,8 +1,7 @@
 /*
-Copyright (c) 2014 Microsoft Corporation. All rights reserved.
+Copyright (c) 2016 Daniel Selsam. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-
-Author: Leonardo de Moura
+Authors: Jack Gallagher, Daniel Selsam
 */
 #include <string>
 #include "assert.h"
@@ -21,18 +20,6 @@ static macro_definition * g_quoted_expr = nullptr;
 name const & get_quoted_expr_name() { return *g_quoted_expr_name; }
 std::string const & get_quoted_expr_opcode() { return *g_quoted_expr_opcode; }
 
-/** \brief This macro is used to "enforce" a given type to an expression.
-    It is equivalent to
-
-        definition quoted_expr (A : Type) (a : A) := a
-
-    We use a macro instead of the definition because we want to be able
-    to use in any environment, even one that does not contain the
-    definition such as quoted_expr.
-
-    The macro is also slightly for efficient because we don't need a
-    universe parameter.
-*/
 class quoted_expr_macro_definition_cell : public macro_definition_cell {
     void check_macro(expr const & m) const {
         if (!is_macro(m) || macro_num_args(m) != 1)
