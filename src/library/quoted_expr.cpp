@@ -36,9 +36,34 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
             throw exception("invalid quoted-expr, incorrect number of arguments");
     }
 
+    expr quote_bool(bool b) {
+        return mk_constant(b ? get_bool_tt_name() : get_bool_ff_name());
+    }
+
+    expr quote_char(char c) { 
+        expr r_c = quote_bool(c & 1);
+        for (int i = 1; i < 8; ++i) {
+            r_c = mk_app(r_c, quote_bool(c & (1 << i)));
+        }
+        return r_c;
+    }
+
+    expr quote_string(string const & s) {
+        expr r_s = mk_constant(get_string_empty_name());
+        for (char c : s.data()) {
+            r_s = mk_app(mk_constant(get_string_str_name()), {quote_char(c), r_s});
+        }
+        return r_s;
+    }
+
     expr quote_name(name const & n) {
-
-
+        if (n.is_anonymous()) {
+            return mk_constant(get_name_nil_name());
+        } else if (n.is_string()) {
+            return mk_app(mk_constant(get_name_cons_name()), 
+                          {quote_string(n.get_string()), quote_name(n.get_prefix())});
+        }
+        lean_unreachable();
     }
 
     expr quote_level(level const & l) {
@@ -47,13 +72,14 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
     }
 
     expr quote_expr(expr const & e) {
+        expr r_id;
         switch (e.kind()) {
         case expr_kind::Local: lean_unreachable();  // LCOV_EXCL_LINE
         case expr_kind::Meta:  lean_unreachable();  // LCOV_EXCL_LINE
         case expr_kind::Var: assert(false); break;
         case expr_kind::Sort: assert(false); break;
         case expr_kind::Constant:
-            expr r_id = quote_name(const_name(e));
+            r_id = quote_name(const_name(e));
             return mk_app(mk_constant(get_expr_const_name()), r_id);
         case expr_kind::Macro: assert(false); break;
         case expr_kind::Lambda: assert(false); break;
