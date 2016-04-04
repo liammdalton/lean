@@ -28,33 +28,65 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
 
     expr quote_name(name const & n) const {
         if (n.is_anonymous()) {
-            return mk_constant(get_name_nil_name());
+            return mk_constant(get_lean_name_nil_name());
         } else if (n.is_string()) {
-            return mk_app(mk_constant(get_name_cons_name()), {from_string(n.get_string()), quote_name(n.get_prefix())});
+            return mk_app(mk_constant(get_lean_name_cons_name()), {from_string(n.get_string()), quote_name(n.get_prefix())});
         }
         lean_unreachable();
     }
 
     expr quote_level(level const & l) const {
-        assert(false);
-        return mk_var(0);
+        switch (l.kind()) {
+        case level_kind::Zero:
+            return mk_constant(get_lean_level_zero_name());
+        case level_kind::Succ: 
+            return mk_app(mk_constant(get_lean_level_succ_name()), quote_level(succ_of(l)));
+        case level_kind::Max:
+            return mk_app(mk_constant(get_lean_level_max_name()), {quote_level(max_lhs(l)), quote_level(max_rhs(l))});
+        case level_kind::IMax:
+            return mk_app(mk_constant(get_lean_level_imax_name()), {quote_level(imax_lhs(l)), quote_level(imax_rhs(l))});
+        case level_kind::Param:
+            return mk_app(mk_constant(get_lean_level_param_name()), quote_name(param_id(l)));
+        case level_kind::Global: 
+            return mk_app(mk_constant(get_lean_level_global_name()), quote_name(global_id(l)));
+        case level_kind::Meta: 
+            lean_unreachable(); // LCOV_EXCL_LINE
+        }
+        lean_unreachable(); // LCOV_EXCL_LINE
+    }
+
+    expr quote_nat(unsigned i) const {
+        expr r_i = mk_constant(get_nat_zero_name());
+        for (unsigned j = 1; j < i; ++j) {
+            r_i = mk_app(mk_constant(get_nat_succ_name()), r_i);
+        }
+        return r_i;
     }
 
     expr quote_expr(expr const & e)  const {
-        expr r_id;
+        expr r_id, r_dom, r_bod, r_fn, r_arg;
+
         switch (e.kind()) {
-        case expr_kind::Local: lean_unreachable();  // LCOV_EXCL_LINE
-        case expr_kind::Meta:  lean_unreachable();  // LCOV_EXCL_LINE
-        case expr_kind::Var: assert(false); break;
-        case expr_kind::Sort: assert(false); break;
+        case expr_kind::Var:
+            return mk_app(mk_constant(get_lean_expr_var_name()), quote_nat(var_idx(e)));
+        case expr_kind::Sort:
+            return mk_app(mk_constant(get_lean_expr_sort_name()), quote_level(sort_level(e)));
         case expr_kind::Constant:
-            r_id = quote_name(const_name(e));
-            return mk_app(mk_constant(get_expr_const_name()), r_id);
-        case expr_kind::Macro: assert(false); break;
-        case expr_kind::Lambda: assert(false); break;
-        case expr_kind::Pi: assert(false); break;
-        case expr_kind::App: assert(false); break;
+            return mk_app(mk_constant(get_lean_expr_const_name()), quote_name(const_name(e)));
+        case expr_kind::Lambda: 
+            return mk_app(mk_constant(get_lean_expr_lam_name()), {quote_expr(binding_domain(e)), quote_expr(binding_body(e))});
+        case expr_kind::Pi: 
+            return mk_app(mk_constant(get_lean_expr_pi_name()), {quote_expr(binding_domain(e)), quote_expr(binding_body(e))});
+        case expr_kind::App:
+            return mk_app(mk_constant(get_lean_expr_app_name()), {quote_expr(app_fn(e)), quote_expr(app_arg(e))});
         case expr_kind::Let: assert(false); break;
+            return mk_app(mk_constant(get_lean_expr_elet_name()), 
+                          { quote_name(let_name(e)), quote_expr(let_type(e))
+                          , quote_expr(let_value(e)), quote_expr(let_body(e)) });
+        case expr_kind::Local: 
+        case expr_kind::Meta:  
+        case expr_kind::Macro: 
+            lean_unreachable();  // LCOV_EXCL_LINE
         }
         lean_unreachable();
     }
@@ -64,7 +96,7 @@ public:
     virtual pair<expr, constraint_seq> check_type(expr const & m, extension_context & ctx, bool infer_only) const {
         constraint_seq cseq;
         check_macro(m);
-        return mk_pair(mk_constant(get_expr_name()), cseq);
+        return mk_pair(mk_constant(get_lean_expr_name()), cseq);
     }
     virtual optional<expr> expand(expr const & m, extension_context &) const {
         check_macro(m);
