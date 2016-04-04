@@ -16,11 +16,6 @@ bool is_quoted_expr(expr const & e);
 
     \remark get_quoted_expr_type(mk_quoted_expr(t, e)) == t
 */
-expr get_quoted_expr_type(expr const & e);
-/** \brief Return the expression/denotation of a quoted expression
-
-    \remark get_quoted_expr_type(mk_quoted_expr(t, e)) == e
-*/
 expr get_quoted_expr_expr(expr const & e);
 
 void initialize_quoted_expr();

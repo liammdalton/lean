@@ -5,9 +5,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 */
 #include <string>
+#include "assert.h"
 #include "kernel/kernel_exception.h"
 #include "library/util.h"
 #include "library/constants.h"
+#include "library/quoted_expr.h"
+#include "library/string.h"
 #include "library/kernel_serializer.h"
 
 namespace lean {
@@ -36,42 +39,21 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
             throw exception("invalid quoted-expr, incorrect number of arguments");
     }
 
-    expr quote_bool(bool b) {
-        return mk_constant(b ? get_bool_tt_name() : get_bool_ff_name());
-    }
-
-    expr quote_char(char c) { 
-        expr r_c = quote_bool(c & 1);
-        for (int i = 1; i < 8; ++i) {
-            r_c = mk_app(r_c, quote_bool(c & (1 << i)));
-        }
-        return r_c;
-    }
-
-    expr quote_string(string const & s) {
-        expr r_s = mk_constant(get_string_empty_name());
-        for (char c : s.data()) {
-            r_s = mk_app(mk_constant(get_string_str_name()), {quote_char(c), r_s});
-        }
-        return r_s;
-    }
-
-    expr quote_name(name const & n) {
+    expr quote_name(name const & n) const {
         if (n.is_anonymous()) {
             return mk_constant(get_name_nil_name());
         } else if (n.is_string()) {
-            return mk_app(mk_constant(get_name_cons_name()), 
-                          {quote_string(n.get_string()), quote_name(n.get_prefix())});
+            return mk_app(mk_constant(get_name_cons_name()), {from_string(n.get_string()), quote_name(n.get_prefix())});
         }
         lean_unreachable();
     }
 
-    expr quote_level(level const & l) {
+    expr quote_level(level const & l) const {
         assert(false);
         return mk_var(0);
     }
 
-    expr quote_expr(expr const & e) {
+    expr quote_expr(expr const & e)  const {
         expr r_id;
         switch (e.kind()) {
         case expr_kind::Local: lean_unreachable();  // LCOV_EXCL_LINE
@@ -87,9 +69,8 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
         case expr_kind::App: assert(false); break;
         case expr_kind::Let: assert(false); break;
         }
+        lean_unreachable();
     }
-
-
 
 public:
     virtual name get_name() const { return get_quoted_expr_name(); }
@@ -100,7 +81,7 @@ public:
     }
     virtual optional<expr> expand(expr const & m, extension_context &) const {
         check_macro(m);
-        return quote_expr(get_quoted_expr_expr(m));
+        return some_expr(quote_expr(get_quoted_expr_expr(m)));
     }
     virtual void write(serializer & s) const {
         s.write_string(get_quoted_expr_opcode());
