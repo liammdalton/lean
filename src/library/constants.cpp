@@ -50,14 +50,15 @@ name const * g_eq_trans = nullptr;
 name const * g_eq_of_heq = nullptr;
 name const * g_eq_rec_heq = nullptr;
 name const * g_exists_elim = nullptr;
-name const * g_lean_expr = nullptr;
-name const * g_lean_expr_const = nullptr;
-name const * g_lean_expr_var = nullptr;
-name const * g_lean_expr_sort = nullptr;
-name const * g_lean_expr_pi = nullptr;
-name const * g_lean_expr_lam = nullptr;
-name const * g_lean_expr_app = nullptr;
-name const * g_lean_expr_elet = nullptr;
+name const * g_lean_syntax_expr = nullptr;
+name const * g_lean_syntax_expr_const = nullptr;
+name const * g_lean_syntax_expr_var = nullptr;
+name const * g_lean_syntax_expr_meta = nullptr;
+name const * g_lean_syntax_expr_sort = nullptr;
+name const * g_lean_syntax_expr_pi = nullptr;
+name const * g_lean_syntax_expr_lam = nullptr;
+name const * g_lean_syntax_expr_app = nullptr;
+name const * g_lean_syntax_expr_elet = nullptr;
 name const * g_false = nullptr;
 name const * g_false_of_true_iff_false = nullptr;
 name const * g_false_rec = nullptr;
@@ -98,13 +99,14 @@ name const * g_is_trunc_is_set = nullptr;
 name const * g_ite = nullptr;
 name const * g_left_distrib = nullptr;
 name const * g_le_refl = nullptr;
-name const * g_lean_level = nullptr;
-name const * g_lean_level_zero = nullptr;
-name const * g_lean_level_succ = nullptr;
-name const * g_lean_level_max = nullptr;
-name const * g_lean_level_imax = nullptr;
-name const * g_lean_level_param = nullptr;
-name const * g_lean_level_global = nullptr;
+name const * g_lean_syntax_level = nullptr;
+name const * g_lean_syntax_level_meta = nullptr;
+name const * g_lean_syntax_level_zero = nullptr;
+name const * g_lean_syntax_level_succ = nullptr;
+name const * g_lean_syntax_level_max = nullptr;
+name const * g_lean_syntax_level_imax = nullptr;
+name const * g_lean_syntax_level_param = nullptr;
+name const * g_lean_syntax_level_global = nullptr;
 name const * g_lift = nullptr;
 name const * g_lift_down = nullptr;
 name const * g_lift_up = nullptr;
@@ -118,7 +120,7 @@ name const * g_mul_one = nullptr;
 name const * g_mul_zero = nullptr;
 name const * g_mul_zero_class = nullptr;
 name const * g_lean_name = nullptr;
-name const * g_lean_name_nil = nullptr;
+name const * g_lean_name_sing = nullptr;
 name const * g_lean_name_cons = nullptr;
 name const * g_nat = nullptr;
 name const * g_nat_of_num = nullptr;
@@ -342,14 +344,15 @@ void initialize_constants() {
     g_eq_of_heq = new name{"eq_of_heq"};
     g_eq_rec_heq = new name{"eq_rec_heq"};
     g_exists_elim = new name{"exists", "elim"};
-    g_lean_expr = new name{"lean", "expr"};
-    g_lean_expr_const = new name{"lean", "expr", "const"};
-    g_lean_expr_var = new name{"lean", "expr", "var"};
-    g_lean_expr_sort = new name{"lean", "expr", "sort"};
-    g_lean_expr_pi = new name{"lean", "expr", "pi"};
-    g_lean_expr_lam = new name{"lean", "expr", "lam"};
-    g_lean_expr_app = new name{"lean", "expr", "app"};
-    g_lean_expr_elet = new name{"lean", "expr", "elet"};
+    g_lean_syntax_expr = new name{"lean", "syntax", "expr"};
+    g_lean_syntax_expr_const = new name{"lean", "syntax", "expr", "const"};
+    g_lean_syntax_expr_var = new name{"lean", "syntax", "expr", "var"};
+    g_lean_syntax_expr_meta = new name{"lean", "syntax", "expr", "meta"};
+    g_lean_syntax_expr_sort = new name{"lean", "syntax", "expr", "sort"};
+    g_lean_syntax_expr_pi = new name{"lean", "syntax", "expr", "pi"};
+    g_lean_syntax_expr_lam = new name{"lean", "syntax", "expr", "lam"};
+    g_lean_syntax_expr_app = new name{"lean", "syntax", "expr", "app"};
+    g_lean_syntax_expr_elet = new name{"lean", "syntax", "expr", "elet"};
     g_false = new name{"false"};
     g_false_of_true_iff_false = new name{"false_of_true_iff_false"};
     g_false_rec = new name{"false", "rec"};
@@ -390,13 +393,14 @@ void initialize_constants() {
     g_ite = new name{"ite"};
     g_left_distrib = new name{"left_distrib"};
     g_le_refl = new name{"le", "refl"};
-    g_lean_level = new name{"lean", "level"};
-    g_lean_level_zero = new name{"lean", "level", "zero"};
-    g_lean_level_succ = new name{"lean", "level", "succ"};
-    g_lean_level_max = new name{"lean", "level", "max"};
-    g_lean_level_imax = new name{"lean", "level", "imax"};
-    g_lean_level_param = new name{"lean", "level", "param"};
-    g_lean_level_global = new name{"lean", "level", "global"};
+    g_lean_syntax_level = new name{"lean", "syntax", "level"};
+    g_lean_syntax_level_meta = new name{"lean", "syntax", "level", "meta"};
+    g_lean_syntax_level_zero = new name{"lean", "syntax", "level", "zero"};
+    g_lean_syntax_level_succ = new name{"lean", "syntax", "level", "succ"};
+    g_lean_syntax_level_max = new name{"lean", "syntax", "level", "max"};
+    g_lean_syntax_level_imax = new name{"lean", "syntax", "level", "imax"};
+    g_lean_syntax_level_param = new name{"lean", "syntax", "level", "param"};
+    g_lean_syntax_level_global = new name{"lean", "syntax", "level", "global"};
     g_lift = new name{"lift"};
     g_lift_down = new name{"lift", "down"};
     g_lift_up = new name{"lift", "up"};
@@ -410,7 +414,7 @@ void initialize_constants() {
     g_mul_zero = new name{"mul_zero"};
     g_mul_zero_class = new name{"mul_zero_class"};
     g_lean_name = new name{"lean", "name"};
-    g_lean_name_nil = new name{"lean", "name", "nil"};
+    g_lean_name_sing = new name{"lean", "name", "sing"};
     g_lean_name_cons = new name{"lean", "name", "cons"};
     g_nat = new name{"nat"};
     g_nat_of_num = new name{"nat", "of_num"};
@@ -635,14 +639,15 @@ void finalize_constants() {
     delete g_eq_of_heq;
     delete g_eq_rec_heq;
     delete g_exists_elim;
-    delete g_lean_expr;
-    delete g_lean_expr_const;
-    delete g_lean_expr_var;
-    delete g_lean_expr_sort;
-    delete g_lean_expr_pi;
-    delete g_lean_expr_lam;
-    delete g_lean_expr_app;
-    delete g_lean_expr_elet;
+    delete g_lean_syntax_expr;
+    delete g_lean_syntax_expr_const;
+    delete g_lean_syntax_expr_var;
+    delete g_lean_syntax_expr_meta;
+    delete g_lean_syntax_expr_sort;
+    delete g_lean_syntax_expr_pi;
+    delete g_lean_syntax_expr_lam;
+    delete g_lean_syntax_expr_app;
+    delete g_lean_syntax_expr_elet;
     delete g_false;
     delete g_false_of_true_iff_false;
     delete g_false_rec;
@@ -683,13 +688,14 @@ void finalize_constants() {
     delete g_ite;
     delete g_left_distrib;
     delete g_le_refl;
-    delete g_lean_level;
-    delete g_lean_level_zero;
-    delete g_lean_level_succ;
-    delete g_lean_level_max;
-    delete g_lean_level_imax;
-    delete g_lean_level_param;
-    delete g_lean_level_global;
+    delete g_lean_syntax_level;
+    delete g_lean_syntax_level_meta;
+    delete g_lean_syntax_level_zero;
+    delete g_lean_syntax_level_succ;
+    delete g_lean_syntax_level_max;
+    delete g_lean_syntax_level_imax;
+    delete g_lean_syntax_level_param;
+    delete g_lean_syntax_level_global;
     delete g_lift;
     delete g_lift_down;
     delete g_lift_up;
@@ -703,7 +709,7 @@ void finalize_constants() {
     delete g_mul_zero;
     delete g_mul_zero_class;
     delete g_lean_name;
-    delete g_lean_name_nil;
+    delete g_lean_name_sing;
     delete g_lean_name_cons;
     delete g_nat;
     delete g_nat_of_num;
@@ -927,14 +933,15 @@ name const & get_eq_trans_name() { return *g_eq_trans; }
 name const & get_eq_of_heq_name() { return *g_eq_of_heq; }
 name const & get_eq_rec_heq_name() { return *g_eq_rec_heq; }
 name const & get_exists_elim_name() { return *g_exists_elim; }
-name const & get_lean_expr_name() { return *g_lean_expr; }
-name const & get_lean_expr_const_name() { return *g_lean_expr_const; }
-name const & get_lean_expr_var_name() { return *g_lean_expr_var; }
-name const & get_lean_expr_sort_name() { return *g_lean_expr_sort; }
-name const & get_lean_expr_pi_name() { return *g_lean_expr_pi; }
-name const & get_lean_expr_lam_name() { return *g_lean_expr_lam; }
-name const & get_lean_expr_app_name() { return *g_lean_expr_app; }
-name const & get_lean_expr_elet_name() { return *g_lean_expr_elet; }
+name const & get_lean_syntax_expr_name() { return *g_lean_syntax_expr; }
+name const & get_lean_syntax_expr_const_name() { return *g_lean_syntax_expr_const; }
+name const & get_lean_syntax_expr_var_name() { return *g_lean_syntax_expr_var; }
+name const & get_lean_syntax_expr_meta_name() { return *g_lean_syntax_expr_meta; }
+name const & get_lean_syntax_expr_sort_name() { return *g_lean_syntax_expr_sort; }
+name const & get_lean_syntax_expr_pi_name() { return *g_lean_syntax_expr_pi; }
+name const & get_lean_syntax_expr_lam_name() { return *g_lean_syntax_expr_lam; }
+name const & get_lean_syntax_expr_app_name() { return *g_lean_syntax_expr_app; }
+name const & get_lean_syntax_expr_elet_name() { return *g_lean_syntax_expr_elet; }
 name const & get_false_name() { return *g_false; }
 name const & get_false_of_true_iff_false_name() { return *g_false_of_true_iff_false; }
 name const & get_false_rec_name() { return *g_false_rec; }
@@ -975,13 +982,14 @@ name const & get_is_trunc_is_set_name() { return *g_is_trunc_is_set; }
 name const & get_ite_name() { return *g_ite; }
 name const & get_left_distrib_name() { return *g_left_distrib; }
 name const & get_le_refl_name() { return *g_le_refl; }
-name const & get_lean_level_name() { return *g_lean_level; }
-name const & get_lean_level_zero_name() { return *g_lean_level_zero; }
-name const & get_lean_level_succ_name() { return *g_lean_level_succ; }
-name const & get_lean_level_max_name() { return *g_lean_level_max; }
-name const & get_lean_level_imax_name() { return *g_lean_level_imax; }
-name const & get_lean_level_param_name() { return *g_lean_level_param; }
-name const & get_lean_level_global_name() { return *g_lean_level_global; }
+name const & get_lean_syntax_level_name() { return *g_lean_syntax_level; }
+name const & get_lean_syntax_level_meta_name() { return *g_lean_syntax_level_meta; }
+name const & get_lean_syntax_level_zero_name() { return *g_lean_syntax_level_zero; }
+name const & get_lean_syntax_level_succ_name() { return *g_lean_syntax_level_succ; }
+name const & get_lean_syntax_level_max_name() { return *g_lean_syntax_level_max; }
+name const & get_lean_syntax_level_imax_name() { return *g_lean_syntax_level_imax; }
+name const & get_lean_syntax_level_param_name() { return *g_lean_syntax_level_param; }
+name const & get_lean_syntax_level_global_name() { return *g_lean_syntax_level_global; }
 name const & get_lift_name() { return *g_lift; }
 name const & get_lift_down_name() { return *g_lift_down; }
 name const & get_lift_up_name() { return *g_lift_up; }
@@ -995,7 +1003,7 @@ name const & get_mul_one_name() { return *g_mul_one; }
 name const & get_mul_zero_name() { return *g_mul_zero; }
 name const & get_mul_zero_class_name() { return *g_mul_zero_class; }
 name const & get_lean_name_name() { return *g_lean_name; }
-name const & get_lean_name_nil_name() { return *g_lean_name_nil; }
+name const & get_lean_name_sing_name() { return *g_lean_name_sing; }
 name const & get_lean_name_cons_name() { return *g_lean_name_cons; }
 name const & get_nat_name() { return *g_nat; }
 name const & get_nat_of_num_name() { return *g_nat_of_num; }
