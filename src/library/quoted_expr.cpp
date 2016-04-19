@@ -29,11 +29,11 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
 
     expr quote_name(name const & n) const {
         if (n.is_numeral()) {
-            throw exception(sstream() << "quoting names with ints not supported"); // TODO(dhs, jack): reflect names with uint components
+            throw exception(sstream() << "quoting names with ints not supported (" << n << ")"); // TODO(dhs, jack): reflect names with uint components
         } else if (n.is_anonymous()) {
             return mk_app(mk_constant(get_list_nil_name(), {mk_level_one()}), mk_constant(get_string_name()));
         } else if (n.is_string()) {
-            return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}), 
+            return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}),
                           {mk_constant(get_string_name()), from_string(n.get_string()), quote_name(n.get_prefix())});
         }
         lean_unreachable();
@@ -43,7 +43,7 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
         switch (l.kind()) {
         case level_kind::Zero:
             return mk_constant(get_lean_syntax_level_zero_name());
-        case level_kind::Succ: 
+        case level_kind::Succ:
             return mk_app(mk_constant(get_lean_syntax_level_succ_name()), quote_level(succ_of(l)));
         case level_kind::Max:
             return mk_app(mk_constant(get_lean_syntax_level_max_name()), {quote_level(max_lhs(l)), quote_level(max_rhs(l))});
@@ -51,9 +51,9 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
             return mk_app(mk_constant(get_lean_syntax_level_imax_name()), {quote_level(imax_lhs(l)), quote_level(imax_rhs(l))});
         case level_kind::Param:
             return mk_app(mk_constant(get_lean_syntax_level_param_name()), quote_name(param_id(l)));
-        case level_kind::Global: 
+        case level_kind::Global:
             return mk_app(mk_constant(get_lean_syntax_level_global_name()), quote_name(global_id(l)));
-        case level_kind::Meta: 
+        case level_kind::Meta:
             return mk_app(mk_constant(get_lean_syntax_level_meta_name()), quote_name(meta_id(l)));
         }
         lean_unreachable(); // LCOV_EXCL_LINE
@@ -63,7 +63,7 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
         if(is_nil(ls)) {
             return mk_app(mk_constant(get_list_nil_name(), {mk_level_one()}), mk_constant(get_lean_syntax_level_name()));
         } else {
-            return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}), 
+            return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}),
                           {mk_constant(get_lean_syntax_level_name()),
                                   quote_level(head(ls)),
                                   quote_levels(tail(ls))});
@@ -84,7 +84,7 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
         case expr_kind::Sort:
             return mk_app(mk_constant(get_lean_syntax_expr_sort_name()), quote_level(sort_level(e)));
         case expr_kind::Constant:
-            return mk_app(mk_constant(get_lean_syntax_expr_const_name()), 
+            return mk_app(mk_constant(get_lean_syntax_expr_const_name()),
                           {quote_name(const_name(e)), quote_levels(const_levels(e))});
         case expr_kind::Lambda:
             return mk_app(mk_constant(get_lean_syntax_expr_lam_name()), {quote_expr(binding_domain(e)), quote_expr(binding_body(e))});
@@ -93,7 +93,7 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
         case expr_kind::App:
             return mk_app(mk_constant(get_lean_syntax_expr_app_name()), {quote_expr(app_fn(e)), quote_expr(app_arg(e))});
         case expr_kind::Let:
-            return mk_app(mk_constant(get_lean_syntax_expr_elet_name()), 
+            return mk_app(mk_constant(get_lean_syntax_expr_elet_name()),
                           { quote_name(let_name(e)), quote_expr(let_type(e))
                           , quote_expr(let_value(e)), quote_expr(let_body(e)) });
         case expr_kind::Meta:
@@ -101,7 +101,7 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
         case expr_kind::Macro:
             throw exception(sstream() << "quoting unexpanded macros not supported"); // TODO(dhs, jack): reflect macros
         case expr_kind::Local:
-            lean_unreachable();  // LCOV_EXCL_LINE
+            return mk_app(mk_constant(get_lean_syntax_expr_loc_name()), {quote_name(mlocal_name(e)), quote_expr(mlocal_type(e))});
         }
         lean_unreachable();
     }

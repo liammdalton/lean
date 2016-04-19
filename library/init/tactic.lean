@@ -129,6 +129,8 @@ definition reverts (ids : identifier_list) : tactic := builtin
 
 definition change (e : expr) : tactic := builtin
 
+definition reflect (e : expr) : tactic := builtin
+
 definition assert_hypothesis (id : identifier) (e : expr) : tactic := builtin
 
 definition note_tac (id : identifier) (e : expr) : tactic := builtin

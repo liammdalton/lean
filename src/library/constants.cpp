@@ -52,6 +52,7 @@ name const * g_eq_rec_heq = nullptr;
 name const * g_exists_elim = nullptr;
 name const * g_lean_syntax_expr = nullptr;
 name const * g_lean_syntax_expr_const = nullptr;
+name const * g_lean_syntax_expr_loc = nullptr;
 name const * g_lean_syntax_expr_var = nullptr;
 name const * g_lean_syntax_expr_meta = nullptr;
 name const * g_lean_syntax_expr_sort = nullptr;
@@ -235,6 +236,7 @@ name const * g_tactic_beta = nullptr;
 name const * g_tactic_builtin = nullptr;
 name const * g_tactic_cases = nullptr;
 name const * g_tactic_change = nullptr;
+name const * g_tactic_reflect = nullptr;
 name const * g_tactic_check_expr = nullptr;
 name const * g_tactic_clear = nullptr;
 name const * g_tactic_clears = nullptr;
@@ -346,6 +348,7 @@ void initialize_constants() {
     g_exists_elim = new name{"exists", "elim"};
     g_lean_syntax_expr = new name{"lean", "syntax", "expr"};
     g_lean_syntax_expr_const = new name{"lean", "syntax", "expr", "const"};
+    g_lean_syntax_expr_loc = new name{"lean", "syntax", "expr", "loc"};
     g_lean_syntax_expr_var = new name{"lean", "syntax", "expr", "var"};
     g_lean_syntax_expr_meta = new name{"lean", "syntax", "expr", "meta"};
     g_lean_syntax_expr_sort = new name{"lean", "syntax", "expr", "sort"};
@@ -529,6 +532,7 @@ void initialize_constants() {
     g_tactic_builtin = new name{"tactic", "builtin"};
     g_tactic_cases = new name{"tactic", "cases"};
     g_tactic_change = new name{"tactic", "change"};
+    g_tactic_reflect = new name{"tactic", "reflect"};
     g_tactic_check_expr = new name{"tactic", "check_expr"};
     g_tactic_clear = new name{"tactic", "clear"};
     g_tactic_clears = new name{"tactic", "clears"};
@@ -641,6 +645,7 @@ void finalize_constants() {
     delete g_exists_elim;
     delete g_lean_syntax_expr;
     delete g_lean_syntax_expr_const;
+    delete g_lean_syntax_expr_loc;
     delete g_lean_syntax_expr_var;
     delete g_lean_syntax_expr_meta;
     delete g_lean_syntax_expr_sort;
@@ -824,6 +829,7 @@ void finalize_constants() {
     delete g_tactic_builtin;
     delete g_tactic_cases;
     delete g_tactic_change;
+    delete g_tactic_reflect;
     delete g_tactic_check_expr;
     delete g_tactic_clear;
     delete g_tactic_clears;
@@ -935,6 +941,7 @@ name const & get_eq_rec_heq_name() { return *g_eq_rec_heq; }
 name const & get_exists_elim_name() { return *g_exists_elim; }
 name const & get_lean_syntax_expr_name() { return *g_lean_syntax_expr; }
 name const & get_lean_syntax_expr_const_name() { return *g_lean_syntax_expr_const; }
+name const & get_lean_syntax_expr_loc_name() { return *g_lean_syntax_expr_loc; }
 name const & get_lean_syntax_expr_var_name() { return *g_lean_syntax_expr_var; }
 name const & get_lean_syntax_expr_meta_name() { return *g_lean_syntax_expr_meta; }
 name const & get_lean_syntax_expr_sort_name() { return *g_lean_syntax_expr_sort; }
@@ -1118,6 +1125,7 @@ name const & get_tactic_beta_name() { return *g_tactic_beta; }
 name const & get_tactic_builtin_name() { return *g_tactic_builtin; }
 name const & get_tactic_cases_name() { return *g_tactic_cases; }
 name const & get_tactic_change_name() { return *g_tactic_change; }
+name const & get_tactic_reflect_name() { return *g_tactic_reflect; }
 name const & get_tactic_check_expr_name() { return *g_tactic_check_expr; }
 name const & get_tactic_clear_name() { return *g_tactic_clear; }
 name const & get_tactic_clears_name() { return *g_tactic_clears; }

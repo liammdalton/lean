@@ -47,6 +47,7 @@ eq_rec_heq
 exists.elim
 lean.syntax.expr
 lean.syntax.expr.const
+lean.syntax.expr.loc
 lean.syntax.expr.var
 lean.syntax.expr.meta
 lean.syntax.expr.sort
@@ -230,6 +231,7 @@ tactic.beta
 tactic.builtin
 tactic.cases
 tactic.change
+tactic.reflect
 tactic.check_expr
 tactic.clear
 tactic.clears

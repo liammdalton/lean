@@ -20,6 +20,7 @@ Author: Leonardo de Moura
 #include "library/tactic/assert_tactic.h"
 #include "library/tactic/rewrite_tactic.h"
 #include "library/tactic/change_tactic.h"
+#include "library/tactic/reflect_tactic.h"
 #include "library/tactic/check_expr_tactic.h"
 #include "library/tactic/note_tactic.h"
 #include "library/tactic/contradiction_tactic.h"
@@ -52,6 +53,7 @@ void initialize_tactic_module() {
     initialize_assert_tactic();
     initialize_rewrite_tactic();
     initialize_change_tactic();
+    initialize_reflect_tactic();
     initialize_check_expr_tactic();
     initialize_note_tactic();
     initialize_contradiction_tactic();
@@ -82,6 +84,7 @@ void finalize_tactic_module() {
     finalize_contradiction_tactic();
     finalize_note_tactic();
     finalize_check_expr_tactic();
+    finalize_reflect_tactic();
     finalize_change_tactic();
     finalize_rewrite_tactic();
     finalize_assert_tactic();

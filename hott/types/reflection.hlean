@@ -16,6 +16,7 @@ namespace lean
     inductive expr : Type₁ :=
     | var   : ℕ → expr
     | const : name  → list level → expr
+    | loc   : name  → expr → expr
     | meta  : name  → expr → expr
     | sort  : level → expr
     | pi    : name  → expr → expr → expr
