@@ -1,7 +1,8 @@
 import data.list
+open sum
 
 namespace lean
-  definition name := list string
+  definition name := list (string + num)
 
   namespace syntax
     inductive level : Type₁ :=

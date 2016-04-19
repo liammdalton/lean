@@ -13,6 +13,7 @@ Authors: Jack Gallagher, Daniel Selsam
 #include "library/quoted_expr.h"
 #include "library/string.h"
 #include "library/kernel_serializer.h"
+#include "library/app_builder.h"
 #include "util/sstream.h"
 
 namespace lean {
@@ -27,17 +28,34 @@ class quote_expr_fn {
 private:
     app_builder m_ab;
 
+    expr quote_pos_num(uint i) const {
+        assert (i != 0);
+        if (i == 1)
+            return mk_constant(get_pos_num_one_name());
+        else if (i % 2 == 0)
+            return mk_app(mk_constant(get_pos_num_bit0_name()), quote_pos_num(i / 2));
+        else
+            return mk_app(mk_constant(get_pos_num_bit1_name()), quote_pos_num(i / 2)); // Does this behave correctly?
+    }
+
+    expr quote_num(uint i) const {
+        if (i == 0)
+            return mk_constant(get_num_zero_name());
+        else
+            return mk_app(mk_constant(get_num_pos_name()), quote_pos_num i);
+    }
+
     expr quote_name(name const & n) const {
-        if (n.is_anonymous()) {
-            return mk_app(mk_constant(get_list_nil_name(), {mk_level_one()}), mk_constant(get_string_name()));
-        } else if (n.is_string()) {
-            return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}),
-                          {mk_constant(get_string_name()), from_string(n.get_string()), quote_name(n.get_prefix())});
-        } else if (n.is_numeral()) {
-            // TODO(dhs, jack): reflect names with uint components
-            throw exception(sstream() << "quoting names with ints not supported (" << n << ")");
-        }
-        lean_unreachable();
+        if (n.is_anonymous())
+            return ab.mk_app(get_list_nil_name()); // mk_app(mk_constant(get_list_nil_name(), {mk_level_one()}), mk_constant(get_string_name()));
+        else if (n.is_numeral())
+            return ab.mk_app(get_list_cons_name(), {ab.mk_app(get_sum_inr_name(), quote_num(n.get_numeral())), quote_name(n.get_prefix())});
+        else if (n.is_string())
+            return ab.mk_app(get_list_cons_name(), {ab.mk_app(get_sum_inl_name(), from_string(n.get_string)), quote_name(n.get_prefix())});
+            // return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}),
+            //               {mk_constant(get_string_name()), from_string(n.get_string()), quote_name(n.get_prefix())});
+        else
+            lean_unreachable();
     }
 
     expr quote_level(level const & l) const {

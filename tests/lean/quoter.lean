@@ -1,5 +1,8 @@
 import data.reflection
 
-eval quote (λ x, x) -- lambdas, variables, metavariables
+print num
+print pos_num
+eval quote (λ x, x)
+eval quote (λ A (x : A), x)
 eval quote (λ x, nat.succ x)
 eval quote ((λ x, x) nat.zero)
