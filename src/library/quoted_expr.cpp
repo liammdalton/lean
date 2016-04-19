@@ -45,20 +45,20 @@ private:
             return mk_app(mk_constant(get_num_pos_name()), quote_pos_num(i));
     }
 
-    expr quote_name(name const & n) const {
+    expr quote_name(name const & n) {
         if (n.is_anonymous())
             return m_ab.mk_app(get_list_nil_name(), m_ab.mk_app(get_sum_name(), mk_constant(get_string_name()), mk_constant(get_num_name()))); // mk_app(mk_constant(get_list_nil_name(), {mk_level_one()}), mk_constant(get_string_name()));
         else if (n.is_numeral())
             return m_ab.mk_app(get_list_cons_name(), m_ab.mk_app(get_sum_inr_name(), quote_num(n.get_numeral()), quote_name(n.get_prefix())));
         else if (n.is_string())
-            return m_ab.mk_app(get_list_cons_name(), m_ab.mk_app(get_sum_inl_name(), from_string(n.get_string), quote_name(n.get_prefix())));
+            return m_ab.mk_app(get_list_cons_name(), m_ab.mk_app(get_sum_inl_name(), from_string(n.get_string()), quote_name(n.get_prefix())));
             // return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}),
             //               {mk_constant(get_string_name()), from_string(n.get_string()), quote_name(n.get_prefix())});
         else
             lean_unreachable();
     }
 
-    expr quote_level(level const & l) const {
+    expr quote_level(level const & l) {
         switch (l.kind()) {
         case level_kind::Zero:
             return mk_constant(get_lean_syntax_level_zero_name());
@@ -78,7 +78,7 @@ private:
         lean_unreachable(); // LCOV_EXCL_LINE
     }
 
-    expr quote_levels(levels const & ls) const {
+    expr quote_levels(levels const & ls) {
         if(is_nil(ls)) {
             return mk_app(mk_constant(get_list_nil_name(), {mk_level_one()}), mk_constant(get_lean_syntax_level_name()));
         } else {
@@ -97,7 +97,7 @@ private:
         return r_i;
     }
 
-    expr quote_expr(expr const & e)  const {
+    expr quote_expr(expr const & e) {
         switch (e.kind()) {
         case expr_kind::Var:
             return mk_app(mk_constant(get_lean_syntax_expr_var_name()), quote_nat(var_idx(e)));
