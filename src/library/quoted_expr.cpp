@@ -4,10 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jack Gallagher, Daniel Selsam
 */
 #include <string>
+#include <iostream> // TODO(dhs): remove
 #include "assert.h"
 #include "kernel/kernel_exception.h"
 #include "library/util.h"
 #include "library/constants.h"
+#include "library/app_builder.h"
 #include "library/quoted_expr.h"
 #include "library/string.h"
 #include "library/kernel_serializer.h"
@@ -21,20 +23,19 @@ static macro_definition * g_quoted_expr = nullptr;
 name const & get_quoted_expr_name() { return *g_quoted_expr_name; }
 std::string const & get_quoted_expr_opcode() { return *g_quoted_expr_opcode; }
 
-class quoted_expr_macro_definition_cell : public macro_definition_cell {
-    void check_macro(expr const & m) const {
-        if (!is_macro(m) || macro_num_args(m) != 1)
-            throw exception("invalid quoted-expr, incorrect number of arguments");
-    }
+class quote_expr_fn {
+private:
+    app_builder m_ab;
 
     expr quote_name(name const & n) const {
-        if (n.is_numeral()) {
-            throw exception(sstream() << "quoting names with ints not supported (" << n << ")"); // TODO(dhs, jack): reflect names with uint components
-        } else if (n.is_anonymous()) {
+        if (n.is_anonymous()) {
             return mk_app(mk_constant(get_list_nil_name(), {mk_level_one()}), mk_constant(get_string_name()));
         } else if (n.is_string()) {
             return mk_app(mk_constant(get_list_cons_name(), {mk_level_one()}),
                           {mk_constant(get_string_name()), from_string(n.get_string()), quote_name(n.get_prefix())});
+        } else if (n.is_numeral()) {
+            // TODO(dhs, jack): reflect names with uint components
+            throw exception(sstream() << "quoting names with ints not supported (" << n << ")");
         }
         lean_unreachable();
     }
@@ -69,6 +70,7 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
                                   quote_levels(tail(ls))});
         }
     }
+
     expr quote_nat(unsigned i) const {
         expr r_i = mk_constant(get_nat_zero_name());
         for (unsigned j = 1; j < i; ++j) {
@@ -107,15 +109,28 @@ class quoted_expr_macro_definition_cell : public macro_definition_cell {
     }
 
 public:
+    quote_expr_fn(environment const & env): m_ab(env) {}
+    expr operator()(expr const & e) { return quote_expr(e); }
+};
+
+
+class quoted_expr_macro_definition_cell : public macro_definition_cell {
+    void check_macro(expr const & m) const {
+        if (!is_macro(m) || macro_num_args(m) != 1)
+            throw exception("invalid quoted-expr, incorrect number of arguments");
+    }
+
+
+public:
     virtual name get_name() const { return get_quoted_expr_name(); }
     virtual pair<expr, constraint_seq> check_type(expr const & m, extension_context &, bool) const {
         constraint_seq cseq;
         check_macro(m);
         return mk_pair(mk_constant(get_lean_syntax_expr_name()), cseq);
     }
-    virtual optional<expr> expand(expr const & m, extension_context &) const {
+    virtual optional<expr> expand(expr const & m, extension_context & ctx) const {
         check_macro(m);
-        return some_expr(quote_expr(get_quoted_expr_expr(m)));
+        return some_expr(quote_expr_fn(ctx.env())(get_quoted_expr_expr(m)));
     }
     virtual void write(serializer & s) const {
         s.write_string(get_quoted_expr_opcode());

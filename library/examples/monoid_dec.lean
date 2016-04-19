@@ -1,4 +1,5 @@
-import data.list data.reflection
+import data.reflection
+import data.list
 open monoid
 open [notation] list
 section
@@ -8,7 +9,7 @@ section
   | ident : monexp
   | var : A → monexp
   | op : monexp → monexp → monexp
-
+/-
   definition mdenote : monexp → A :=
    monexp.rec 1 (λ a, a) (λ e1 e2 m1 m2, m1 * m2)
   --| mdenote monexp.ident := 1
@@ -41,11 +42,15 @@ section
   definition app_cons [defeq] (A : Type) : ∀ a (l1 l2 : list A), (a :: l1) ++ l2 = a :: (l1 ++ l2) := λ a l1 l2, rfl
   lemma app_nil_r [simp] (A : Type) (l : list A) : l ++ [] = l := by induction l; all_goals inst_simp
 
+  attribute [forward] mul_assoc
+  attribute [simp] one_mul mul_one
+  attribute [forward] one_mul mul_one
+
   lemma flat_concat [simp] (l1 l2 : list A) : mconcat (l1 ++ l2) = mconcat l1 * mconcat l2 := by induction l1; all_goals inst_simp
   theorem monexp_mdenote (m : monexp) : mconcat (flatten m) = mdenote m := by induction m; all_goals inst_simp
+-/
 end
 
-open lean
 
 -- monexp.{l_1} : Π {A : Type.{l_1}} [_inst_1 : monoid.{l_1} A], Type.{max 1 l_1}
 
@@ -63,7 +68,7 @@ check (mul.{1} : A → A → A)
 
 definition reify_monoid (A : Type.{1}) [A_monoid : monoid.{1} A] : expr →  @monexp.{1} A A_monoid
 | (quote (@one.{1} A A_monoid)) := monexp.ident
-| (app (app (quote (@monoid.mul.{1} A A_monoid)) e₁) e₂) := monexp.op (reify_monoid e₁) (reify_monoid e₂)
+--| (app (app (quote (@monoid.mul.{1} A A_monoid)) e₁) e₂) := monexp.op (reify_monoid e₁) (reify_monoid e₂)
 | _ := monexp.ident
 
 print reify_monoid
