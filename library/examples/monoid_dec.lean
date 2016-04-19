@@ -9,7 +9,7 @@ section
   | ident : monexp
   | var : A → monexp
   | op : monexp → monexp → monexp
-/-
+
   definition mdenote : monexp → A :=
    monexp.rec 1 (λ a, a) (λ e1 e2 m1 m2, m1 * m2)
   --| mdenote monexp.ident := 1
@@ -59,16 +59,34 @@ attribute A_monoid [instance]
 
 open lean.syntax
 
-set_option pp.all true
-check (one : A)
-check (mul.{1} : A → A → A)
-
--- @one.{1} A (@monoid.to_has_one.{1} A A_monoid) : A
--- @monoid.mul.{1} A A_monoid : A → A → A
-
 definition reify_monoid (A : Type.{1}) [A_monoid : monoid.{1} A] : expr →  @monexp.{1} A A_monoid
 | (quote (@one.{1} A A_monoid)) := monexp.ident
---| (app (app (quote (@monoid.mul.{1} A A_monoid)) e₁) e₂) := monexp.op (reify_monoid e₁) (reify_monoid e₂)
+| (expr.app (expr.app (quote (@monoid.mul.{1} A A_monoid)) e₁) e₂) := monexp.op (reify_monoid e₁) (reify_monoid e₂)
 | _ := monexp.ident
 
 print reify_monoid
+namespace test
+
+variables (A : Type.{1}) [A_monoid : monoid A] (x y z : A)
+include A_monoid
+
+eval reify_monoid A (quote (one * one * one * one * one * one *one * one * one))
+eval reify_monoid A (quote (one * one * one * one * one * one *one * one * one))
+eval reify_monoid A (quote (one * one * one * one * one * one *one * one * one))
+eval reify_monoid A (quote (one * one * one * one * one * one *one * one * one))
+eval reify_monoid A (quote (one * one * one * one * one * one *one * one * one))
+eval reify_monoid A (quote (one * one * one * one * one * one *one * one * one))
+eval reify_monoid A (quote (one * one * one * one * one * one *one * one * one))
+
+
+/-
+set_option trace.app_builder true
+example : x = x :=
+begin
+reflect (@reify_monoid A A_monoid),
+
+end
+
+
+-/
+end test
