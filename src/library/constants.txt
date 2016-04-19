@@ -220,6 +220,9 @@ sub
 subsingleton
 subsingleton.elim
 subsingleton.helim
+sum
+sum.inl
+sum.inr
 tactic
 tactic.all_goals
 tactic.and_then
