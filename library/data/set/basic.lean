@@ -27,15 +27,24 @@ infix ⊆ := subset
 definition superset (s t : set X) : Prop := t ⊆ s
 infix ⊇ := superset
 
-theorem subset.refl (a : set X) : a ⊆ a := take x, assume H, H
+theorem subset.refl (a : set X) : a ⊆ a := 
+  take x : X,
+    show x ∈ a → x ∈ a, from
+      (λ H : x ∈ a, H)
 
 theorem subset.trans {a b c : set X} (subab : a ⊆ b) (subbc : b ⊆ c) : a ⊆ c :=
-take x, assume ax, subbc (subab ax)
+  take x : X,
+    show x ∈ a → x ∈ c, from
+      (λ H : x ∈ a, subbc (subab H))
 
 theorem subset.antisymm {a b : set X} (h₁ : a ⊆ b) (h₂ : b ⊆ a) : a = b :=
-ext (λ x, iff.intro (λ ina, h₁ ina) (λ inb, h₂ inb))
+  show a = b, from
+    have Hf : ∀ x : X, x ∈ a → x ∈ b, from h₁,
+    have Hb : ∀ x : X, x ∈ b → x ∈ a, from h₂,
+    have H : ∀ x : X, x ∈ a ↔ x ∈ b, from (λ x : X, iff.intro (Hf x) (Hb x)), 
+    ext H
 
--- an alterantive name
+-- an alternative name
 theorem eq_of_subset_of_subset {a b : set X} (h₁ : a ⊆ b) (h₂ : b ⊆ a) : a = b :=
 subset.antisymm h₁ h₂
 
